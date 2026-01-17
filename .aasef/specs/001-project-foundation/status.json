@@ -1,0 +1,11 @@
+{
+    "id": "001",
+    "name": "project-foundation",
+    "status": "completed",
+    "priority": "critical",
+    "dependencies": [],
+    "estimated_days": 3,
+    "created_at": "2026-01-17T22:57:00.000000",
+    "updated_at": "2026-01-17T23:23:00.000000",
+    "completed_at": "2026-01-17T23:23:00.000000"
+}

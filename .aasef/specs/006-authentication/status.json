@@ -1,0 +1,13 @@
+{
+    "id": "006",
+    "name": "authentication",
+    "status": "pending",
+    "priority": "medium",
+    "dependencies": [
+        "001",
+        "002"
+    ],
+    "estimated_days": 3,
+    "created_at": "2026-01-17T22:57:00.000000",
+    "updated_at": "2026-01-17T22:57:00.000000"
+}

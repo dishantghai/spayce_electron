@@ -1,0 +1,50 @@
+{
+  "product": {
+    "name": "Spayce",
+    "description": "Personal Learning Management System with integrated browser",
+    "target_users": "Knowledge workers, developers, students, researchers",
+    "problem": "Disorganized bookmarks and poor context switching between browser and files",
+    "scale": "mvp",
+    "domain": "Productivity / Knowledge Management / Browser"
+  },
+  "architecture": {
+    "type": "desktop-monorepo",
+    "tech_stack": {
+      "desktop": "Electron 30+",
+      "ui": "React Native Web",
+      "build": "Vite",
+      "language": "TypeScript",
+      "database": "SurrealDB (embedded)",
+      "state": "Zustand + TanStack Query",
+      "auth": "Firebase Auth",
+      "icons": "Lucide React",
+      "styling": "Tailwind CSS",
+      "testing": "Vitest + Playwright"
+    },
+    "decisions": [
+      "WebContentsView for Arc-style multi-tab browser",
+      "pnpm workspaces monorepo",
+      "Shared code in packages/shared, desktop in packages/desktop"
+    ]
+  },
+  "specs": [
+    "001-project-foundation",
+    "002-navigation-shell",
+    "003-spaces-feature",
+    "004-browser-feature",
+    "005-workspace-feature",
+    "006-authentication"
+  ],
+  "stories": [],
+  "codebase": {
+    "structure": "packages/shared + packages/desktop monorepo",
+    "last_synced": null
+  },
+  "decisions": [
+    "Use WebContentsView (not deprecated BrowserView)",
+    "SurrealDB for graph relations between Spaces and Items",
+    "Reuse existing spayce-app Firebase project"
+  ],
+  "created_at": "2026-01-17T22:47:24.865263",
+  "updated_at": "2026-01-17T22:57:00.000000"
+}
