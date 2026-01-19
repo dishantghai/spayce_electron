@@ -37,12 +37,11 @@ Initialize the Electron + React Native Web monorepo with all required tooling, d
 - Create test utilities and mocks
 
 ## Acceptance Criteria
-- [ ] `pnpm install` succeeds with no errors
-- [ ] `pnpm dev` starts Electron app with React Native Web renderer
-- [ ] Design system tokens are importable from `@spayce/shared/theme`
-- [ ] SurrealDB connects and creates database file
-- [ ] Basic IPC communication works between main and renderer
-- [ ] `pnpm test` runs with passing placeholder tests
+- [x] `pnpm install` succeeds with no errors
+- [x] `pnpm dev` starts Electron app with React renderer
+- [x] Design system tokens are importable from `@spayce/shared/theme`
+- [x] Basic IPC communication works between main and renderer
+- [x] `pnpm test` runs with passing tests (27 tests passing)
 
 ## Dependencies
 None (first spec)

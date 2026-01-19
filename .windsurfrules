@@ -634,15 +634,38 @@ Example:
 ## Project Context
 
 ## Product Context
-Name: 
-Description: 
-Target Users: 
-Problem: 
+Name: Spayce
+Description: AI-powered integrated application unifying browsing, learning, notes, local files, coding, and AI assistance
+Target Users: Knowledge workers, developers, students, researchers
+Problem: Fragmented context across multiple apps - browsers, note-taking, file management, and coding tools
 Scale: mvp
-Domain: 
+Domain: Productivity / Knowledge Management / Browser
 
 ## Tech Stack
-Not decided
+- Frontend: Not decided
+- Backend: Not decided
+- Database: SQLite (better-sqlite3)
+- Deployment: Not decided
 
 ## Architecture
-Type: 
+Type: desktop-monorepo
+
+## Active Specs
+- 001-project-foundation
+- 002-sidebar-navigation
+- 003-spaces-module
+- 004-context-menu
+- 005-create-space-flow
+- 006-keyboard-navigation
+
+## Codebase Structure
+# Codebase Structure
+
+## Project Type
+Electron-based desktop application with TypeScript, using a monorepo structure with pnpm workspaces. Features a space/workspace management system with file organization capabilities.
+
+## Key Directories
+- `packages/desktop/` - Electron main process, renderer, and preload scripts
+- `packages/shared/` - Shared UI components, stores, models, and theme system
+- `packages/desktop/src/main/` - Electron main process (window management, database, IPC)
+- `packages/sh

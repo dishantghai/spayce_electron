@@ -1,0 +1,12 @@
+[
+  {
+    "name": "remove empty KeyboardNavigationProvider.tsx",
+    "description": "Spec mentions KeyboardNavigationProvider context as future enhancement, but there's an empty KeyboardNavigationProvider.tsx file suggesting this was started but not completed",
+    "suggestion": "Either complete the KeyboardNavigationProvider implementation or remove the empty file and update spec to reflect current App.tsx-based approach",
+    "type": "CODE_BEHIND",
+    "priority": "P2",
+    "source_spec": "keyboard-navigation",
+    "created_at": "2026-01-20T01:19:20.764069",
+    "status": "pending"
+  }
+]

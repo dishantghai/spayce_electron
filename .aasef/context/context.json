@@ -1,45 +1,77 @@
 {
   "product": {
     "name": "Spayce",
-    "description": "Personal AI Powered Workspace and Knowledge Management System with integrated Browser,Notes,Workspaces, System Files and AI Assistant",
+    "description": "AI-powered integrated application unifying browsing, learning, notes, local files, coding, and AI assistance",
     "target_users": "Knowledge workers, developers, students, researchers",
-    "problem": "Disorganized bookmarks and poor context switching between browser and files",
+    "problem": "Fragmented context across multiple apps - browsers, note-taking, file management, and coding tools",
     "scale": "mvp",
-    "domain": "Productivity / Knowledge Management / Browser"
+    "domain": "Productivity / Knowledge Management / Browser",
+    "platforms": [
+      "macOS",
+      "Windows",
+      "Linux"
+    ]
   },
   "architecture": {
     "type": "desktop-monorepo",
     "tech_stack": {
       "desktop": "Electron 30+",
-      "ui": "React Native Web",
-      "build": "Vite",
-      "language": "TypeScript",
-      "database": "SurrealDB (embedded)",
-      "state": "Zustand + TanStack Query",
-      "auth": "Firebase Auth",
+      "ui": "React 18+",
+      "language": "TypeScript 5.x",
+      "build": "Vite 5+",
+      "state": "Zustand 4+",
+      "styling": "CSS Modules",
+      "database": "SQLite (better-sqlite3)",
       "icons": "Lucide React",
-      "styling": "Tailwind CSS",
-      "testing": "Vitest + Playwright"
+      "testing": "Vitest + React Testing Library"
     },
     "decisions": [
       "WebContentsView for Arc-style multi-tab browser",
-      "pnpm workspaces monorepo",
-      "Shared code in packages/shared, desktop in packages/desktop"
+      "pnpm workspaces monorepo structure",
+      "Shared code in packages/shared, desktop app in packages/desktop",
+      "CSS Modules for scoped component styling",
+      "SQLite for reliable embedded persistence"
     ]
   },
   "specs": [
-    "001-project-foundation"
+    "001-project-foundation",
+    "002-sidebar-navigation",
+    "003-spaces-module",
+    "004-context-menu",
+    "005-create-space-flow",
+    "006-keyboard-navigation"
   ],
   "stories": [],
   "codebase": {
-    "structure": "packages/shared + packages/desktop monorepo",
-    "last_synced": null
+    "structure": "# Codebase Structure\n\n## Project Type\nElectron-based desktop application with TypeScript, using a monorepo structure with pnpm workspaces. Features a space/workspace management system with file organization capabilities.\n\n## Key Directories\n- `packages/desktop/` - Electron main process, renderer, and preload scripts\n- `packages/shared/` - Shared UI components, stores, models, and theme system\n- `packages/desktop/src/main/` - Electron main process (window management, database, IPC)\n- `packages/sh",
+    "components_implemented": [
+      "TreeView",
+      "TreeItem",
+      "TreeItemIcon",
+      "Sidebar",
+      "SidebarTabs",
+      "BottomBar",
+      "SpaceHeader",
+      "PinnedLinksGrid",
+      "SpacesScreen",
+      "SpaceCard",
+      "SpacesBottomBar",
+      "ContextMenu",
+      "CreateSpaceView"
+    ],
+    "stores": [
+      "navigation",
+      "spaces"
+    ],
+    "last_synced": "2026-01-20T01:19:32.963222"
   },
   "decisions": [
-    "Use WebContentsView (not deprecated BrowserView)",
-    "SurrealDB for graph relations between Spaces and Items",
-    "Reuse existing spayce-app Firebase project"
+    "Use WebContentsView (not deprecated BrowserView) for tabs",
+    "SQLite over SurrealDB for simpler embedded database",
+    "CSS Modules over Tailwind for exact design control",
+    "Focus management with independent sidebar/spacesScreen contexts",
+    "Fixed and floating sidebar modes"
   ],
   "created_at": "2026-01-17T22:47:24.865263",
-  "updated_at": "2026-01-17T22:57:00.000000"
+  "updated_at": "2026-01-20T01:19:32.963256"
 }
