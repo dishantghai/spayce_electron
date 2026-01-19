@@ -19,7 +19,8 @@
 }
 
 .sidebar.floating.collapsed {
-    transform: translateX(-310px);
+    transform: translateX(-320px);
+    pointer-events: none;
 }
 
 /* Hover trigger area for collapsed floating sidebar */
@@ -69,7 +70,7 @@
 }
 
 .treeContainer::-webkit-scrollbar {
-    width: 8px;
+    width: 4px;
 }
 
 .treeContainer::-webkit-scrollbar-track {
@@ -77,8 +78,8 @@
 }
 
 .treeContainer::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
 }
 
 .treeContainer::-webkit-scrollbar-thumb:hover {

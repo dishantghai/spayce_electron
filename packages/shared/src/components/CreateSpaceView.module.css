@@ -364,10 +364,10 @@
     color: #9CA3AF;
 }
 
-/* Scrollbar styling */
+/* Scrollbar styling - subtle */
 .iconPickerContent::-webkit-scrollbar,
 .scrollContent::-webkit-scrollbar {
-    width: 6px;
+    width: 4px;
 }
 
 .iconPickerContent::-webkit-scrollbar-track,
@@ -377,11 +377,11 @@
 
 .iconPickerContent::-webkit-scrollbar-thumb,
 .scrollContent::-webkit-scrollbar-thumb {
-    background: #374151;
-    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
 }
 
 .iconPickerContent::-webkit-scrollbar-thumb:hover,
 .scrollContent::-webkit-scrollbar-thumb:hover {
-    background: #4B5563;
+    background: rgba(255, 255, 255, 0.15);
 }

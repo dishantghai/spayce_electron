@@ -19,3 +19,11 @@ export type { BottomBarProps } from './components/BottomBar';
 export { CreateSpaceView, getIconComponent } from './components/CreateSpaceView';
 export type { CreateSpaceViewProps } from './components/CreateSpaceView';
 export type { SidebarViewMode } from './components/Sidebar';
+
+// Spaces Screen Components
+export { SpaceCard, getSpaceIconComponent } from './components/spaces/SpaceCard';
+export type { SpaceCardProps } from './components/spaces/SpaceCard';
+export { SpacesScreen } from './components/spaces/SpacesScreen';
+export type { SpacesScreenProps } from './components/spaces/SpacesScreen';
+export { SpacesBottomBar } from './components/spaces/SpacesBottomBar';
+export type { SpacesBottomBarProps } from './components/spaces/SpacesBottomBar';

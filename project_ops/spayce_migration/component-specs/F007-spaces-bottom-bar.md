@@ -4,16 +4,39 @@
 
 | Property | Value |
 |----------|-------|
-| **Source Files** | `spaces_screen_hifi_v2.dart` (bottom action bar section) |
-| **Target File** | `src/renderer/components/spaces/SpacesBottomBar.tsx` |
+| **Source Files** | `spaces_screen_hifi_v2.dart` (_SpacesBottomNav class, lines 653-914) |
+| **Target File** | `packages/shared/src/components/spaces/SpacesBottomBar.tsx` |
+| **CSS Module** | `packages/shared/src/components/spaces/SpacesScreen.module.css` (shared styles) |
 | **Screenshot Reference** | `/Users/Shared/ALL WORKSPACE/projects/spayce_electron/project_ops/HIFI_UI_DESIGN_SCREENS/Spaces Screen Bottom Bar.png` |
-| **Complexity** | Low (simple bar with actions) |
+| **Complexity** | Medium (tabs, drag-to-reorder, animations) |
+| **Status** | ✅ IMPLEMENTED |
 
 ---
 
 ## Component Description
 
-Action bar at the bottom of Spaces Screen. Shows when items are selected, provides bulk actions. When no selection, shows "Add Space" button.
+Navigation bar at the bottom of Spaces Screen showing all spaces as tabs. Each tab displays the space icon and name. Supports drag-to-reorder.
+
+### Key Flutter Implementation Details (from _SpacesBottomNav in spaces_screen_hifi_v2.dart)
+
+1. **Structure**:
+   - Horizontal scrollable row of space tabs
+   - Each tab: icon + name with accent color when active
+   - Add space button (+) at the end
+   - Drop indicator line appears between tabs during drag
+
+2. **Drag-to-Reorder (F024)**:
+   - `_draggedIndex` - Index of tab being dragged
+   - `_dropTargetSlot` - Calculated insertion point
+   - Arc-style animated gap opens at drop position
+   - Feedback widget shows dragged tab with glow effect
+   - `reorderSpaces()` called on successful drop
+
+3. **Tab Button States**:
+   - Default: transparent background, muted text/icon
+   - Hover: subtle background highlight
+   - Active: accent color background (20% opacity), accent border, accent text/icon
+   - Dragging: reduced opacity (0.3)
 
 ---
 
@@ -21,23 +44,50 @@ Action bar at the bottom of Spaces Screen. Shows when items are selected, provid
 
 ```json
 {
-  "bar": {
-    "height": 56,
-    "padding": 16,
-    "background": "#1A1628",
-    "borderTop": "#374151"
+  "container": {
+    "padding": "12px 16px",
+    "margin": 24,
+    "background": "#131020",
+    "borderRadius": 12,
+    "border": "1px solid #1F2937"
   },
-  "button": {
-    "height": 36,
-    "paddingHorizontal": 16,
+  "spaceTab": {
+    "padding": "8px 16px",
     "borderRadius": 8,
-    "gap": 8
+    "gap": 8,
+    "iconSize": 16,
+    "fontSize": 13,
+    "fontWeight": 500,
+    "textColor": "#9CA3AF",
+    "activeBackground": "{accentColor}20",
+    "activeBorder": "1.5px solid {accentColor}",
+    "activeTextColor": "{accentColor}",
+    "hoverBackground": "rgba(45, 38, 69, 0.5)"
   },
-  "colors": {
-    "primaryButton": "#6D5AE6",
-    "primaryButtonHover": "#5D4AD6",
-    "secondaryButton": "transparent",
-    "secondaryButtonBorder": "#374151"
+  "addButton": {
+    "size": 32,
+    "borderRadius": 8,
+    "border": "1px solid #374151",
+    "iconSize": 16,
+    "iconColor": "#6B7280",
+    "hoverBackground": "rgba(45, 38, 69, 0.5)",
+    "hoverIconColor": "#E5E7EB"
+  },
+  "dropIndicator": {
+    "width": 3,
+    "height": 24,
+    "expandedWidth": 40,
+    "color": "#6D5AE6",
+    "borderRadius": 2,
+    "glowBlur": 6,
+    "glowOpacity": 0.5
+  },
+  "dragFeedback": {
+    "background": "{accentColor}30",
+    "border": "2px solid {accentColor}",
+    "glowBlur": 12,
+    "glowSpread": 2,
+    "glowOpacity": 0.6
   }
 }
 ```
@@ -111,9 +161,13 @@ Container(
 
 ## Acceptance Criteria
 
-- [ ] Bar renders at bottom of spaces screen
-- [ ] "New Space" button always visible
-- [ ] Selection count shows when items selected
-- [ ] Delete button appears with selection
-- [ ] Button hover/press states work
-- [ ] Actions trigger correct handlers
+- [x] Bar renders at bottom of spaces screen with correct styling
+- [x] All spaces shown as tabs with icon + name
+- [x] Active tab has accent color background/border/text
+- [x] Tabs respond to hover with background highlight
+- [x] Add space button (+) visible at end
+- [x] Click tab selects that space
+- [x] Tabs are draggable (HTML5 drag)
+- [x] Drop indicator shows insertion point during drag
+- [ ] Animated gap opens at drop position (CSS transition implemented)
+- [ ] Haptic feedback on drag (desktop only - not applicable to web)

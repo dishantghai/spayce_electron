@@ -47,7 +47,11 @@ export function BottomBar({
             <div className={styles.divider} />
 
             {/* Profile button */}
-            <button className={styles.profileButton} onClick={onSettingsClick}>
+            <button
+                className={styles.profileButton}
+                onClick={onSettingsClick}
+                title="Settings"
+            >
                 <div className={styles.avatar}>
                     {userName.charAt(0).toUpperCase()}
                 </div>

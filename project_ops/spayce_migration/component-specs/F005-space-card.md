@@ -5,21 +5,39 @@
 | Property | Value |
 |----------|-------|
 | **Source Files** | `space_card_hifi_v2.dart` (1870 lines) |
-| **Target File** | `src/renderer/components/spaces/SpaceCard.tsx` |
+| **Target File** | `packages/shared/src/components/spaces/SpaceCard.tsx` |
+| **CSS Module** | `packages/shared/src/components/spaces/SpaceCard.module.css` |
 | **Screenshot Reference** | `/Users/Shared/ALL WORKSPACE/projects/spayce_electron/project_ops/HIFI_UI_DESIGN_SCREENS/Space Card Design.png` |
 | **Complexity** | High (tree structure, drag-drop, context menus, inline edit) |
+| **Status** | ✅ IMPLEMENTED |
 
 ---
 
 ## Component Description
 
 Card displaying a single space with:
-- Header: space icon + name + actions menu
-- Content: tree view of space items (folders, links, local folders)
-- Expand/collapse folders
-- Context menu on right-click
-- Inline rename on double-click
-- Drag and drop reordering
+- **Header**: Space icon (20px) + name (UPPERCASE, 12px, 700 weight, 1.2px letter-spacing) in accent color
+- **Content**: Scrollable tree view of space items (folders, links, local folders, local files)
+- **Expand/collapse folders**: Click to toggle, with smooth animation
+- **Context menu**: Right-click for actions (Add subfolder, Add link, Rename, Copy, Paste, Delete)
+- **Inline rename**: Double-click to edit item name
+- **Actions bar**: Bottom bar with quick actions (only shown for selected card)
+- **Hover actions**: FolderPlus, Link, MoreVertical icons appear on item hover
+
+### Key Flutter Implementation Details (from space_card_hifi_v2.dart)
+
+1. **Providers used**:
+   - `expandedCardFoldersProvider` - Tracks expanded folder IDs
+   - `cardInlineRenameItemIdProvider` - Tracks item being renamed
+   - `cardInlineInputProvider` - Tracks inline input state for new items
+   - `spacesScreenActiveSpaceIndexProvider` - Independent from sidebar active space
+   - `keyboardFocusContextProvider` - Determines which area has keyboard focus
+
+2. **Selection states**:
+   - `isSelected` - Link currently open in browser (purple highlight with glow)
+   - `isKeyboardSelected` - Item selected via keyboard navigation (subtle highlight)
+   - `isMultiSelected` - Part of multi-selection
+   - `hasContextMenuOpen` - Context menu visible for this item
 
 ---
 
@@ -28,26 +46,60 @@ Card displaying a single space with:
 ```json
 {
   "card": {
-    "width": 288,
-    "minHeight": 200,
-    "maxHeight": 500,
+    "width": "dynamic (min 288px, responsive to fit 3 cards)",
     "borderRadius": 12,
     "background": "#1A1628",
-    "padding": 16
+    "borderDefault": "1px solid #1F2937",
+    "borderSelected": "2px solid {accentColor}30"
   },
   "header": {
-    "iconSize": 32,
-    "gap": 12,
-    "marginBottom": 16
+    "padding": 12,
+    "iconSize": 20,
+    "gap": 8,
+    "titleFontSize": 12,
+    "titleFontWeight": 700,
+    "titleLetterSpacing": "1.2px",
+    "titleTransform": "uppercase",
+    "borderBottom": "1px solid #1F2937"
   },
-  "tree": {
+  "content": {
+    "padding": 12,
+    "scrollbar": {
+      "width": 6,
+      "thumbColor": "#374151",
+      "thumbHoverColor": "#4B5563"
+    }
+  },
+  "treeItem": {
+    "padding": "6px 8px",
     "indent": 16,
-    "rowHeight": 28,
-    "iconSize": 16
+    "iconSize": 16,
+    "faviconSize": 14,
+    "fontSize": 12,
+    "fontWeight": 400,
+    "gap": 8,
+    "borderRadius": 6
   },
   "colors": {
-    "hoverBackground": "#2D2645",
-    "selectedBackground": "#3D3655"
+    "textPrimary": "#E5E7EB",
+    "textMuted": "#6B7280",
+    "hoverBackground": "rgba(45, 38, 69, 0.3)",
+    "selectedBackground": "rgba(109, 90, 230, 0.08)",
+    "selectedBorder": "rgba(109, 90, 230, 0.5)",
+    "keyboardSelectedBackground": "rgba(45, 38, 69, 0.3)"
+  },
+  "actionsBar": {
+    "padding": "10px 12px",
+    "borderTop": "1px solid #1F2937",
+    "iconSize": 18,
+    "buttonPadding": 8,
+    "buttonRadius": 6
+  },
+  "hoverActions": {
+    "size": 18,
+    "iconSize": 10,
+    "gap": 2,
+    "radius": 3
   }
 }
 ```
@@ -162,10 +214,15 @@ interface SpaceCardState {
 
 ## Acceptance Criteria
 
-- [ ] Card renders with correct dimensions and styling
-- [ ] Tree items expand/collapse with animation
-- [ ] Chevron rotates on expand
-- [ ] Hover states work on card and items
-- [ ] Context menu shows on right-click
-- [ ] Inline rename works on double-click
-- [ ] Drag and drop reorders items (can defer to F008)
+- [x] Card renders with correct dimensions and styling
+- [x] Header shows space icon + uppercase name in accent color
+- [x] Tree items render with proper indentation (16px per level)
+- [x] Folders expand/collapse on click
+- [x] Hover states work on card and items
+- [x] Hover actions appear (FolderPlus, Link, MoreVertical)
+- [x] Context menu shows on right-click
+- [x] Actions bar shows at bottom for selected card
+- [x] Different item types render with appropriate icons
+- [x] Favicon images load for links with fallback to Globe icon
+- [ ] Inline rename works on double-click (TODO)
+- [ ] Drag and drop reorders items (TODO - F008)

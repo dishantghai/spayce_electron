@@ -25,6 +25,7 @@ export interface SidebarProps {
     activeTab?: SidebarTabId;
     userName?: string;
     isVisible?: boolean;
+    hasFocus?: boolean;
     onSpaceSelect?: (index: number) => void;
     onTabChange?: (tab: SidebarTabId) => void;
     onModeToggle?: () => void;
@@ -36,6 +37,7 @@ export interface SidebarProps {
     onAddLink?: (spaceId: string) => void;
     onEditSpace?: (space: Space, spaceData: { name: string; iconName: string; accentColor: string }) => void;
     onSettingsClick?: () => void;
+    onFocusChange?: (hasFocus: boolean) => void;
 }
 
 /**
@@ -50,6 +52,7 @@ export function Sidebar({
     activeTab = 'spaces',
     userName,
     isVisible = true,
+    hasFocus = true,
     onSpaceSelect,
     onTabChange,
     onModeToggle,
@@ -61,6 +64,7 @@ export function Sidebar({
     onAddLink,
     onEditSpace,
     onSettingsClick,
+    onFocusChange,
 }: SidebarProps): React.ReactElement {
     const sidebarRef = useRef<HTMLElement>(null);
     const [viewMode, setViewMode] = useState<SidebarViewMode>('normal');
@@ -259,6 +263,7 @@ export function Sidebar({
     // Keyboard navigation - matching Flutter behavior
     useEffect(() => {
         if (viewMode !== 'normal') return; // Skip keyboard nav in create/edit mode
+        if (!hasFocus) return; // Skip if sidebar doesn't have focus
 
         const handleKeyDown = (e: KeyboardEvent) => {
             // Skip if user is in an input field
@@ -346,17 +351,18 @@ export function Sidebar({
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [viewMode, activeSpaceIndex, spaces.length, onSpaceSelect, handleAddSpace, selectPreviousItem, selectNextItem, handleRightArrow, handleLeftArrow, handleEnterKey]);
+    }, [viewMode, activeSpaceIndex, spaces.length, onSpaceSelect, handleAddSpace, selectPreviousItem, selectNextItem, handleRightArrow, handleLeftArrow, handleEnterKey, hasFocus]);
 
     const handleItemClick = useCallback(
         (item: SpaceItem) => {
             // Sync mouse click with keyboard focus state
             setFocusedItemId(item.id);
+            onFocusChange?.(true); // Sidebar takes focus on item click
             if (activeSpace) {
                 onItemClick?.(item, activeSpace.id);
             }
         },
-        [activeSpace, onItemClick]
+        [activeSpace, onItemClick, onFocusChange]
     );
 
     const handleItemContextMenu = useCallback(
@@ -427,7 +433,11 @@ export function Sidebar({
                         onMouseEnter={() => onVisibilityChange?.(true)}
                     />
                 )}
-                <aside ref={sidebarRef} className={sidebarClasses}>
+                <aside
+                    ref={sidebarRef}
+                    className={sidebarClasses}
+                    onClick={() => onFocusChange?.(true)}
+                >
                     <div className={styles.emptyState}>No spaces available</div>
                 </aside>
             </>
@@ -442,7 +452,11 @@ export function Sidebar({
                     onMouseEnter={() => onVisibilityChange?.(true)}
                 />
             )}
-            <aside ref={sidebarRef} className={sidebarClasses}>
+            <aside
+                ref={sidebarRef}
+                className={sidebarClasses}
+                onClick={() => onFocusChange?.(true)}
+            >
                 {viewMode !== 'normal' ? (
                     <CreateSpaceView
                         existingSpaces={spaces}

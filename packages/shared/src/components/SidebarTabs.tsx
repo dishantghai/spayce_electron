@@ -35,6 +35,7 @@ export function SidebarTabs({ activeTab, onTabChange }: SidebarTabsProps): React
                         className={`${styles.tab} ${isActive ? styles.active : ''}`}
                         onClick={() => onTabChange(tab.id)}
                         aria-current={isActive ? 'page' : undefined}
+                        title={tab.label}
                     >
                         <Icon size={18} className={styles.icon} />
                         <span className={styles.label}>{tab.label}</span>

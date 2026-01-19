@@ -6,6 +6,7 @@ import {
     SpaceItemType,
     ContextMenu,
     Sidebar,
+    SpacesScreen,
 } from '@spayce/shared';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/shared';
 import * as LucideIcons from 'lucide-react';
@@ -431,10 +432,41 @@ function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMen
 export function App(): React.ReactElement {
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [spaces, setSpaces] = useState<Space[]>(DEMO_SPACES);
-    const [activeSpaceIndex, setActiveSpaceIndex] = useState(0);
+    // Sidebar and SpacesScreen have independent active space indices
+    const [sidebarActiveSpaceIndex, setSidebarActiveSpaceIndex] = useState(0);
+    const [spacesScreenActiveSpaceIndex, setSpacesScreenActiveSpaceIndex] = useState(0);
     const [sidebarMode, setSidebarMode] = useState<SidebarMode>('fixed');
     const [sidebarVisible, setSidebarVisible] = useState(true);
     const [activeTab, setActiveTab] = useState<SidebarTabId>('spaces');
+    // Focus context: 'sidebar' or 'spacesScreen'
+    // Rule 0: Default to 'sidebar' on app open
+    const [focusContext, setFocusContext] = useState<'sidebar' | 'spacesScreen'>('sidebar');
+
+    /**
+     * KEYBOARD NAVIGATION FOCUS RULES:
+     * 
+     * Rule 0: On app open, focus defaults to Sidebar (regardless of mode)
+     * Rule 1: Click on Sidebar or any item within -> focus moves to Sidebar
+     * Rule 2: Click on SpacesScreen or any item within -> focus moves to SpacesScreen
+     * Rule 3: In Floating mode, when sidebar opens -> focus moves to Sidebar
+     * Rule 4: In Floating mode, when sidebar closes AND Spaces tab is active -> focus moves to SpacesScreen
+     */
+
+    // Handle sidebar visibility changes (Rule 3 & 4)
+    const handleSidebarVisibilityChange = (visible: boolean) => {
+        setSidebarVisible(visible);
+        if (sidebarMode === 'floating') {
+            if (visible) {
+                // Rule 3: Floating sidebar opened -> focus to sidebar
+                setFocusContext('sidebar');
+            } else {
+                // Rule 4: Floating sidebar closed -> focus to SpacesScreen if Spaces tab active
+                if (activeTab === 'spaces') {
+                    setFocusContext('spacesScreen');
+                }
+            }
+        }
+    };
     const [contextMenu, setContextMenu] = useState<{
         item: SpaceItem;
         spaceId: string;
@@ -445,6 +477,7 @@ export function App(): React.ReactElement {
     const handleItemClick = (item: SpaceItem, spaceId: string) => {
         console.log('Item clicked:', item.name, 'in space:', spaceId);
         setSelectedId(item.id);
+        setFocusContext('sidebar'); // Sidebar item click sets focus to sidebar
     };
 
     const handleContextMenu = (item: SpaceItem, spaceId: string, event: React.MouseEvent) => {
@@ -491,7 +524,7 @@ export function App(): React.ReactElement {
         };
 
         setSpaces(prevSpaces => [...prevSpaces, newSpace]);
-        setActiveSpaceIndex(spaces.length); // Switch to the new space
+        setSidebarActiveSpaceIndex(spaces.length); // Switch to the new space in sidebar
         console.log('Created new space:', newSpace);
     };
 
@@ -521,24 +554,35 @@ export function App(): React.ReactElement {
                 backgroundColor: SpayceColors.backgroundDark,
             }}
         >
-            {/* Sidebar with F001 component */}
+            {/* Sidebar with F001 component - position absolute when floating to not take space */}
             <div
                 style={{
-                    boxShadow: '10px 0 30px -5px rgba(0, 0, 0, 0.5)',
+                    boxShadow: sidebarMode === 'floating' && !sidebarVisible
+                        ? 'none'
+                        : '10px 0 30px -5px rgba(0, 0, 0, 0.5)',
+                    ...(sidebarMode === 'floating' ? {
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        zIndex: 100,
+                        pointerEvents: sidebarVisible ? 'auto' : 'none',
+                    } : {}),
                 }}
             >
                 <Sidebar
                     spaces={spaces}
-                    activeSpaceIndex={activeSpaceIndex}
+                    activeSpaceIndex={sidebarActiveSpaceIndex}
                     selectedItemId={selectedId}
                     mode={sidebarMode}
                     activeTab={activeTab}
                     userName="dishant ghai"
                     isVisible={sidebarVisible}
-                    onSpaceSelect={setActiveSpaceIndex}
+                    hasFocus={focusContext === 'sidebar'}
+                    onSpaceSelect={setSidebarActiveSpaceIndex}
                     onTabChange={setActiveTab}
                     onModeToggle={handleModeToggle}
-                    onVisibilityChange={setSidebarVisible}
+                    onVisibilityChange={handleSidebarVisibilityChange}
                     onItemClick={handleItemClick}
                     onItemContextMenu={handleContextMenu}
                     onCreateSpace={handleCreateSpace}
@@ -546,6 +590,9 @@ export function App(): React.ReactElement {
                     onAddLink={handleAddLink}
                     onEditSpace={handleUpdateSpace}
                     onSettingsClick={handleSettingsClick}
+                    onFocusChange={(hasFocus) => {
+                        if (hasFocus) setFocusContext('sidebar');
+                    }}
                 />
             </div>
 
@@ -554,40 +601,73 @@ export function App(): React.ReactElement {
                 style={{
                     flex: 1,
                     display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    flexDirection: 'column',
                     backgroundColor: SpayceColors.backgroundDark,
+                    overflow: 'hidden',
                 }}
             >
-                <div style={{ textAlign: 'center' }}>
-                    <h2
-                        style={{
-                            fontSize: 24,
-                            fontWeight: 600,
-                            color: SpayceColors.textPrimary,
+                {activeTab === 'spaces' ? (
+                    <SpacesScreen
+                        spaces={spaces}
+                        activeSpaceIndex={spacesScreenActiveSpaceIndex}
+                        selectedItemId={null}
+                        hasFocus={focusContext === 'spacesScreen'}
+                        onSpaceSelect={setSpacesScreenActiveSpaceIndex}
+                        onItemClick={(item, spaceId) => {
+                            console.log('SpacesScreen item clicked:', item.name, 'in space:', spaceId);
                         }}
-                    >
-                        F001: Sidebar Navigation Tree
-                    </h2>
-                    <p
-                        style={{
-                            fontSize: 14,
-                            color: SpayceColors.textSecondary,
-                            marginTop: 8,
+                        onItemContextMenu={handleContextMenu}
+                        onAddSpace={() => {
+                            // Trigger create space view in sidebar
+                            console.log('Add space clicked from SpacesScreen');
                         }}
-                    >
-                        Click items in sidebar or right-click for context menu
-                    </p>
-                    <p
-                        style={{
-                            fontSize: 12,
-                            color: SpayceColors.textMuted,
-                            marginTop: 16,
+                        onAddFolder={handleAddFolder}
+                        onAddLink={handleAddLink}
+                        onReorderSpaces={(oldIndex, newIndex) => {
+                            setSpaces(prevSpaces => {
+                                const newSpaces = [...prevSpaces];
+                                const [removed] = newSpaces.splice(oldIndex, 1);
+                                newSpaces.splice(newIndex, 0, removed);
+                                return newSpaces.map((s, i) => ({ ...s, order: i }));
+                            });
                         }}
-                    >
-                        Selected: {selectedId ?? 'None'}
-                    </p>
-                </div>
+                        onFocusChange={(hasFocus) => {
+                            if (hasFocus) setFocusContext('spacesScreen');
+                        }}
+                    />
+                ) : (
+                    <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}>
+                        <div style={{ textAlign: 'center' }}>
+                            <h2
+                                style={{
+                                    fontSize: 24,
+                                    fontWeight: 600,
+                                    color: SpayceColors.textPrimary,
+                                }}
+                            >
+                                {activeTab === 'browser' ? 'Browser View' :
+                                    activeTab === 'workspace' ? 'Workspace View' :
+                                        'Settings'}
+                            </h2>
+                            <p
+                                style={{
+                                    fontSize: 14,
+                                    color: SpayceColors.textSecondary,
+                                    marginTop: 8,
+                                }}
+                            >
+                                {activeTab === 'browser' ? 'Web browser content will appear here' :
+                                    activeTab === 'workspace' ? 'Code workspace will appear here' :
+                                        'Application settings'}
+                            </p>
+                        </div>
+                    </div>
+                )}
             </main>
 
             {/* Context Menu */}

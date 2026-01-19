@@ -1,0 +1,245 @@
+/* SpacesScreen.module.css - Pixel-perfect from Flutter implementation */
+
+.spacesScreen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background-color: #0F0B1A;
+    overflow: hidden;
+}
+
+/* Cards Container - Horizontal Scrolling */
+.cardsContainer {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 24px;
+    display: flex;
+    gap: 20px;
+    scroll-behavior: smooth;
+}
+
+.cardsContainer::-webkit-scrollbar {
+    height: 4px;
+}
+
+.cardsContainer::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cardsContainer::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+}
+
+.cardsContainer::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Individual Card Wrapper */
+.cardWrapper {
+    flex-shrink: 0;
+    height: 100%;
+    transition: transform 200ms ease-out, box-shadow 200ms ease-out;
+}
+
+.cardWrapper:hover {
+    transform: translateY(-2px);
+}
+
+/* Drop Target State */
+.cardWrapperDropTarget {
+    border: 3px solid var(--space-accent-color, #6D5AE6);
+    border-radius: 15px;
+    box-shadow: 0 0 16px rgba(109, 90, 230, 0.4);
+}
+
+/* Bottom Navigation Bar - Centered and wrapped */
+.bottomNavContainer {
+    padding: 24px;
+    padding-top: 16px;
+    display: flex;
+    justify-content: center;
+}
+
+.bottomNav {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 16px;
+    background-color: #131020;
+    border-radius: 12px;
+    border: 1px solid #1F2937;
+    gap: 4px;
+}
+
+.bottomNav::-webkit-scrollbar {
+    height: 0;
+}
+
+/* Space Tab Button */
+.spaceTab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.spaceTab:hover {
+    background-color: rgba(45, 38, 69, 0.5);
+}
+
+.spaceTabActive {
+    background-color: color-mix(in srgb, var(--tab-color, #6D5AE6) 20%, transparent);
+    border: 1.5px solid var(--tab-color, #6D5AE6);
+}
+
+.spaceTabIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spaceTabName {
+    font-size: 13px;
+    font-weight: 500;
+    color: #9CA3AF;
+    transition: color 150ms ease;
+}
+
+.spaceTabActive .spaceTabName {
+    color: var(--tab-color, #6D5AE6);
+}
+
+/* Add Space Button */
+.addSpaceButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #374151;
+    background: transparent;
+    cursor: pointer;
+    color: #6B7280;
+    transition: background-color 150ms ease, color 150ms ease;
+    flex-shrink: 0;
+    margin-left: 4px;
+}
+
+.addSpaceButton:hover {
+    background-color: rgba(45, 38, 69, 0.5);
+    color: #E5E7EB;
+}
+
+/* Dragging States */
+.spaceTabDragging {
+    opacity: 0.3;
+}
+
+.spaceTabDragFeedback {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background-color: color-mix(in srgb, var(--tab-color, #6D5AE6) 30%, transparent);
+    border: 2px solid var(--tab-color, #6D5AE6);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--tab-color, #6D5AE6) 60%, transparent);
+}
+
+/* Drop Indicator Line */
+.dropIndicator {
+    width: 3px;
+    height: 24px;
+    background-color: #6D5AE6;
+    border-radius: 2px;
+    box-shadow: 0 0 6px rgba(109, 90, 230, 0.5);
+    opacity: 0;
+    transition: opacity 200ms ease, width 200ms ease;
+}
+
+.dropIndicatorActive {
+    opacity: 1;
+    width: 40px;
+}
+
+/* Loading State */
+.loadingContainer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #1F2937;
+    border-top-color: #6D5AE6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error State */
+.errorContainer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6B7280;
+    font-size: 14px;
+}
+
+/* Empty State */
+.emptyState {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: #6B7280;
+}
+
+.emptyStateText {
+    font-size: 16px;
+    color: #9CA3AF;
+}
+
+.emptyStateButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 8px;
+    background-color: #6D5AE6;
+    border: none;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.emptyStateButton:hover {
+    background-color: #5D4AD6;
+}
+
+/* Focus outline for keyboard navigation - removed blue border */
+.spacesScreen:focus {
+    outline: none;
+}
+
+.spacesScreen:focus-visible {
+    outline: none;
+}
