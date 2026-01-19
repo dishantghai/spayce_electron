@@ -1,0 +1,35 @@
+{
+    "$schema": "design-tokens",
+    "source": "spayce/frontend/lib/core/theme/spayce_icons.dart",
+    "extractedAt": "2026-01-19",
+    "iconLibrary": "lucide-react",
+    "note": "Flutter uses lucide_icons package, React should use lucide-react",
+    "sizes": {
+        "xs": 14,
+        "sm": 16,
+        "md": 18,
+        "lg": 20,
+        "xl": 24,
+        "xxl": 32
+    },
+    "semantic": {
+        "treeItem": 16,
+        "navButton": 18,
+        "spaceIcon": 32,
+        "tabIcon": 16,
+        "actionButton": 18
+    },
+    "cssVariables": {
+        "--icon-xs": "14px",
+        "--icon-sm": "16px",
+        "--icon-md": "18px",
+        "--icon-lg": "20px",
+        "--icon-xl": "24px",
+        "--icon-xxl": "32px",
+        "--icon-tree": "16px",
+        "--icon-nav": "18px",
+        "--icon-space": "32px",
+        "--icon-tab": "16px",
+        "--icon-action": "18px"
+    }
+}

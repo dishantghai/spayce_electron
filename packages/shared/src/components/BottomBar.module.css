@@ -1,0 +1,110 @@
+.bottomBar {
+    padding: 8px 12px;
+    border-top: 1px solid #1F2937;
+}
+
+.spacesRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 28px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.spacesRow::-webkit-scrollbar {
+    display: none;
+}
+
+.spaceIcon {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 150ms ease;
+    padding: 0;
+    background: none;
+}
+
+.spaceIcon.active {
+    border-width: 2px;
+}
+
+.addButton {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #374151;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #6B7280;
+    transition: all 150ms ease;
+    padding: 0;
+}
+
+.addButton:hover {
+    border-color: #6B7280;
+    color: #E5E7EB;
+}
+
+.divider {
+    height: 1px;
+    background-color: #1F2937;
+    margin: 8px 0;
+}
+
+.profileButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.profileButton:hover {
+    background-color: #2D2645;
+}
+
+.avatar {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #6D5AE6, #EC4899);
+    border-radius: 12px;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.userName {
+    flex: 1;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 500;
+    color: #E5E7EB;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settingsIcon {
+    color: #6B7280;
+    flex-shrink: 0;
+}

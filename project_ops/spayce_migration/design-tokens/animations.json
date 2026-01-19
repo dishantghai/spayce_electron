@@ -1,0 +1,63 @@
+{
+    "$schema": "design-tokens",
+    "source": "spayce/frontend/lib/core/theme/spayce_animations.dart",
+    "extractedAt": "2026-01-19",
+    "durations": {
+        "quick": 100,
+        "hover": 150,
+        "expand": 200,
+        "fade": 200,
+        "sidebarSlide": 250,
+        "pageTransition": 300
+    },
+    "curves": {
+        "standard": "ease-in-out",
+        "decelerate": "ease-out",
+        "accelerate": "ease-in"
+    },
+    "flutterToCss": {
+        "Curves.easeInOut": "cubic-bezier(0.42, 0, 0.58, 1)",
+        "Curves.decelerate": "cubic-bezier(0, 0, 0.2, 1)",
+        "Curves.easeIn": "cubic-bezier(0.42, 0, 1, 1)",
+        "Curves.easeOut": "cubic-bezier(0, 0, 0.58, 1)",
+        "Curves.easeOutCubic": "cubic-bezier(0.33, 1, 0.68, 1)"
+    },
+    "cssVariables": {
+        "--duration-quick": "100ms",
+        "--duration-hover": "150ms",
+        "--duration-expand": "200ms",
+        "--duration-fade": "200ms",
+        "--duration-sidebar": "250ms",
+        "--duration-page": "300ms",
+        "--ease-standard": "cubic-bezier(0.42, 0, 0.58, 1)",
+        "--ease-decelerate": "cubic-bezier(0, 0, 0.2, 1)",
+        "--ease-accelerate": "cubic-bezier(0.42, 0, 1, 1)"
+    },
+    "componentAnimations": {
+        "treeExpand": {
+            "duration": 200,
+            "curve": "ease-out",
+            "property": "height, opacity"
+        },
+        "iconRotate": {
+            "duration": 200,
+            "curve": "ease-out",
+            "property": "transform"
+        },
+        "hoverFade": {
+            "duration": 150,
+            "curve": "ease",
+            "property": "background-color, opacity"
+        },
+        "sidebarSlide": {
+            "duration": 250,
+            "curve": "ease-in-out",
+            "property": "transform"
+        },
+        "cardHover": {
+            "duration": 200,
+            "curve": "ease-out",
+            "property": "transform, box-shadow"
+        }
+    }
+}

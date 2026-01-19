@@ -1,0 +1,111 @@
+{
+    "$schema": "design-tokens",
+    "source": "spayce/frontend/lib/core/theme/spayce_typography.dart",
+    "extractedAt": "2026-01-19",
+    "fontFamilies": {
+        "primary": "Inter",
+        "mono": "JetBrains Mono"
+    },
+    "fontWeights": {
+        "normal": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700
+    },
+    "textStyles": {
+        "navButton": {
+            "fontSize": 14,
+            "fontWeight": 500,
+            "color": "textPrimary"
+        },
+        "sectionHeader": {
+            "fontSize": 14,
+            "fontWeight": 700,
+            "letterSpacing": 0.5,
+            "color": "textSecondary",
+            "textTransform": "uppercase"
+        },
+        "treeItem": {
+            "fontSize": 14,
+            "fontWeight": 500,
+            "color": "textPrimary"
+        },
+        "treeSubItem": {
+            "fontSize": 14,
+            "fontWeight": 400,
+            "color": "textSecondary"
+        },
+        "cardHeader": {
+            "fontSize": 12,
+            "fontWeight": 600,
+            "letterSpacing": 0.5,
+            "color": "textSecondary",
+            "textTransform": "uppercase"
+        },
+        "profileName": {
+            "fontSize": 14,
+            "fontWeight": 500,
+            "color": "textPrimary"
+        },
+        "urlBar": {
+            "fontSize": 14,
+            "fontWeight": 400,
+            "fontFamily": "mono",
+            "color": "textSecondary"
+        },
+        "tabTitle": {
+            "fontSize": 13,
+            "fontWeight": 500,
+            "color": "textPrimary"
+        },
+        "body": {
+            "fontSize": 14,
+            "fontWeight": 400,
+            "color": "textPrimary"
+        },
+        "bodySmall": {
+            "fontSize": 12,
+            "fontWeight": 400,
+            "color": "textSecondary"
+        },
+        "headingLarge": {
+            "fontSize": 24,
+            "fontWeight": 700,
+            "color": "textPrimary"
+        },
+        "headingMedium": {
+            "fontSize": 18,
+            "fontWeight": 600,
+            "color": "textPrimary"
+        },
+        "headingSmall": {
+            "fontSize": 16,
+            "fontWeight": 600,
+            "color": "textPrimary"
+        },
+        "button": {
+            "fontSize": 14,
+            "fontWeight": 600,
+            "color": "textPrimary"
+        },
+        "caption": {
+            "fontSize": 11,
+            "fontWeight": 400,
+            "color": "textMuted"
+        }
+    },
+    "cssClasses": {
+        ".text-nav-button": "font-size: 14px; font-weight: 500; color: var(--color-text-primary);",
+        ".text-section-header": "font-size: 14px; font-weight: 700; letter-spacing: 0.5px; color: var(--color-text-secondary); text-transform: uppercase;",
+        ".text-tree-item": "font-size: 14px; font-weight: 500; color: var(--color-text-primary);",
+        ".text-tree-sub-item": "font-size: 14px; font-weight: 400; color: var(--color-text-secondary);",
+        ".text-card-header": "font-size: 12px; font-weight: 600; letter-spacing: 0.5px; color: var(--color-text-secondary); text-transform: uppercase;",
+        ".text-body": "font-size: 14px; font-weight: 400; color: var(--color-text-primary);",
+        ".text-body-small": "font-size: 12px; font-weight: 400; color: var(--color-text-secondary);",
+        ".text-heading-lg": "font-size: 24px; font-weight: 700; color: var(--color-text-primary);",
+        ".text-heading-md": "font-size: 18px; font-weight: 600; color: var(--color-text-primary);",
+        ".text-heading-sm": "font-size: 16px; font-weight: 600; color: var(--color-text-primary);",
+        ".text-button": "font-size: 14px; font-weight: 600; color: var(--color-text-primary);",
+        ".text-caption": "font-size: 11px; font-weight: 400; color: var(--color-text-muted);"
+    }
+}

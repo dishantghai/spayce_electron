@@ -1,0 +1,252 @@
+{
+    "basePath": "/Users/Shared/ALL WORKSPACE/projects/spayce_electron/project_ops/HIFI_UI_DESIGN_SCREENS",
+    "description": "Maps each component to its reference screenshot(s) for visual verification during implementation",
+    "components": {
+        "F001-sidebar-nav-tree": {
+            "primary": "Sidebar with Local Imported Folders.png",
+            "secondary": [
+                "App Side Bar with Spaces Screen Open.png"
+            ],
+            "focus": "The tree view section showing spaces with nested folders and links",
+            "keyElements": [
+                "Tree indentation (16px per level)",
+                "Expand/collapse chevrons",
+                "Folder and link icons",
+                "Hover state background"
+            ]
+        },
+        "F002-sidebar-bottom-bar": {
+            "primary": "Create New Space from Bottom Bar in App Sidebar.png",
+            "secondary": [
+                "App Side Bar with Spaces Screen Open.png"
+            ],
+            "focus": "The bottom bar showing space icons, nav dots, add button, and user avatar",
+            "keyElements": [
+                "Circular space icons (32px)",
+                "Nav dot separators (4px)",
+                "Plus button with border",
+                "User profile avatar"
+            ]
+        },
+        "F003-create-space-flow": {
+            "primary": "Create New Space Choose Space Icon.png",
+            "secondary": [
+                "Create New Space from Bottom Bar in App Sidebar.png"
+            ],
+            "focus": "The modal dialog for creating a new space with icon picker",
+            "keyElements": [
+                "Modal with dark background",
+                "Icon grid (6 columns)",
+                "Selected icon highlight",
+                "Form input styling"
+            ]
+        },
+        "F004-spaces-screen-layout": {
+            "primary": "Spaces Screen from Spaces Tab.png",
+            "secondary": [
+                "App Side Bar with Spaces Screen Open.png"
+            ],
+            "focus": "The main content area showing space cards in a grid",
+            "keyElements": [
+                "Header 'Spaces'",
+                "Card grid layout",
+                "Card dimensions (288px)",
+                "Grid gap (16px)"
+            ]
+        },
+        "F005-space-card": {
+            "primary": "Spaces Card Folder Icons Open and Closed.png",
+            "secondary": [
+                "Spaced Card Local Imported Folders.png",
+                "Spaces Card Create New Folder.png",
+                "Spaces Card Create New Link.png"
+            ],
+            "focus": "Individual space card with tree structure inside",
+            "keyElements": [
+                "Card header with space icon",
+                "Tree view of items",
+                "Folder expand/collapse",
+                "Card shadow and border radius"
+            ]
+        },
+        "F006-context-menu": {
+            "primary": "Spaces Card Folder Context Menu.png",
+            "secondary": [
+                "Spaces Card Folder Context Icons.png",
+                "Space Sidebar Add Link to Folder.png",
+                "Space Sidebar Create SubFolder.png"
+            ],
+            "focus": "Context menu popup with action items",
+            "keyElements": [
+                "Menu background and shadow",
+                "Menu item icons (16px)",
+                "Hover state",
+                "Destructive item styling (red)"
+            ]
+        },
+        "F007-spaces-bottom-bar": {
+            "primary": "App Side Bar with Spaces Screen Open.png",
+            "secondary": [],
+            "focus": "The bottom action bar on the Spaces screen",
+            "keyElements": [
+                "Bar height (56px)",
+                "Primary button styling",
+                "Selection count text"
+            ]
+        },
+        "F008-folder-tree-structure": {
+            "primary": "Sidebar with Local Imported Folders.png",
+            "secondary": [
+                "Spaces Card Folder Icons Open and Closed.png",
+                "Spaced Card Local Imported Folders.png"
+            ],
+            "focus": "The tree structure used in both sidebar and cards",
+            "keyElements": [
+                "Row height (32px)",
+                "Indentation (16px)",
+                "Icon sizing (16px)",
+                "Expand/collapse animation"
+            ]
+        }
+    },
+    "allImages": [
+        {
+            "filename": "App Side Bar with Spaces Screen Open.png",
+            "size": "502548 bytes",
+            "usedBy": [
+                "F001",
+                "F002",
+                "F004",
+                "F007"
+            ]
+        },
+        {
+            "filename": "Browser Tab Bar.png",
+            "size": "75693 bytes",
+            "usedBy": []
+        },
+        {
+            "filename": "Browser View.png",
+            "size": "949300 bytes",
+            "usedBy": []
+        },
+        {
+            "filename": "Create New Space Choose Space Icon.png",
+            "size": "478336 bytes",
+            "usedBy": [
+                "F003"
+            ]
+        },
+        {
+            "filename": "Create New Space from Bottom Bar in App Sidebar.png",
+            "size": "463354 bytes",
+            "usedBy": [
+                "F002",
+                "F003"
+            ]
+        },
+        {
+            "filename": "Rename Folder Name.png",
+            "size": "13096 bytes",
+            "usedBy": []
+        },
+        {
+            "filename": "Settings Screen.png",
+            "size": "404248 bytes",
+            "usedBy": []
+        },
+        {
+            "filename": "Sidebar Tabs and Spaces Contex Icons.png",
+            "size": "39931 bytes",
+            "usedBy": []
+        },
+        {
+            "filename": "Sidebar with Local Imported Folders.png",
+            "size": "625017 bytes",
+            "usedBy": [
+                "F001",
+                "F008"
+            ]
+        },
+        {
+            "filename": "Space Sidebar Add Link to Folder.png",
+            "size": "25092 bytes",
+            "usedBy": [
+                "F006"
+            ]
+        },
+        {
+            "filename": "Space Sidebar Create SubFolder.png",
+            "size": "26999 bytes",
+            "usedBy": [
+                "F006"
+            ]
+        },
+        {
+            "filename": "Spaced Card Local Imported Folders.png",
+            "size": "30154 bytes",
+            "usedBy": [
+                "F005",
+                "F008"
+            ]
+        },
+        {
+            "filename": "Spaces Card Create New Folder.png",
+            "size": "38000 bytes",
+            "usedBy": [
+                "F005"
+            ]
+        },
+        {
+            "filename": "Spaces Card Create New Link.png",
+            "size": "33353 bytes",
+            "usedBy": [
+                "F005"
+            ]
+        },
+        {
+            "filename": "Spaces Card Folder Context Icons.png",
+            "size": "34084 bytes",
+            "usedBy": [
+                "F006"
+            ]
+        },
+        {
+            "filename": "Spaces Card Folder Context Menu.png",
+            "size": "158593 bytes",
+            "usedBy": [
+                "F006"
+            ]
+        },
+        {
+            "filename": "Spaces Card Folder Icons Open and Closed.png",
+            "size": "33204 bytes",
+            "usedBy": [
+                "F005",
+                "F008"
+            ]
+        },
+        {
+            "filename": "Spaces Screen from Spaces Tab.png",
+            "size": "480262 bytes",
+            "usedBy": [
+                "F004"
+            ]
+        },
+        {
+            "filename": "System File and Folder Picker.png",
+            "size": "883898 bytes",
+            "usedBy": []
+        },
+        {
+            "filename": "Workspace View in Browser.png",
+            "size": "769110 bytes",
+            "usedBy": []
+        },
+        {
+            "filename": "Worskspace View.png",
+            "size": "792192 bytes",
+            "usedBy": []
+        }
+    ]
+}

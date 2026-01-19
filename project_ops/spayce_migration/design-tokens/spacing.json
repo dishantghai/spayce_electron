@@ -1,0 +1,48 @@
+{
+    "$schema": "design-tokens",
+    "source": "spayce/frontend/lib/core/theme/spayce_spacing.dart",
+    "extractedAt": "2026-01-19",
+    "baseScale": {
+        "p1": 4,
+        "p2": 8,
+        "p3": 12,
+        "p4": 16,
+        "p5": 20,
+        "p6": 24,
+        "p8": 32,
+        "p10": 40,
+        "p12": 48,
+        "p16": 64
+    },
+    "semantic": {
+        "xs": 4,
+        "sm": 8,
+        "md": 16,
+        "lg": 24,
+        "xl": 32,
+        "xxl": 48
+    },
+    "layout": {
+        "sidebarWidth": 320,
+        "treeIndent": 16,
+        "cardWidth": 288,
+        "spaceIconSize": 32,
+        "navDotSize": 4,
+        "bottomTabBarHeight": 60,
+        "topBarHeight": 56
+    },
+    "cssVariables": {
+        "--spacing-xs": "4px",
+        "--spacing-sm": "8px",
+        "--spacing-md": "16px",
+        "--spacing-lg": "24px",
+        "--spacing-xl": "32px",
+        "--spacing-xxl": "48px",
+        "--layout-sidebar-width": "320px",
+        "--layout-tree-indent": "16px",
+        "--layout-card-width": "288px",
+        "--layout-space-icon": "32px",
+        "--layout-bottom-bar": "60px",
+        "--layout-top-bar": "56px"
+    }
+}

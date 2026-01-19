@@ -1,0 +1,33 @@
+{
+    "$schema": "design-tokens",
+    "source": "spayce/frontend/lib/core/theme/spayce_shadows.dart",
+    "extractedAt": "2026-01-19",
+    "shadows": {
+        "sidebarEmbossed": {
+            "flutter": "BoxShadow(color: black.withOpacity(0.5), offset: Offset(10, 0), blurRadius: 30, spreadRadius: -5)",
+            "css": "10px 0 30px -5px rgba(0, 0, 0, 0.5)"
+        },
+        "cardSubtle": {
+            "flutter": "BoxShadow(color: black.withOpacity(0.2), offset: Offset(0, 2), blurRadius: 8, spreadRadius: 0)",
+            "css": "0 2px 8px 0 rgba(0, 0, 0, 0.2)"
+        },
+        "cardHover": {
+            "flutter": "BoxShadow(color: black.withOpacity(0.3), offset: Offset(0, 4), blurRadius: 16, spreadRadius: 0)",
+            "css": "0 4px 16px 0 rgba(0, 0, 0, 0.3)"
+        },
+        "dropdown": {
+            "flutter": "BoxShadow(color: black.withOpacity(0.4), offset: Offset(0, 4), blurRadius: 12, spreadRadius: 0)",
+            "css": "0 4px 12px 0 rgba(0, 0, 0, 0.4)"
+        },
+        "none": {
+            "flutter": "[]",
+            "css": "none"
+        }
+    },
+    "cssVariables": {
+        "--shadow-sidebar": "10px 0 30px -5px rgba(0, 0, 0, 0.5)",
+        "--shadow-card": "0 2px 8px 0 rgba(0, 0, 0, 0.2)",
+        "--shadow-card-hover": "0 4px 16px 0 rgba(0, 0, 0, 0.3)",
+        "--shadow-dropdown": "0 4px 12px 0 rgba(0, 0, 0, 0.4)"
+    }
+}

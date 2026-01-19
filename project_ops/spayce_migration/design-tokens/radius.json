@@ -1,0 +1,36 @@
+{
+    "$schema": "design-tokens",
+    "source": "spayce/frontend/lib/core/theme/spayce_radius.dart",
+    "extractedAt": "2026-01-19",
+    "baseScale": {
+        "xs": 4,
+        "sm": 6,
+        "md": 8,
+        "lg": 12,
+        "xl": 16,
+        "xxl": 24,
+        "full": 999
+    },
+    "semantic": {
+        "button": 8,
+        "input": 8,
+        "card": 12,
+        "sidebar": 16,
+        "avatar": 999,
+        "tab": 8
+    },
+    "cssVariables": {
+        "--radius-xs": "4px",
+        "--radius-sm": "6px",
+        "--radius-md": "8px",
+        "--radius-lg": "12px",
+        "--radius-xl": "16px",
+        "--radius-xxl": "24px",
+        "--radius-full": "999px",
+        "--radius-button": "8px",
+        "--radius-input": "8px",
+        "--radius-card": "12px",
+        "--radius-sidebar": "16px",
+        "--radius-tab": "8px"
+    }
+}

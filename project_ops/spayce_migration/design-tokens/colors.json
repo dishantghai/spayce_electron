@@ -1,0 +1,72 @@
+{
+  "$schema": "design-tokens",
+  "source": "spayce/frontend/lib/core/theme/spayce_colors.dart",
+  "extractedAt": "2026-01-19",
+  
+  "colors": {
+    "primary": "#6D5AE6",
+    
+    "background": {
+      "dark": "#0F0B1A",
+      "surface": "#1A1628",
+      "sidebar": "#131020",
+      "accent": "#2D2645"
+    },
+    
+    "text": {
+      "primary": "#E5E7EB",
+      "secondary": "#9CA3AF",
+      "muted": "#6B7280"
+    },
+    
+    "border": {
+      "dark": "#374151",
+      "subtle": "#1F2937"
+    },
+    
+    "status": {
+      "success": "#10B981",
+      "warning": "#F59E0B",
+      "error": "#EF4444",
+      "info": "#3B82F6"
+    }
+  },
+  
+  "spaceColors": {
+    "palette": [
+      { "name": "violet", "hex": "#8B5CF6" },
+      { "name": "amber", "hex": "#F59E0B" },
+      { "name": "emerald", "hex": "#10B981" },
+      { "name": "pink", "hex": "#EC4899" },
+      { "name": "blue", "hex": "#3B82F6" },
+      { "name": "red", "hex": "#EF4444" },
+      { "name": "teal", "hex": "#14B8A6" },
+      { "name": "orange", "hex": "#F97316" }
+    ]
+  },
+  
+  "itemColors": {
+    "folderDefault": "#6B7280",
+    "linkRed": "#EF4444",
+    "linkBlue": "#3B82F6",
+    "linkYellow": "#EAB308",
+    "navDot": "#4B5563"
+  },
+  
+  "cssVariables": {
+    "--color-primary": "#6D5AE6",
+    "--color-bg-dark": "#0F0B1A",
+    "--color-bg-surface": "#1A1628",
+    "--color-bg-sidebar": "#131020",
+    "--color-bg-accent": "#2D2645",
+    "--color-text-primary": "#E5E7EB",
+    "--color-text-secondary": "#9CA3AF",
+    "--color-text-muted": "#6B7280",
+    "--color-border-dark": "#374151",
+    "--color-border-subtle": "#1F2937",
+    "--color-success": "#10B981",
+    "--color-warning": "#F59E0B",
+    "--color-error": "#EF4444",
+    "--color-info": "#3B82F6"
+  }
+}
