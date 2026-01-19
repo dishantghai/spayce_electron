@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Copy, Link2, MoreVertical } from 'lucide-react';
+import { FolderPlus, Link, MoreVertical } from 'lucide-react';
 import type { SpaceItem } from '../types';
 import { SpaceItemType } from '../types';
 import { SpayceColors } from '../theme';
@@ -44,10 +44,14 @@ export function TreeItem({
     // Parent has 8px padding + 16px icon = 24px, so subfolders need 24px base + 16px per additional level
     const indentPx = depth === 0 ? 0 : 24 + (depth - 1) * 16;
 
-    const handleClick = useCallback(() => {
+    // Click handler - expand/collapse folders AND notify parent for focus
+    const handleClick = useCallback((e: React.MouseEvent) => {
+        e.preventDefault();
+        // Toggle expand/collapse for folders with children
         if (isFolder && hasChildren) {
             onItemExpand?.(item, !isExpanded);
         }
+        // Always notify parent to update focus state
         onItemClick?.(item);
     }, [item, isFolder, hasChildren, isExpanded, onItemClick, onItemExpand]);
 
@@ -57,24 +61,6 @@ export function TreeItem({
             onItemContextMenu?.(item, e);
         },
         [item, onItemContextMenu]
-    );
-
-    const handleKeyDown = useCallback(
-        (e: React.KeyboardEvent) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleClick();
-            }
-            if (e.key === 'ArrowRight' && isFolder && !isExpanded) {
-                e.preventDefault();
-                onItemExpand?.(item, true);
-            }
-            if (e.key === 'ArrowLeft' && isFolder && isExpanded) {
-                e.preventDefault();
-                onItemExpand?.(item, false);
-            }
-        },
-        [handleClick, isFolder, isExpanded, item, onItemExpand]
     );
 
     // Get file extension for file icons
@@ -100,13 +86,11 @@ export function TreeItem({
                 } as React.CSSProperties}
                 onClick={handleClick}
                 onContextMenu={handleContextMenu}
-                onKeyDown={handleKeyDown}
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
                 role="treeitem"
                 aria-expanded={isFolder ? isExpanded : undefined}
                 aria-selected={isSelected}
-                tabIndex={0}
             >
                 {/* Item icon */}
                 <span className={styles.itemIcon}>
@@ -121,29 +105,33 @@ export function TreeItem({
                 {/* Item name */}
                 <span className={styles.itemText}>{item.name}</span>
 
-                {/* Folder context icons on hover */}
-                {isFolder && isHovered && (
+                {/* Context icons on hover - for both folders and links */}
+                {isHovered && (
                     <div className={styles.contextIcons}>
-                        <button
-                            className={styles.contextIcon}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Copy folder');
-                            }}
-                            title="Copy Folder"
-                        >
-                            <Copy size={14} />
-                        </button>
-                        <button
-                            className={styles.contextIcon}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('Copy all links');
-                            }}
-                            title="Copy All Links"
-                        >
-                            <Link2 size={14} />
-                        </button>
+                        {isFolder && (
+                            <>
+                                <button
+                                    className={styles.contextIcon}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        // TODO: Implement add subfolder
+                                    }}
+                                    title="Add Subfolder"
+                                >
+                                    <FolderPlus size={14} />
+                                </button>
+                                <button
+                                    className={styles.contextIcon}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        // TODO: Implement add link
+                                    }}
+                                    title="Add Link"
+                                >
+                                    <Link size={14} />
+                                </button>
+                            </>
+                        )}
                         <button
                             className={styles.contextIcon}
                             onClick={(e) => {

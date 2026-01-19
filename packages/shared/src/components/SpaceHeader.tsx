@@ -1,7 +1,39 @@
 import React, { useState } from 'react';
 import { Pencil, FolderPlus, Link, StickyNote, Download } from 'lucide-react';
+import * as LucideIcons from 'lucide-react';
 import type { Space } from '../types';
 import styles from './SpaceHeader.module.css';
+
+// Icon component mapping
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
+    'briefcase': LucideIcons.Briefcase, 'building': LucideIcons.Building,
+    'laptop': LucideIcons.Laptop, 'calendar': LucideIcons.Calendar,
+    'clipboard': LucideIcons.Clipboard, 'home': LucideIcons.Home,
+    'heart': LucideIcons.Heart, 'user': LucideIcons.User,
+    'users': LucideIcons.Users, 'smile': LucideIcons.Smile,
+    'code': LucideIcons.Code, 'terminal': LucideIcons.Terminal,
+    'database': LucideIcons.Database, 'cpu': LucideIcons.Cpu,
+    'git-branch': LucideIcons.GitBranch, 'palette': LucideIcons.Palette,
+    'image': LucideIcons.Image, 'music': LucideIcons.Music,
+    'video': LucideIcons.Video, 'camera': LucideIcons.Camera,
+    'folder': LucideIcons.Folder, 'layers': LucideIcons.Layers,
+    'archive': LucideIcons.Archive, 'bookmark': LucideIcons.Bookmark,
+    'star': LucideIcons.Star, 'book': LucideIcons.Book,
+    'graduation-cap': LucideIcons.GraduationCap, 'lightbulb': LucideIcons.Lightbulb,
+    'brain': LucideIcons.Brain, 'shopping-cart': LucideIcons.ShoppingCart,
+    'dollar-sign': LucideIcons.DollarSign, 'credit-card': LucideIcons.CreditCard,
+    'mail': LucideIcons.Mail, 'message-circle': LucideIcons.MessageCircle,
+    'phone': LucideIcons.Phone, 'plane': LucideIcons.Plane,
+    'map': LucideIcons.Map, 'compass': LucideIcons.Compass,
+    'activity': LucideIcons.Activity, 'dumbbell': LucideIcons.Dumbbell,
+    'rocket': LucideIcons.Rocket, 'trophy': LucideIcons.Trophy,
+    'target': LucideIcons.Target, 'zap': LucideIcons.Zap,
+    'flame': LucideIcons.Flame,
+};
+
+function getIconComponent(iconName: string): React.ComponentType<any> {
+    return ICON_MAP[iconName] || LucideIcons.Layers;
+}
 
 export interface SpaceHeaderProps {
     space: Space;
@@ -37,12 +69,10 @@ export function SpaceHeader({
                 className={styles.iconContainer}
                 style={{ backgroundColor: `${space.accentColor}26` }}
             >
-                <span
-                    className={styles.iconEmoji}
-                    style={{ color: space.accentColor }}
-                >
-                    🚀
-                </span>
+                {React.createElement(getIconComponent(space.iconName), {
+                    size: 14,
+                    style: { color: space.accentColor }
+                })}
             </div>
 
             {/* Space name */}

@@ -16,3 +16,6 @@ export { SpaceHeader } from './components/SpaceHeader';
 export type { SpaceHeaderProps } from './components/SpaceHeader';
 export { BottomBar } from './components/BottomBar';
 export type { BottomBarProps } from './components/BottomBar';
+export { CreateSpaceView, getIconComponent } from './components/CreateSpaceView';
+export type { CreateSpaceViewProps } from './components/CreateSpaceView';
+export type { SidebarViewMode } from './components/Sidebar';

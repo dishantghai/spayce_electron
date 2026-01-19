@@ -430,6 +430,7 @@ function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMen
 
 export function App(): React.ReactElement {
     const [selectedId, setSelectedId] = useState<string | null>(null);
+    const [spaces, setSpaces] = useState<Space[]>(DEMO_SPACES);
     const [activeSpaceIndex, setActiveSpaceIndex] = useState(0);
     const [sidebarMode, setSidebarMode] = useState<SidebarMode>('fixed');
     const [sidebarVisible, setSidebarVisible] = useState(true);
@@ -460,7 +461,7 @@ export function App(): React.ReactElement {
     };
 
     const handleModeToggle = () => {
-        setSidebarMode((prev) => (prev === 'fixed' ? 'floating' : 'fixed'));
+        setSidebarMode((prev: SidebarMode) => (prev === 'fixed' ? 'floating' : 'fixed'));
     };
 
     const handleAddFolder = (spaceId: string) => {
@@ -471,12 +472,40 @@ export function App(): React.ReactElement {
         console.log('Add link to space:', spaceId);
     };
 
-    const handleEditSpace = (space: Space) => {
-        console.log('Edit space:', space.name);
+    const handleCreateSpace = (spaceData: {
+        name: string;
+        iconName: string;
+        accentColor: string;
+    }) => {
+        const newSpace: Space = {
+            id: `space-${Date.now()}`,
+            profileId: 'profile-1',
+            userId: 'user-1',
+            name: spaceData.name,
+            accentColor: spaceData.accentColor,
+            iconName: spaceData.iconName,
+            order: spaces.length,
+            isExpanded: true,
+            createdAt: new Date(),
+            rootItems: [],
+        };
+
+        setSpaces(prevSpaces => [...prevSpaces, newSpace]);
+        setActiveSpaceIndex(spaces.length); // Switch to the new space
+        console.log('Created new space:', newSpace);
     };
 
-    const handleAddSpace = () => {
-        console.log('Add new space');
+    const handleUpdateSpace = (space: Space, spaceData: {
+        name: string;
+        iconName: string;
+        accentColor: string;
+    }) => {
+        setSpaces(prevSpaces => prevSpaces.map(s =>
+            s.id === space.id
+                ? { ...s, name: spaceData.name, iconName: spaceData.iconName, accentColor: spaceData.accentColor }
+                : s
+        ));
+        console.log('Updated space:', space.name, 'to', spaceData);
     };
 
     const handleSettingsClick = () => {
@@ -499,7 +528,7 @@ export function App(): React.ReactElement {
                 }}
             >
                 <Sidebar
-                    spaces={DEMO_SPACES}
+                    spaces={spaces}
                     activeSpaceIndex={activeSpaceIndex}
                     selectedItemId={selectedId}
                     mode={sidebarMode}
@@ -512,10 +541,10 @@ export function App(): React.ReactElement {
                     onVisibilityChange={setSidebarVisible}
                     onItemClick={handleItemClick}
                     onItemContextMenu={handleContextMenu}
-                    onAddSpace={handleAddSpace}
+                    onCreateSpace={handleCreateSpace}
                     onAddFolder={handleAddFolder}
                     onAddLink={handleAddLink}
-                    onEditSpace={handleEditSpace}
+                    onEditSpace={handleUpdateSpace}
                     onSettingsClick={handleSettingsClick}
                 />
             </div>
@@ -573,4 +602,3 @@ export function App(): React.ReactElement {
         </div>
     );
 }
-

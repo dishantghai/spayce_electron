@@ -1,7 +1,7 @@
 {
   "product": {
     "name": "Spayce",
-    "description": "Personal Learning Management System with integrated browser",
+    "description": "Personal AI Powered Workspace and Knowledge Management System with integrated Browser,Notes,Workspaces, System Files and AI Assistant",
     "target_users": "Knowledge workers, developers, students, researchers",
     "problem": "Disorganized bookmarks and poor context switching between browser and files",
     "scale": "mvp",
@@ -28,12 +28,7 @@
     ]
   },
   "specs": [
-    "001-project-foundation",
-    "002-navigation-shell",
-    "003-spaces-feature",
-    "004-browser-feature",
-    "005-workspace-feature",
-    "006-authentication"
+    "001-project-foundation"
   ],
   "stories": [],
   "codebase": {

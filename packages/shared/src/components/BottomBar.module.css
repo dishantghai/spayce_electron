@@ -32,7 +32,24 @@
 }
 
 .spaceIcon.active {
-    border-width: 2px;
+    border-color: var(--accent-color);
+}
+
+.spaceIcon.focused {
+    outline: none;
+    animation: focusPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes focusPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
 }
 
 .addButton {

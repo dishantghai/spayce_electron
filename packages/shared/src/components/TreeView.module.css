@@ -25,7 +25,7 @@
     background-color: #2D2645;
 }
 
-/* Selected item - use same hover color, not bright highlight */
+/* Selected/Focused item - unified background highlight */
 .treeItemSelected {
     background-color: #2D2645;
 }
@@ -34,17 +34,9 @@
     background-color: #2D2645;
 }
 
-/* Active item - left accent border */
-.treeItemActive::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background-color: var(--tree-accent-color, #6D5AE6);
-    border-radius: 0 2px 2px 0;
-    transition: background-color 100ms ease;
+/* Active item - same as selected, no special left border */
+.treeItemActive {
+    background-color: #2D2645;
 }
 
 
@@ -122,8 +114,7 @@
     color: #E5E7EB;
 }
 
-/* Focus visible indicator */
+/* Focus visible indicator - disabled, using custom focus state instead */
 .treeItem:focus-visible {
-    outline: 2px solid #6D5AE6;
-    outline-offset: -2px;
+    outline: none;
 }
