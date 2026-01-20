@@ -80,7 +80,7 @@ This project uses **AASEF** (AI-Assisted Scalable Engineering Framework) for spe
 **When to suggest phases:**
 - If project has 5+ specs and no phases, suggest: "You have multiple specs. Consider `aasef phases suggest` to organize implementation."
 
-### 🔧 CRITICAL: Tech Decisions
+### 🔧 CRITICAL: Tech & Architecture Decisions
 
 **BEFORE suggesting or using ANY package/framework:**
 1. Check if `.aasef/context/tech_decisions.md` exists
@@ -88,12 +88,16 @@ This project uses **AASEF** (AI-Assisted Scalable Engineering Framework) for spe
 3. NEVER suggest alternatives to decided technologies
 4. If a spec uses wrong packages, flag it for correction
 
-Example tech_decisions.md content:
-```
-## Database: Drift (not SQLite/sqflite)
-## WebView: flutter_inappwebview (not webview_flutter)
-## State: Riverpod (not Provider)
-```
+**BEFORE implementing significant logic:**
+1. Check the "Important Architecture Decisions" section in `tech_decisions.md`
+2. Follow documented patterns, conventions, and design decisions
+3. Avoid documented anti-patterns
+4. If making architectural changes, update this section first
+
+This file contains:
+- **Tech Stack**: Authoritative package/framework choices
+- **Important Architecture Decisions**: Patterns, conventions, design decisions
+- **Anti-Patterns to Avoid**: What NOT to do
 
 ### 🎨 CRITICAL: Design System
 
@@ -480,10 +484,73 @@ Tell the developer to use these commands:
 - `aasef story "title" --specs 001,002` - Create story linked to multiple specs
 - `aasef story "title" --files lib/*.dart` - Create story with affected files
 
+**Testing & TDD:**
+- `aasef implement 001 --tdd` - Start TDD workflow (tests first)
+- `aasef test init` - Initialize testing infrastructure
+- `aasef test gen 001` - Generate tests for spec
+- `aasef test run` - Run all tests
+- `aasef test coverage` - Show test coverage
+- `aasef test gaps` - Find untested code
+- `aasef test tdd-red 001` - Generate failing tests (Red phase)
+- `aasef test tdd-green 001` - Verify tests pass (Green phase)
+- `aasef complete 001 --test` - Run tests before marking complete
+
+**Configuration & Decisions:**
+- `aasef config --ides` - Show/manage enabled IDEs
+- `aasef decisions` - View/manage tech decisions
+- `aasef validate-story F001` - Validate story quality
+
 **Maintenance:**
 - `aasef sync` - Sync codebase context
 - `aasef review 001` - Check for spec-code drift
 - `aasef cleanup` - Remove any clutter files
+
+**Advanced:**
+- `aasef mark-foundation 001` - Mark spec as foundation
+- `aasef fix-circular-deps` - Fix circular dependencies
+- `aasef renumber` - Renumber specs to match order
+
+## 🧪 TDD Workflow (Test-Driven Development)
+
+**When developer says `aasef implement 001 --tdd`:**
+
+The TDD workflow follows Red-Green-Refactor:
+
+### 1. RED Phase (Write Failing Tests)
+```bash
+aasef test tdd-red 001
+```
+- AI generates test cases from spec's acceptance criteria
+- Tests should FAIL initially (no implementation yet)
+- You implement ONLY enough to make tests compile
+
+### 2. GREEN Phase (Make Tests Pass)
+```bash
+aasef test tdd-green 001
+```
+- Implement minimum code to make tests pass
+- Don't over-engineer - just make tests green
+- Run tests frequently: `aasef test run --spec 001`
+
+### 3. REFACTOR Phase
+- Clean up code while keeping tests green
+- Run tests after each refactor
+
+### TDD Workflow Example
+```
+Developer: "aasef implement 001 --tdd"
+
+You: "Starting TDD workflow for spec 001.
+
+Phase 1 (RED): Writing failing tests first.
+[Generate tests from acceptance criteria]
+
+Phase 2 (GREEN): Implementing minimum code to pass.
+[Make tests pass one by one]
+
+Phase 3 (REFACTOR): Tests pass! Cleaning up code.
+[Refactor while keeping tests green]"
+```
 
 ## Creating Specs Directly (Advanced)
 
@@ -634,38 +701,92 @@ Example:
 ## Project Context
 
 ## Product Context
-Name: Spayce
-Description: AI-powered integrated application unifying browsing, learning, notes, local files, coding, and AI assistance
-Target Users: Knowledge workers, developers, students, researchers
-Problem: Fragmented context across multiple apps - browsers, note-taking, file management, and coding tools
-Scale: mvp
-Domain: Productivity / Knowledge Management / Browser
+**Name**: Spayce
+**Description**: AI-powered integrated application unifying browsing, learning, notes, local files, coding, and AI assistance
+**Target Users**: Knowledge workers, developers, students, researchers
+**Scale**: mvp
 
 ## Tech Stack
-- Frontend: Not decided
-- Backend: Not decided
-- Database: SQLite (better-sqlite3)
-- Deployment: Not decided
+- **Desktop**: Electron 30+
+- **Ui**: React 18+
+- **Language**: TypeScript 5.x
+- **Build**: Vite 5+
+- **State**: Zustand 4+
+- **Styling**: CSS Modules
+- **Database**: SQLite (better-sqlite3)
+- **Icons**: Lucide React
+- **Testing**: Vitest + React Testing Library
 
 ## Architecture
-Type: desktop-monorepo
+**Type**: desktop-monorepo
 
-## Active Specs
-- 001-project-foundation
-- 002-sidebar-navigation
-- 003-spaces-module
-- 004-context-menu
-- 005-create-space-flow
-- 006-keyboard-navigation
+## Key Decisions
+- Use WebContentsView (not deprecated BrowserView) for tabs
+- SQLite over SurrealDB for simpler embedded database
+- CSS Modules over Tailwind for exact design control
+- Focus management with independent sidebar/spacesScreen contexts
+- Fixed and floating sidebar modes
 
-## Codebase Structure
-# Codebase Structure
-
-## Project Type
-Electron-based desktop application with a monorepo structure using pnpm workspaces. Appears to be a space/workspace management tool called "Spayce" with file organization and browser integration capabilities.
 
 ## Key Directories
-- `packages/desktop/` - Electron main process, renderer, and preload scripts
-- `packages/shared/` - Shared UI components, stores, models, and theme system
-- `project_ops/HIFI_UI_DESIGN_SCREENS/` - UI design mockups and screenshots
-- 
+- `packages/core/` - Domain layer with entities, repositories, validators, and business logic
+- `packages/desktop/` - Electron application (main process, renderer, preload)
+- `packages/shared/` - Shared React components, stores, models, and theme system
+- `resources/db/` - SQLite database files
+- `.windsurf/workflows/` - AI workflow documentation
+- `project_ops/` - Project documentation and migration specs
+
+## Key Files
+- `pnpm-workspace.yaml` - Monorepo workspace configuration
+- `packages/core/src/domain/entities/Space.ts` - Core Space entity
+- `packages/core/src/domain/entities/SpaceItem.ts` - Space item entity
+- `packages/desktop/src/main/index.ts` - Electron main process entry
+- `packages/desktop/src/renderer/App.tsx` - React UI root component
+- `packages/shared/src/stores/spaces.ts` - Zustand state management for spaces
+- `packages/shared/src/components/Sidebar.tsx` - Main sidebar component
+- `packages/shared/src/theme/colors.ts` - Design system color tokens
+- `vitest.config.ts` - Testing configuration
+
+## Patterns Observed
+- **Clean Architecture**: Domain layer in `@spayce/core` with readonly entities and repository interfaces
+- **Monorepo Structure**: Three packages (core, desktop, shared) with clear separation of concerns
+- **CSS Modules**: Component-scoped styling with `.module.css` files
+- **Barrel Exports**: `index.ts` files for clean imports
+- **Test Co-location**: `__tests__/` directories alongside source code
+- **Domain Events**: Event-driven architecture with typed domain events
+- **Validation Layers**: Schema, format, and business rule validators
+
+## Important Architecture Decisions
+
+> These are authoritative architecture patterns. All implementations MUST follow these.
+> Full details in `.aasef/context/tech_decisions.md`
+
+> **CRITICAL**: This section is ALWAYS included in IDE context during implementation.
+> All specs, stories, and code changes MUST conform to these architectural patterns.
+
+### Patterns & Conventions
+
+- **State Management**: Zustand stores in `packages/shared/src/stores/`. Global state flows down via React context, local state via useState.
+- **Component Structure**: Each component has `Component.tsx` + `Component.module.css`. Export via barrel files.
+- **Data Layer**: SQLite via better-sqlite3 in main process. Renderer accesses via IPC bridge.
+- **Focus Management**: Independent focus contexts - sidebar vs spaces screen. Never mix focus domains.
+- **Clean Architecture**: Follow layered architecture with `@spayce/core` domain layer. Domain entities are immutable (readonly). Repository interfaces define contracts. Use domain events for loose coupling.
+
+### Design Decisions
+
+- **WebContentsView for Tabs**: Use Electron 30+ WebContentsView, NOT deprecated BrowserView
+- **CSS Modules**: Use CSS Modules with CSS custom properties for design tokens, NOT Tailwind
+- **Theme Tokens**: All colors/spacing/radius from `packages/shared/src/theme/`. Never hardcode values.
+
+### Anti-Patterns to Avoid
+
+- ❌ **Direct DOM manipulation**: Use React state, never `document.querySelector`
+- ❌ **Hardcoded colors/spacing**: Always use theme tokens from `theme/` directory
+- ❌ **Cross-process state**: Don't share Zustand stores between main/renderer
+- ❌ **Deprecated APIs**: No BrowserView, no remote module, no nodeIntegration in renderers
+- ❌ **Mutable domain entities**: Never use mutable properties in domain entities. All entity properties must be `readonly`
+- ❌ **String dates in domain**: Use `Date` type for all date/time fields, never strings
+- ❌ **Direct database access from UI**: Always use repository interfaces, never access database directly from React components
+- ❌ **Business logic in UI**: Keep domain logic in `@spayce/core`, UI only handles presentation and user interaction
+
+---

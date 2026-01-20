@@ -1,6 +1,6 @@
 # AASEF Rules (Core) - Auto-generated
 # Do not edit manually - regenerated on each AASEF command
-# Size: 4962 chars (max: 8000)
+# Size: 5292 chars (max: 8000)
 
 # AASEF Project Rules
 
@@ -60,7 +60,7 @@ If NO spec exists:
 **When to suggest phases:**
 - If project has 5+ specs and no phases, suggest: "You have multiple specs. Consider `aasef phases suggest` to organize implementation."
 
-### 🔧 CRITICAL: Tech Decisions
+### 🔧 CRITICAL: Tech & Architecture Decisions
 
 **BEFORE suggesting or using ANY package/framework:**
 1. Check if `.aasef/context/tech_decisions.md` exists
@@ -68,12 +68,16 @@ If NO spec exists:
 3. NEVER suggest alternatives to decided technologies
 4. If a spec uses wrong packages, flag it for correction
 
-Example tech_decisions.md content:
-```
-## Database: Drift (not SQLite/sqflite)
-## WebView: flutter_inappwebview (not webview_flutter)
-## State: Riverpod (not Provider)
-```
+**BEFORE implementing significant logic:**
+1. Check the "Important Architecture Decisions" section in `tech_decisions.md`
+2. Follow documented patterns, conventions, and design decisions
+3. Avoid documented anti-patterns
+4. If making architectural changes, update this section first
+
+This file contains:
+- **Tech Stack**: Authoritative package/framework choices
+- **Important Architecture Decisions**: Patterns, conventions, design decisions
+- **Anti-Patterns to Avoid**: What NOT to do
 
 ### 🎯 Your Role
 

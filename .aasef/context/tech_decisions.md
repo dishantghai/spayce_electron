@@ -126,7 +126,39 @@ spayce_electron/
 └── vitest.config.ts
 ```
 
-## Architecture Decisions
+## Important Architecture Decisions
+
+> **CRITICAL**: This section is ALWAYS included in IDE context during implementation.
+> All specs, stories, and code changes MUST conform to these architectural patterns.
+
+### Patterns & Conventions
+
+- **State Management**: Zustand stores in `packages/shared/src/stores/`. Global state flows down via React context, local state via useState.
+- **Component Structure**: Each component has `Component.tsx` + `Component.module.css`. Export via barrel files.
+- **Data Layer**: SQLite via better-sqlite3 in main process. Renderer accesses via IPC bridge.
+- **Focus Management**: Independent focus contexts - sidebar vs spaces screen. Never mix focus domains.
+- **Clean Architecture**: Follow layered architecture with `@spayce/core` domain layer. Domain entities are immutable (readonly). Repository interfaces define contracts. Use domain events for loose coupling.
+
+### Design Decisions
+
+- **WebContentsView for Tabs**: Use Electron 30+ WebContentsView, NOT deprecated BrowserView
+- **CSS Modules**: Use CSS Modules with CSS custom properties for design tokens, NOT Tailwind
+- **Theme Tokens**: All colors/spacing/radius from `packages/shared/src/theme/`. Never hardcode values.
+
+### Anti-Patterns to Avoid
+
+- ❌ **Direct DOM manipulation**: Use React state, never `document.querySelector`
+- ❌ **Hardcoded colors/spacing**: Always use theme tokens from `theme/` directory
+- ❌ **Cross-process state**: Don't share Zustand stores between main/renderer
+- ❌ **Deprecated APIs**: No BrowserView, no remote module, no nodeIntegration in renderers
+- ❌ **Mutable domain entities**: Never use mutable properties in domain entities. All entity properties must be `readonly`
+- ❌ **String dates in domain**: Use `Date` type for all date/time fields, never strings
+- ❌ **Direct database access from UI**: Always use repository interfaces, never access database directly from React components
+- ❌ **Business logic in UI**: Keep domain logic in `@spayce/core`, UI only handles presentation and user interaction
+
+---
+
+## Architecture Decisions (Detailed)
 
 ### 1. Electron with WebContentsView
 - Modern API for multi-tab browsing (not deprecated BrowserView)
@@ -152,3 +184,33 @@ spayce_electron/
 - **Decision**: Support both fixed and floating sidebar modes
 - **Fixed**: Sidebar always visible, takes layout space
 - **Floating**: Sidebar overlays content, can be toggled
+
+### 6. Clean Architecture - Domain Layer (Spec 007)
+
+| Decision | Value | Rationale |
+|----------|-------|-----------|
+| Package Location | `packages/core/src/domain/` | Centralized domain logic |
+| Entity Pattern | Readonly interfaces | Immutability, type safety |
+| Repository Pattern | Interfaces with Promise-based async | Framework-agnostic contracts |
+| Error Pattern | Class hierarchy extending DomainError | Consistent error handling |
+| Validator Pattern | Schema, Format, BusinessRule validators | Multi-layer validation |
+| Event Pattern | Typed DomainEvent interface | Loose coupling via events |
+
+**Domain Layer Structure:**
+```
+packages/core/src/domain/
+├── entities/          # SpaceEntity, SpaceItemEntity
+├── repositories/      # ISpacesRepository, ISpaceItemsRepository
+├── value-objects/     # Color
+├── events/            # SpaceCreated, ItemMoved, etc.
+├── errors/            # ValidationError, BusinessRuleError, etc.
+├── validators/        # CreateSpaceValidator, FormatValidators
+├── services/          # IEventBus, ILogger
+└── index.ts           # Barrel exports
+```
+
+**Key Principles:**
+- Zero production dependencies in @spayce/core
+- All entities are immutable (readonly properties)
+- Date fields use `Date` type, not strings
+- Repository interfaces define contracts for infrastructure layer

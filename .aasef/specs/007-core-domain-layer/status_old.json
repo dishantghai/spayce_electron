@@ -1,0 +1,14 @@
+{
+    "specId": "007-core-domain-layer",
+    "title": "Core Domain Layer",
+    "version": "2.0.0",
+    "status": "ready",
+    "phase": "implementation",
+    "dependencies": [
+        "001-project-foundation"
+    ],
+    "blockedBy": [],
+    "lastUpdated": "2026-01-20T11:05:00Z",
+    "estimatedDays": 3,
+    "notes": "Split from original 3500+ line spec. Pure TypeScript domain layer."
+}

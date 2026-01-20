@@ -1,36 +1,42 @@
 # Codebase Structure
 
 ## Project Type
-Electron-based desktop application with a monorepo structure using pnpm workspaces. Appears to be a space/workspace management tool called "Spayce" with file organization and browser integration capabilities.
+**Spayce** - A desktop browser application built with Electron, featuring workspace management and multi-tab browsing capabilities. Uses a monorepo structure with clean architecture and domain-driven design.
 
 ## Key Directories
-- `packages/desktop/` - Electron main process, renderer, and preload scripts
-- `packages/shared/` - Shared UI components, stores, models, and theme system
-- `project_ops/HIFI_UI_DESIGN_SCREENS/` - UI design mockups and screenshots
-- `packages/shared/src/components/` - React components organized by feature (spaces, navigation, icons)
-- `packages/shared/src/stores/` - State management (navigation, spaces)
-- `packages/shared/src/theme/` - Design system (colors, typography, spacing, etc.)
+- `packages/core/` - Domain layer with entities, repositories, validators, and business logic
+- `packages/desktop/` - Electron application (main process, renderer, preload)
+- `packages/shared/` - Shared React components, stores, models, and theme system
+- `resources/db/` - SQLite database files
+- `.windsurf/workflows/` - AI workflow documentation
+- `project_ops/` - Project documentation and migration specs
 
 ## Key Files
 - `pnpm-workspace.yaml` - Monorepo workspace configuration
+- `packages/core/src/domain/entities/Space.ts` - Core Space entity
+- `packages/core/src/domain/entities/SpaceItem.ts` - Space item entity
 - `packages/desktop/src/main/index.ts` - Electron main process entry
-- `packages/desktop/src/main/database/surrealdb.ts` - Database integration
-- `packages/shared/src/stores/spaces.ts` - Core spaces state management
-- `packages/shared/src/models/spaces.ts` - Space data models
-- `vitest.config.ts` - Test configuration with comprehensive test coverage
+- `packages/desktop/src/renderer/App.tsx` - React UI root component
+- `packages/shared/src/stores/spaces.ts` - Zustand state management for spaces
+- `packages/shared/src/components/Sidebar.tsx` - Main sidebar component
+- `packages/shared/src/theme/colors.ts` - Design system color tokens
+- `vitest.config.ts` - Testing configuration
 
 ## Patterns Observed
-- **Monorepo structure** with shared and desktop packages
-- **CSS Modules** for component styling (`.module.css` files)
-- **Feature-based organization** in components (spaces/, navigation/, icons/)
-- **Comprehensive theming system** with separate files for design tokens
-- **Test coverage** for major components and functionality
-- **TypeScript throughout** with proper configuration
+- **Clean Architecture**: Domain layer in `@spayce/core` with readonly entities and repository interfaces
+- **Monorepo Structure**: Three packages (core, desktop, shared) with clear separation of concerns
+- **CSS Modules**: Component-scoped styling with `.module.css` files
+- **Barrel Exports**: `index.ts` files for clean imports
+- **Test Co-location**: `__tests__/` directories alongside source code
+- **Domain Events**: Event-driven architecture with typed domain events
+- **Validation Layers**: Schema, format, and business rule validators
 
 ## Notes for AI Assistants
-- This is a workspace/file management desktop app built with Electron + React
-- Uses SurrealDB for data persistence
-- Heavy focus on UI/UX with detailed design mockups available
-- Shared package contains reusable components that could be used across platforms
-- State management appears to use custom stores rather than Redux/Zustand
-- CSS Modules pattern suggests component-scoped styling approach
+- **Tech Stack**: Electron + React + TypeScript + SQLite + Zustand + CSS Modules + Vite + pnpm workspaces
+- **Database**: SQLite with better-sqlite3 (not SurrealDB despite any legacy files)
+- **State Management**: Zustand stores in `packages/shared/src/stores/`
+- **Styling**: CSS Modules with design tokens from `packages/shared/src/theme/`
+- **Architecture**: Clean architecture with immutable domain entities (readonly properties)
+- **Focus Management**: Independent contexts for sidebar vs main content areas
+- **Browser Integration**: Uses WebContentsView (Electron 30+), not deprecated BrowserView
+- **Testing**: Vitest for unit tests, React Testing Library for components

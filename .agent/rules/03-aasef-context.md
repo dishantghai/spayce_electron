@@ -1,6 +1,6 @@
 # AASEF Rules (Context) - Auto-generated
 # Do not edit manually - regenerated on each AASEF command
-# Size: 7670 chars (max: 8000)
+# Size: 8683 chars (max: 8000)
 
 # AASEF Context & Commands
 
@@ -106,13 +106,46 @@ Tell the developer to use these commands:
 - `aasef story --type bug "title"` - Create bug story
 - `aasef story "title" --epic E001` - Create story in epic
 - `aasef story "title" --spec 001` - Create story linked to spec
-- `aasef story "title" --specs 001,002` - Create story linked to multiple specs
-- `aasef story "title" --files lib/*.dart` - Create story with affected files
+
+**Testing & TDD:**
+- `aasef implement 001 --tdd` - Start TDD workflow (tests first)
+- `aasef test init` - Initialize testing infrastructure
+- `aasef test gen 001` - Generate tests for spec
+- `aasef test run` - Run all tests
+- `aasef test coverage` - Show test coverage
+- `aasef test tdd-red 001` - Generate failing tests (Red phase)
+- `aasef test tdd-green 001` - Verify tests pass (Green phase)
+- `aasef complete 001 --test` - Run tests before complete
+
+**Configuration:**
+- `aasef config --ides` - Show/manage enabled IDEs
+- `aasef decisions` - View/manage tech decisions
+- `aasef validate-story F001` - Validate story quality
 
 **Maintenance:**
 - `aasef sync` - Sync codebase context
 - `aasef review 001` - Check for spec-code drift
 - `aasef cleanup` - Remove any clutter files
+
+## 🧪 TDD Workflow
+
+**When developer says `aasef implement 001 --tdd`:**
+
+### Red-Green-Refactor Cycle:
+1. **RED**: `aasef test tdd-red 001` - Generate failing tests from acceptance criteria
+2. **GREEN**: Implement minimum code to pass tests
+3. **REFACTOR**: Clean up while keeping tests green
+
+### TDD Example:
+```
+Developer: "aasef implement 001 --tdd"
+
+You: "Starting TDD workflow.
+1. Running: aasef test tdd-red 001
+2. Tests generated - they should fail
+3. Implementing minimum code to pass
+4. Refactoring while keeping tests green"
+```
 
 ## Creating Specs Directly (Advanced)
 
