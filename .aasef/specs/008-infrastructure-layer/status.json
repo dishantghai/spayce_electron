@@ -1,0 +1,17 @@
+{
+    "specId": "008-infrastructure-layer",
+    "title": "Infrastructure & Database Layer",
+    "version": "1.0.0",
+    "status": "ready",
+    "phase": "implementation",
+    "dependencies": [
+        "001-project-foundation",
+        "007-core-domain-layer"
+    ],
+    "blockedBy": [
+        "007-core-domain-layer"
+    ],
+    "lastUpdated": "2026-01-20T11:05:00Z",
+    "estimatedDays": 4,
+    "notes": "SQLite repositories, service registry, event bus. Split from original spec."
+}

@@ -1,0 +1,19 @@
+{
+    "specId": "011-migration-feature-parity",
+    "title": "Migration & Feature Parity",
+    "version": "1.0.0",
+    "status": "ready",
+    "phase": "implementation",
+    "dependencies": [
+        "007-core-domain-layer",
+        "008-infrastructure-layer",
+        "009-application-layer",
+        "010-react-ui-integration"
+    ],
+    "blockedBy": [
+        "010-react-ui-integration"
+    ],
+    "lastUpdated": "2026-01-20T11:05:00Z",
+    "estimatedDays": 7,
+    "notes": "Migration, Flutter parity, testing, rollback. Final integration spec."
+}

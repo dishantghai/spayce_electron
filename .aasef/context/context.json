@@ -43,7 +43,7 @@
   ],
   "stories": [],
   "codebase": {
-    "structure": "# Codebase Structure\n\n## Project Type\nElectron-based desktop application with TypeScript, using a monorepo structure with pnpm workspaces. Features a space/workspace management system with file organization capabilities.\n\n## Key Directories\n- `packages/desktop/` - Electron main process, renderer, and preload scripts\n- `packages/shared/` - Shared UI components, stores, models, and theme system\n- `packages/desktop/src/main/` - Electron main process (window management, database, IPC)\n- `packages/sh",
+    "structure": "# Codebase Structure\n\n## Project Type\nElectron-based desktop application with a monorepo structure using pnpm workspaces. Appears to be a space/workspace management tool called \"Spayce\" with file organization and browser integration capabilities.\n\n## Key Directories\n- `packages/desktop/` - Electron main process, renderer, and preload scripts\n- `packages/shared/` - Shared UI components, stores, models, and theme system\n- `project_ops/HIFI_UI_DESIGN_SCREENS/` - UI design mockups and screenshots\n- ",
     "components_implemented": [
       "TreeView",
       "TreeItem",
@@ -63,7 +63,7 @@
       "navigation",
       "spaces"
     ],
-    "last_synced": "2026-01-20T01:19:32.963222"
+    "last_synced": "2026-01-20T02:31:56.560132"
   },
   "decisions": [
     "Use WebContentsView (not deprecated BrowserView) for tabs",
@@ -73,5 +73,9 @@
     "Fixed and floating sidebar modes"
   ],
   "created_at": "2026-01-17T22:47:24.865263",
-  "updated_at": "2026-01-20T01:19:32.963256"
+  "updated_at": "2026-01-20T02:31:56.560179",
+  "enabled_ides": [
+    "windsurf",
+    "antigravity"
+  ]
 }

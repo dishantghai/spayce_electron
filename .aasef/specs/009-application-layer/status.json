@@ -1,0 +1,17 @@
+{
+    "specId": "009-application-layer",
+    "title": "Application Layer - Use Cases & Facades",
+    "version": "1.0.0",
+    "status": "ready",
+    "phase": "implementation",
+    "dependencies": [
+        "007-core-domain-layer",
+        "008-infrastructure-layer"
+    ],
+    "blockedBy": [
+        "008-infrastructure-layer"
+    ],
+    "lastUpdated": "2026-01-20T11:05:00Z",
+    "estimatedDays": 4,
+    "notes": "Use cases, queries, facades. Split from original spec."
+}

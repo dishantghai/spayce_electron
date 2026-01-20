@@ -662,10 +662,10 @@ Type: desktop-monorepo
 # Codebase Structure
 
 ## Project Type
-Electron-based desktop application with TypeScript, using a monorepo structure with pnpm workspaces. Features a space/workspace management system with file organization capabilities.
+Electron-based desktop application with a monorepo structure using pnpm workspaces. Appears to be a space/workspace management tool called "Spayce" with file organization and browser integration capabilities.
 
 ## Key Directories
 - `packages/desktop/` - Electron main process, renderer, and preload scripts
 - `packages/shared/` - Shared UI components, stores, models, and theme system
-- `packages/desktop/src/main/` - Electron main process (window management, database, IPC)
-- `packages/sh
+- `project_ops/HIFI_UI_DESIGN_SCREENS/` - UI design mockups and screenshots
+- 

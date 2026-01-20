@@ -1,0 +1,52 @@
+[
+  {
+    "id": "4ea6d8fe-2b9a-430f-aa46-15e86e3c0680",
+    "intent": "Fixed",
+    "item": "**Missing Error Types**: Error handling strategy defines classes but doesn't specify which package contains them",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Missing Error Types Package Location\n\n### What needs to be added:\nSpecify the exact package/module location for each error class in your error handling strategy.\n\n### Where to add it:\nIn your error handling section, expand each error class definition to include:\n\n```typescript\n// Error Classes Location Specification\nexport const ErrorTypes = {\n  // Core application errors\n  ValidationError: '@/core/errors/ValidationError',\n  NetworkError: '@/core/errors/NetworkError',\n  DatabaseError: '@/core/errors/DatabaseError',\n  \n  // Feature-specific errors  \n  SpaceError: '@/features/spaces/errors/SpaceError',\n  NavigationError: '@/features/navigation/errors/NavigationError',\n  \n  // System errors\n  ConfigurationError: '@/system/errors/ConfigurationError',\n  PermissionError: '@/system/errors/PermissionError'\n}\n```\n\n### Integration with related specs:\n- **Spec 001**: Add error handling as a foundation dependency since it affects the entire monorepo structure\n- **Spec 003**: Reference `SpaceError` types for space-related failures (loading, data validation)\n- **Spec 006**: Reference `NavigationError` types for focus management failures\n\n### Recommended structure:\n```\nsrc/\n\u251c\u2500\u2500 core/errors/           # Base error classes\n\u251c\u2500\u2500 features/*/errors/     # Feature-specific errors\n\u2514\u2500\u2500 system/errors/         # System-level errors\n```\n\nThis creates a clear hierarchy that other specs can reference consistently using `@/[domain]/errors/[ErrorType]` imports.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-20T15:25:25.195561"
+  },
+  {
+    "id": "e62f75ee-b27f-4383-9bb6-17c608e58777",
+    "intent": "Fixed",
+    "item": "**DI Container Mismatch**: References `@/core/di` and `reflect-metadata` but tech decisions don't specify these packages",
+    "category": "gap",
+    "ai_suggestion": "## Fix for DI Container Mismatch\n\n**Issue**: The spec references dependency injection packages (`@/core/di`, `reflect-metadata`) that aren't established in the project's tech decisions.\n\n### Recommended Actions:\n\n1. **Remove DI References** - Since no tech stack is specified and these packages aren't approved:\n   - Remove `@/core/di` imports and DI container usage\n   - Remove `reflect-metadata` dependency\n   - Use direct imports/instantiation instead\n\n2. **Alternative Approach** - Replace DI pattern with:\n   ```typescript\n   // Instead of DI container\n   import { SpaceService } from '@/services/SpaceService';\n   import { NavigationService } from '@/services/NavigationService';\n   \n   // Direct instantiation\n   const spaceService = new SpaceService();\n   const navigationService = new NavigationService();\n   ```\n\n3. **Where to Update**:\n   - **Dependencies section**: Remove `reflect-metadata`\n   - **Implementation details**: Replace DI container patterns with direct imports\n   - **Service instantiation**: Use constructor injection or factory patterns\n\n4. **Consistency Check**:\n   - Review **Spec 001 (project-foundation)** to see if DI was established there\n   - If DI is needed project-wide, add it to Spec 001's tech decisions first\n   - Ensure **Spec 003 (spaces-module)** and **Spec 006 (keyboard-navigation)** use the same dependency management approach\n\n**Template for services without DI**:\n```typescript\nexport class FeatureService {\n  constructor(\n    private readonly dataService: DataService,\n    private readonly eventBus: EventBus\n  ) {}\n}\n```\n\nThis maintains clean architecture without introducing unspecified dependencies.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-20T15:34:14.407619"
+  },
+  {
+    "id": "cfa874c1-94a6-462c-8db3-474acd0a0145",
+    "intent": "Fixed",
+    "item": "**Missing Validation Layer**: No input validation strategy for use cases beyond basic null checks",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Missing Validation Layer\n\n### What needs to be added:\nCreate a comprehensive input validation strategy that goes beyond basic null checks to handle:\n- Data type validation\n- Format validation (emails, URLs, etc.)\n- Business rule validation\n- Cross-field validation\n- Sanitization for security\n\n### Where to add it:\nAdd a new section **\"Input Validation Strategy\"** after any existing data handling sections, containing:\n\n```markdown\n## Input Validation Strategy\n\n### Validation Layers\n1. **Schema Validation**: Use TypeScript interfaces + runtime validation\n2. **Format Validation**: Regex patterns for emails, URLs, file paths\n3. **Business Rules**: Custom validators for domain-specific logic\n4. **Sanitization**: XSS prevention and data cleaning\n\n### Implementation Approach\n- Client-side validation for immediate feedback\n- Server-side validation for security (if applicable)\n- Validation error handling with user-friendly messages\n- Validation state management in React components\n\n### Validation Triggers\n- On input change (debounced)\n- On field blur\n- On form submission\n- On data persistence\n```\n\n### Spec Dependencies:\nSince this is a cross-cutting concern, consider:\n- **Adding dependency to Spec 001** for validation utilities setup\n- **Referencing from Spec 003** for space data validation\n- **Coordinating with Spec 006** for validation error focus management\n\n### Integration Note:\nIf other specs handle specific data validation, reference this spec's validation strategy rather than duplicating validation logic.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-20T15:45:26.981789"
+  },
+  {
+    "id": "1c751a79-4a8e-427d-9463-fcc2eabe75a0",
+    "intent": "Consider",
+    "item": "**Add migration rollback strategy**: Include specific steps for reverting if the Clean Architecture migration breaks existing functionality",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Analysis: Migration Rollback Strategy\n\n**What needs to be added:**\nA comprehensive rollback plan with specific steps, criteria, and safeguards for the Clean Architecture migration.\n\n**Where to add it:**\nCreate a new section \"Migration Rollback Strategy\" after the implementation phases, before the timeline section.\n\n**Recommended content:**\n\n```markdown\n## Migration Rollback Strategy\n\n### Rollback Triggers\n- Critical functionality breaks (app won't start, data corruption)\n- Performance degradation >50% from baseline\n- Integration failures with SurrealDB or Electron APIs\n- User-blocking issues in Spaces navigation or keyboard controls\n\n### Pre-Migration Safeguards\n- Full git branch backup before starting migration\n- Database schema snapshot using SurrealDB export\n- Automated test suite baseline (reference Spec 006 for keyboard nav tests)\n- Performance benchmarks for Spaces module rendering (reference Spec 003)\n\n### Rollback Process\n1. **Immediate**: Revert to pre-migration git commit\n2. **Database**: Restore SurrealDB from snapshot if schema changed\n3. **Dependencies**: Reset package.json to original state\n4. **Validation**: Run full test suite against Specs 001, 003, 006\n5. **Communication**: Document rollback reason and lessons learned\n\n### Recovery Timeline\n- Emergency rollback: <2 hours\n- Full system validation: <4 hours\n- Post-rollback analysis: 1 business day\n```\n\n**Dependencies to add:**\n- Reference Spec 001 for project foundation validation\n- Reference Spec 003 for Spaces functionality verification\n- Reference Spec 006 for keyboard navigation testing\n\nThis ensures the migration can be safely reversed while maintaining consistency with existing specifications.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-20T15:52:00.514185"
+  },
+  {
+    "id": "5fa50143-592f-4ae7-a972-35612b4874c8",
+    "intent": "Consider",
+    "item": "**Define clear integration points**: Specify exactly which files in packages/shared/ get moved where, with a checklist format",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Analysis & Solution\n\n**Issue**: The specification lacks concrete details about which shared components/utilities need to be moved and where they should go during the migration.\n\n## Recommended Changes\n\n### 1. Add Integration Mapping Section\n**Location**: After the current \"Integration Points\" section\n\n**Content to Add**:\n```markdown\n## Shared Package Migration Checklist\n\n### UI Components (packages/shared/components/ \u2192 apps/desktop/src/shared/components/)\n- [ ] Button.tsx\n- [ ] Input.tsx\n- [ ] Modal.tsx\n- [ ] Card.tsx\n- [ ] Icon.tsx\n\n### Utilities (packages/shared/utils/ \u2192 apps/desktop/src/shared/utils/)\n- [ ] formatting.ts\n- [ ] validation.ts\n- [ ] constants.ts\n- [ ] types.ts\n\n### Hooks (packages/shared/hooks/ \u2192 apps/desktop/src/shared/hooks/)\n- [ ] useLocalStorage.ts\n- [ ] useDebounce.ts\n- [ ] useKeyboard.ts\n\n### Design Tokens (packages/shared/tokens/ \u2192 apps/desktop/src/shared/tokens/)\n- [ ] colors.ts\n- [ ] typography.ts\n- [ ] spacing.ts\n\n### Dependencies to Update\n- [ ] Update import paths in Spec 003 (Spaces module)\n- [ ] Update import paths in Spec 006 (Keyboard navigation)\n- [ ] Verify design system tokens remain accessible per Spec 001\n```\n\n### 2. Add Dependency References\n**Location**: In the \"Dependencies\" section\n\n**Add**:\n- **Spec 001**: Ensure design system tokens migration maintains accessibility\n- **Spec 003**: Update Spaces module imports post-migration\n- **Spec 006**: Update keyboard navigation hook imports\n\n### 3. Add Validation Steps\n**Location**: New subsection under \"Integration Points\"\n\n**Content**:\n```markdown\n### Migration Validation\n- [ ] All imports resolve correctly\n- [ ] No circular dependencies introduced\n- [ ] Build passes for desktop app\n- [ ] Shared components render correctly\n```\n\nThis provides the concrete checklist format requested while maintaining consistency with related specs.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-20T15:54:56.981616"
+  }
+]
