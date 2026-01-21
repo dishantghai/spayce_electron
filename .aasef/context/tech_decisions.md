@@ -65,37 +65,31 @@
 ```
 spayce_electron/
 ├── packages/
+│   ├── core/                   # Domain & Application layers
+│   │   ├── src/
+│   │   │   ├── domain/         # Entities, repositories, validators
+│   │   │   └── application/    # Use cases, queries, facades
+│   │   └── package.json
+│   │
+│   ├── infrastructure/         # Database, services implementation
+│   │   ├── src/
+│   │   │   ├── persistence/    # SQLite repositories
+│   │   │   ├── di/             # Service registry
+│   │   │   └── services/       # Event bus, logger
+│   │   └── package.json
+│   │
+│   ├── react-ui/               # Presentation layer hooks & components
+│   │   ├── src/
+│   │   │   ├── hooks/          # Data & mutation hooks
+│   │   │   ├── components/     # Error boundaries, skeletons
+│   │   │   └── stores/         # UI-only Zustand stores
+│   │   └── package.json
+│   │
 │   ├── shared/                 # Shared React components & utilities
 │   │   ├── src/
 │   │   │   ├── components/     # Reusable UI components
-│   │   │   │   ├── TreeView.tsx
-│   │   │   │   ├── TreeItem.tsx
-│   │   │   │   ├── TreeItemIcon.tsx
-│   │   │   │   ├── Sidebar.tsx
-│   │   │   │   ├── ContextMenu.tsx
-│   │   │   │   ├── CreateSpaceView.tsx
-│   │   │   │   ├── SpaceHeader.tsx
-│   │   │   │   ├── BottomBar.tsx
-│   │   │   │   ├── PinnedLinksGrid.tsx
-│   │   │   │   ├── SidebarTabs.tsx
-│   │   │   │   └── spaces/
-│   │   │   │       ├── SpacesScreen.tsx
-│   │   │   │       ├── SpaceCard.tsx
-│   │   │   │       └── SpacesBottomBar.tsx
-│   │   │   ├── stores/         # Zustand state stores
-│   │   │   │   ├── navigation.ts
-│   │   │   │   └── spaces.ts
-│   │   │   ├── models/         # Data models
 │   │   │   ├── theme/          # Design system tokens
-│   │   │   │   ├── colors.ts
-│   │   │   │   ├── spacing.ts
-│   │   │   │   ├── radius.ts
-│   │   │   │   ├── animations.ts
-│   │   │   │   ├── shadows.ts
-│   │   │   │   └── typography.ts
-│   │   │   ├── types/          # TypeScript interfaces
-│   │   │   └── index.ts        # Barrel exports
-│   │   ├── __tests__/          # Unit tests
+│   │   │   └── types/          # TypeScript interfaces
 │   │   └── package.json
 │   │
 │   └── desktop/                # Electron application
@@ -296,3 +290,78 @@ packages/core/src/application/
 - Facades provide thin wrappers returning Result<T> for UI consumption
 - All errors mapped to AppError type with type discrimination
 - No external dependencies in application layer (uses domain interfaces)
+
+### 9. React UI Integration - Presentation Layer (Spec 010)
+
+| Decision | Value | Rationale |
+|----------|-------|-----------|
+| Package Location | `packages/react-ui/` | Separated presentation layer |
+| Data Hooks | Custom hooks with useInvalidation | Reactive data fetching |
+| Mutation Hooks | useCreateSpace, useDeleteSpace, etc. | Encapsulated mutations |
+| Cache Invalidation | InvalidationContext + useInvalidation | Pub/sub pattern for refetch |
+| Error Boundaries | DomainErrorBoundary, GlobalErrorBoundary | Graceful error handling |
+| UI State | Zustand stores | Navigation, drag-drop state |
+| Form Validation | useFormValidation hook | Reusable validation logic |
+| Loading States | Skeleton components | Consistent loading UI |
+
+**React UI Layer Structure:**
+```
+packages/react-ui/src/
+├── hooks/
+│   ├── common/
+│   │   ├── InvalidationContext.tsx  # Pub/sub for cache invalidation
+│   │   └── useAsync.ts              # Generic async hook
+│   ├── mutations/
+│   │   ├── useCreateSpace.ts
+│   │   ├── useDeleteSpace.ts
+│   │   ├── useUpdateSpace.ts
+│   │   ├── useReorderSpaces.ts
+│   │   ├── useCreateItem.ts
+│   │   ├── useDeleteItem.ts
+│   │   ├── useMoveItem.ts
+│   │   ├── usePinItem.ts
+│   │   └── useUnpinItem.ts
+│   ├── useSpaces.ts                 # Data fetching hook
+│   ├── useSpaceItems.ts
+│   ├── usePinnedItems.ts
+│   ├── useRecentItems.ts
+│   ├── useFormValidation.ts
+│   └── index.ts
+├── components/
+│   ├── error/
+│   │   ├── DomainErrorBoundary.tsx  # Catches component errors
+│   │   ├── GlobalErrorBoundary.tsx  # App-level error boundary
+│   │   └── ErrorFallback.tsx        # Error UI component
+│   ├── common/
+│   │   └── Skeleton.tsx             # Loading placeholder
+│   └── spaces/
+│       └── SpaceListSkeleton.tsx    # Space list loading UI
+├── stores/
+│   ├── navigationUiStore.ts         # Sidebar, active space
+│   └── dragDropUiStore.ts           # Drag-drop state
+└── index.ts
+```
+
+**Key Principles:**
+- **Data Hooks Pattern**: All data fetching via custom hooks that return `{ data, loading, error, refetch }`
+- **Invalidation Pattern**: Mutations call `invalidate('key')` to trigger refetch in subscribed hooks
+- **Error Boundary Pattern**: Wrap feature areas with DomainErrorBoundary for graceful degradation
+- **UI State Separation**: Zustand stores for UI-only state (navigation, drag-drop), NOT business data
+- **Form Validation Pattern**: useFormValidation accepts validator schema, returns form state and helpers
+- **Loading State Pattern**: Use Skeleton components with design system tokens for consistent loading UI
+
+**Invalidation Keys:**
+| Key Pattern | Usage |
+|-------------|-------|
+| `spaces` | All spaces list |
+| `space-items:{spaceId}` | Items for specific space |
+| `space-items` | All items (global) |
+| `pins` | Pinned items |
+| `recent-items` | Recent items list |
+
+**Anti-Patterns for Presentation Layer:**
+- ❌ **Direct facade calls in components**: Use data hooks, not direct facade access
+- ❌ **Business logic in hooks**: Hooks orchestrate, facades contain logic
+- ❌ **Shared state for business data**: Use data hooks, not Zustand for spaces/items
+- ❌ **Manual refetch management**: Use InvalidationContext for automatic refetch
+- ❌ **Inline error handling**: Use error boundaries for component errors
