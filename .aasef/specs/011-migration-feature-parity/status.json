@@ -1,19 +1,18 @@
 {
-    "specId": "011-migration-feature-parity",
-    "title": "Migration & Feature Parity",
-    "version": "1.0.0",
-    "status": "ready",
-    "phase": "implementation",
+    "id": "011",
+    "name": "migration-feature-parity",
+    "status": "pending",
+    "priority": "critical",
     "dependencies": [
-        "007-core-domain-layer",
-        "008-infrastructure-layer",
-        "009-application-layer",
-        "010-react-ui-integration"
+        "001",
+        "002",
+        "003",
+        "007",
+        "008",
+        "009",
+        "010"
     ],
-    "blockedBy": [
-        "010-react-ui-integration"
-    ],
-    "lastUpdated": "2026-01-20T11:05:00Z",
-    "estimatedDays": 7,
-    "notes": "Migration, Flutter parity, testing, rollback. Final integration spec."
+    "estimated_days": 7,
+    "created_at": "2026-01-20T11:05:00.000000",
+    "updated_at": "2026-01-21T10:10:00.000000"
 }

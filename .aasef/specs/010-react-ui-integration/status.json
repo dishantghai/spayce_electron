@@ -1,18 +1,17 @@
 {
-    "specId": "010-react-ui-integration",
-    "title": "React UI Integration",
-    "version": "1.0.0",
-    "status": "ready",
-    "phase": "implementation",
+    "id": "010",
+    "name": "react-ui-integration",
+    "status": "pending",
+    "priority": "critical",
     "dependencies": [
-        "007-core-domain-layer",
-        "008-infrastructure-layer",
-        "009-application-layer"
+        "001",
+        "002",
+        "003",
+        "007",
+        "008",
+        "009"
     ],
-    "blockedBy": [
-        "009-application-layer"
-    ],
-    "lastUpdated": "2026-01-20T11:05:00Z",
-    "estimatedDays": 4,
-    "notes": "React hooks, error boundaries, Zustand stores. Split from original spec."
+    "estimated_days": 4,
+    "created_at": "2026-01-20T11:05:00.000000",
+    "updated_at": "2026-01-21T10:10:00.000000"
 }

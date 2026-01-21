@@ -214,3 +214,39 @@ packages/core/src/domain/
 - All entities are immutable (readonly properties)
 - Date fields use `Date` type, not strings
 - Repository interfaces define contracts for infrastructure layer
+
+### 7. Clean Architecture - Infrastructure Layer (Spec 008)
+
+| Decision | Value | Rationale |
+|----------|-------|-----------|
+| Package Location | `packages/infrastructure/` | Separated from domain |
+| Database Driver | better-sqlite3 | Synchronous API, performance |
+| Database Schema | INTEGER timestamps | Flutter Drift compatibility |
+| Service Pattern | ServiceRegistry singleton | No external DI frameworks |
+| Event Bus | InMemoryEventBus | Simple pub/sub for domain events |
+| Validation | SchemaValidator + IntegrityChecker | Safe startup checks |
+
+**Infrastructure Layer Structure:**
+```
+packages/infrastructure/src/
+├── bootstrap/         # ServiceBootstrap initialization
+├── di/                # ServiceRegistry, SERVICE_KEYS
+├── errors/            # DatabaseError, FileSystemError
+├── persistence/
+│   └── sqlite/
+│       ├── SqliteSpacesRepository.ts
+│       ├── SqliteSpaceItemsRepository.ts
+│       ├── DatabaseInitializer.ts
+│       └── validation/
+│           ├── SchemaValidator.ts
+│           └── IntegrityChecker.ts
+├── services/          # InMemoryEventBus, ConsoleLogger
+└── index.ts
+```
+
+**Key Principles:**
+- Use `ServiceBootstrap.initialize({ databasePath })` to start services
+- Use `serviceRegistry.get(SERVICE_KEYS.SPACES_REPOSITORY)` to access services
+- Database timestamps stored as INTEGER (Unix ms), converted to Date in entities
+- Always wrap database operations in try/catch and throw DatabaseError
+- Use transactions for multi-row operations (reorder, batch updates)
