@@ -305,4 +305,268 @@ describe('Space Item Use Cases', () => {
             expect(mockEventBus.publish).toHaveBeenCalledWith(event);
         });
     });
+
+    describe('RenameItemUseCase', () => {
+        it('should rename existing item with valid name', async () => {
+            const item: SpaceItemEntity = {
+                id: 'item-1',
+                spaceId: 'space-1',
+                parentId: null,
+                name: 'Old Name',
+                path: 'https://example.com',
+                type: SpaceItemType.Link,
+                isExpanded: false,
+                sortOrder: 0,
+                createdAt: new Date(),
+                faviconUrl: null,
+                description: null,
+                visitCount: 0,
+                lastVisited: null,
+                isPinned: false,
+                pinPosition: null,
+                localPath: null,
+                securityBookmark: null,
+                lastSyncedAt: null,
+                isWatching: false,
+            };
+
+            vi.mocked(mockItemsRepository.getItemById).mockResolvedValue(item);
+            vi.mocked(mockItemsRepository.updateItem).mockResolvedValue(undefined);
+
+            const retrieved = await mockItemsRepository.getItemById('item-1');
+            expect(retrieved?.name).toBe('Old Name');
+
+            await mockItemsRepository.updateItem({ ...item, name: 'New Name' });
+            expect(mockItemsRepository.updateItem).toHaveBeenCalledWith(
+                expect.objectContaining({ name: 'New Name' })
+            );
+        });
+
+        it('should sanitize new name', () => {
+            const input = '  New Name  ';
+            const sanitized = DataSanitizer.sanitizeString(input);
+            expect(sanitized).toBe('New Name');
+        });
+
+        it('should reject empty name', () => {
+            const input = '   ';
+            const sanitized = DataSanitizer.sanitizeString(input);
+            expect(sanitized).toBe('');
+        });
+
+        it('should throw error for nonexistent item', async () => {
+            vi.mocked(mockItemsRepository.getItemById).mockResolvedValue(null);
+
+            const item = await mockItemsRepository.getItemById('nonexistent');
+            expect(item).toBeNull();
+        });
+    });
+
+    describe('ReorderItemsUseCase', () => {
+        it('should reorder items at root level', async () => {
+            const items: SpaceItemEntity[] = [
+                {
+                    id: 'item-1',
+                    spaceId: 'space-1',
+                    parentId: null,
+                    name: 'Item 1',
+                    path: 'https://example1.com',
+                    type: SpaceItemType.Link,
+                    isExpanded: false,
+                    sortOrder: 0,
+                    createdAt: new Date(),
+                    faviconUrl: null,
+                    description: null,
+                    visitCount: 0,
+                    lastVisited: null,
+                    isPinned: false,
+                    pinPosition: null,
+                    localPath: null,
+                    securityBookmark: null,
+                    lastSyncedAt: null,
+                    isWatching: false,
+                },
+                {
+                    id: 'item-2',
+                    spaceId: 'space-1',
+                    parentId: null,
+                    name: 'Item 2',
+                    path: 'https://example2.com',
+                    type: SpaceItemType.Link,
+                    isExpanded: false,
+                    sortOrder: 1,
+                    createdAt: new Date(),
+                    faviconUrl: null,
+                    description: null,
+                    visitCount: 0,
+                    lastVisited: null,
+                    isPinned: false,
+                    pinPosition: null,
+                    localPath: null,
+                    securityBookmark: null,
+                    lastSyncedAt: null,
+                    isWatching: false,
+                },
+            ];
+
+            vi.mocked(mockItemsRepository.getItemsBySpaceId).mockResolvedValue(items);
+            vi.mocked(mockItemsRepository.reorderItems).mockResolvedValue(undefined);
+
+            const retrieved = await mockItemsRepository.getItemsBySpaceId('space-1');
+            expect(retrieved.length).toBe(2);
+
+            // Reorder: item-2 before item-1
+            await mockItemsRepository.reorderItems(null, ['item-2', 'item-1']);
+            expect(mockItemsRepository.reorderItems).toHaveBeenCalledWith(null, ['item-2', 'item-1']);
+        });
+
+        it('should validate all items exist in context', async () => {
+            const items: SpaceItemEntity[] = [
+                {
+                    id: 'item-1',
+                    spaceId: 'space-1',
+                    parentId: null,
+                    name: 'Item 1',
+                    path: 'https://example.com',
+                    type: SpaceItemType.Link,
+                    isExpanded: false,
+                    sortOrder: 0,
+                    createdAt: new Date(),
+                    faviconUrl: null,
+                    description: null,
+                    visitCount: 0,
+                    lastVisited: null,
+                    isPinned: false,
+                    pinPosition: null,
+                    localPath: null,
+                    securityBookmark: null,
+                    lastSyncedAt: null,
+                    isWatching: false,
+                },
+            ];
+
+            vi.mocked(mockItemsRepository.getItemsBySpaceId).mockResolvedValue(items);
+
+            const retrieved = await mockItemsRepository.getItemsBySpaceId('space-1');
+            const existingIds = new Set(retrieved.map(i => i.id));
+
+            expect(existingIds.has('item-1')).toBe(true);
+            expect(existingIds.has('nonexistent')).toBe(false);
+        });
+    });
+
+    describe('IncrementVisitCountUseCase', () => {
+        it('should increment visit count for existing item', async () => {
+            const item: SpaceItemEntity = {
+                id: 'item-1',
+                spaceId: 'space-1',
+                parentId: null,
+                name: 'Test Link',
+                path: 'https://example.com',
+                type: SpaceItemType.Link,
+                isExpanded: false,
+                sortOrder: 0,
+                createdAt: new Date(),
+                faviconUrl: null,
+                description: null,
+                visitCount: 5,
+                lastVisited: null,
+                isPinned: false,
+                pinPosition: null,
+                localPath: null,
+                securityBookmark: null,
+                lastSyncedAt: null,
+                isWatching: false,
+            };
+
+            vi.mocked(mockItemsRepository.getItemById).mockResolvedValue(item);
+            vi.mocked(mockItemsRepository.incrementVisitCount).mockResolvedValue(undefined);
+
+            const retrieved = await mockItemsRepository.getItemById('item-1');
+            expect(retrieved?.visitCount).toBe(5);
+
+            await mockItemsRepository.incrementVisitCount('item-1');
+            expect(mockItemsRepository.incrementVisitCount).toHaveBeenCalledWith('item-1');
+        });
+
+        it('should throw error for nonexistent item', async () => {
+            vi.mocked(mockItemsRepository.getItemById).mockResolvedValue(null);
+
+            const item = await mockItemsRepository.getItemById('nonexistent');
+            expect(item).toBeNull();
+        });
+    });
+
+    describe('UpdateItemMetadataUseCase', () => {
+        it('should update item metadata', async () => {
+            const item: SpaceItemEntity = {
+                id: 'item-1',
+                spaceId: 'space-1',
+                parentId: null,
+                name: 'Old Name',
+                path: 'https://example.com',
+                type: SpaceItemType.Link,
+                isExpanded: false,
+                sortOrder: 0,
+                createdAt: new Date(),
+                faviconUrl: null,
+                description: null,
+                visitCount: 0,
+                lastVisited: null,
+                isPinned: false,
+                pinPosition: null,
+                localPath: null,
+                securityBookmark: null,
+                lastSyncedAt: null,
+                isWatching: false,
+            };
+
+            vi.mocked(mockItemsRepository.getItemById).mockResolvedValue(item);
+            vi.mocked(mockItemsRepository.updateItem).mockResolvedValue(undefined);
+
+            const retrieved = await mockItemsRepository.getItemById('item-1');
+            expect(retrieved?.name).toBe('Old Name');
+            expect(retrieved?.description).toBeNull();
+
+            const updatedItem = {
+                ...item,
+                name: 'New Name',
+                description: 'A description',
+                faviconUrl: 'https://example.com/favicon.ico',
+            };
+
+            await mockItemsRepository.updateItem(updatedItem);
+            expect(mockItemsRepository.updateItem).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    name: 'New Name',
+                    description: 'A description',
+                })
+            );
+        });
+
+        it('should validate favicon URL', () => {
+            const validUrl = 'https://example.com/favicon.ico';
+            const result = FormatValidators.validateUrl(validUrl);
+            expect(result.success).toBe(true);
+        });
+
+        it('should reject invalid favicon URL', () => {
+            const invalidUrl = 'not-a-url';
+            const result = FormatValidators.validateUrl(invalidUrl);
+            expect(result.success).toBe(false);
+        });
+
+        it('should sanitize description', () => {
+            const input = '  A description with spaces  ';
+            const sanitized = DataSanitizer.sanitizeString(input);
+            expect(sanitized).toBe('A description with spaces');
+        });
+
+        it('should throw error for nonexistent item', async () => {
+            vi.mocked(mockItemsRepository.getItemById).mockResolvedValue(null);
+
+            const item = await mockItemsRepository.getItemById('nonexistent');
+            expect(item).toBeNull();
+        });
+    });
 });

@@ -9,6 +9,10 @@ import {
     CreateItemUseCase,
     DeleteItemUseCase,
     MoveItemUseCase,
+    RenameItemUseCase,
+    ReorderItemsUseCase,
+    IncrementVisitCountUseCase,
+    UpdateItemMetadataUseCase,
 } from '../use-cases/items';
 import { GetSpaceItemsQuery, type SpaceItemWithChildren } from '../queries';
 
@@ -17,6 +21,10 @@ export class SpaceItemsFacade {
         private readonly createItemUseCase: CreateItemUseCase,
         private readonly deleteItemUseCase: DeleteItemUseCase,
         private readonly moveItemUseCase: MoveItemUseCase,
+        private readonly renameItemUseCase: RenameItemUseCase,
+        private readonly reorderItemsUseCase: ReorderItemsUseCase,
+        private readonly incrementVisitCountUseCase: IncrementVisitCountUseCase,
+        private readonly updateItemMetadataUseCase: UpdateItemMetadataUseCase,
         private readonly getSpaceItemsQuery: GetSpaceItemsQuery
     ) { }
 
@@ -64,6 +72,52 @@ export class SpaceItemsFacade {
         try {
             await this.moveItemUseCase.execute(input);
             return ok(undefined);
+        } catch (error) {
+            return err(this.mapError(error));
+        }
+    }
+
+    async renameItem(itemId: string, newName: string): Promise<Result<void, AppError>> {
+        try {
+            await this.renameItemUseCase.execute({ itemId, newName });
+            return ok(undefined);
+        } catch (error) {
+            return err(this.mapError(error));
+        }
+    }
+
+    async reorderItems(input: {
+        spaceId: string;
+        parentId: string | null;
+        orderedItemIds: string[];
+    }): Promise<Result<void, AppError>> {
+        try {
+            await this.reorderItemsUseCase.execute(input);
+            return ok(undefined);
+        } catch (error) {
+            return err(this.mapError(error));
+        }
+    }
+
+    async incrementVisitCount(itemId: string): Promise<Result<void, AppError>> {
+        try {
+            await this.incrementVisitCountUseCase.execute({ itemId });
+            return ok(undefined);
+        } catch (error) {
+            return err(this.mapError(error));
+        }
+    }
+
+    async updateItemMetadata(input: {
+        itemId: string;
+        name?: string;
+        description?: string | null;
+        faviconUrl?: string | null;
+        isExpanded?: boolean;
+    }): Promise<Result<SpaceItemEntity, AppError>> {
+        try {
+            const item = await this.updateItemMetadataUseCase.execute(input);
+            return ok(item);
         } catch (error) {
             return err(this.mapError(error));
         }

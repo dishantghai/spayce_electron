@@ -52,4 +52,5 @@ export const SERVICE_KEYS = {
     LOGGER: 'logger',
     SPACES_FACADE: 'spacesFacade',
     SPACE_ITEMS_FACADE: 'spaceItemsFacade',
+    SEARCH_FACADE: 'searchFacade',
 } as const;
