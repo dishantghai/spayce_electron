@@ -1,13 +1,28 @@
 {
-    "id": "009",
-    "name": "application-layer",
-    "status": "pending",
-    "priority": "critical",
-    "dependencies": [
-        "007",
-        "008"
-    ],
-    "estimated_days": 4,
-    "created_at": "2026-01-20T11:05:00.000000",
-    "updated_at": "2026-01-21T10:10:00.000000"
+  "id": "009",
+  "name": "application-layer",
+  "status": "completed",
+  "priority": "critical",
+  "dependencies": [
+    "007",
+    "008"
+  ],
+  "estimated_days": 3,
+  "created_at": "2026-01-20T11:05:00.000000",
+  "updated_at": "2026-01-21T11:15:00.000000",
+  "implementation_started": "2026-01-21T11:00:19.738933",
+  "completed_at": "2026-01-21T11:15:00.000000",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-21T11:00:19.740135",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  }
 }

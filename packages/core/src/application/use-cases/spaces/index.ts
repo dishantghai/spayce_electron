@@ -1,0 +1,10 @@
+export { CreateSpaceUseCase } from './CreateSpaceUseCase';
+export type { CreateSpaceInput, CreateSpaceOutput } from './CreateSpaceUseCase';
+export { DeleteSpaceUseCase } from './DeleteSpaceUseCase';
+export type { DeleteSpaceInput } from './DeleteSpaceUseCase';
+export { RenameSpaceUseCase } from './RenameSpaceUseCase';
+export type { RenameSpaceInput } from './RenameSpaceUseCase';
+export { UpdateSpaceUseCase } from './UpdateSpaceUseCase';
+export type { UpdateSpaceInput } from './UpdateSpaceUseCase';
+export { ReorderSpacesUseCase } from './ReorderSpacesUseCase';
+export type { ReorderSpacesInput } from './ReorderSpacesUseCase';

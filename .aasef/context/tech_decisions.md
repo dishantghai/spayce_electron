@@ -250,3 +250,49 @@ packages/infrastructure/src/
 - Database timestamps stored as INTEGER (Unix ms), converted to Date in entities
 - Always wrap database operations in try/catch and throw DatabaseError
 - Use transactions for multi-row operations (reorder, batch updates)
+
+### 8. Clean Architecture - Application Layer (Spec 009)
+
+| Decision | Value | Rationale |
+|----------|-------|-----------|
+| Package Location | `packages/core/src/application/` | Within core package |
+| Use Case Pattern | Single execute() method | Clear, testable operations |
+| Query Pattern | Separate from commands | CQRS-lite separation |
+| Facade Pattern | Thin orchestrators | Simple API for UI layer |
+| Error Handling | Result<T, Error> type | UI-friendly error propagation |
+| Validation | Schema + Business rule | Multi-layer validation |
+
+**Application Layer Structure:**
+```
+packages/core/src/application/
+├── common/
+│   ├── Result.ts          # Result<T, E> type and ok/err helpers
+│   ├── idGenerator.ts     # UUID v4 generation
+│   ├── UseCase.ts         # UseCase<TInput, TOutput> interface
+│   └── index.ts
+├── use-cases/
+│   ├── spaces/            # Space CRUD operations
+│   ├── items/             # SpaceItem CRUD operations
+│   ├── pins/              # Pin management operations
+│   └── index.ts
+├── queries/
+│   ├── GetSpacesQuery.ts
+│   ├── GetSpaceItemsQuery.ts
+│   ├── SearchItemsQuery.ts
+│   ├── GetRecentItemsQuery.ts
+│   ├── GetMostVisitedItemsQuery.ts
+│   └── index.ts
+├── facades/
+│   ├── SpacesFacade.ts
+│   ├── SpaceItemsFacade.ts
+│   ├── SearchFacade.ts
+│   └── index.ts
+└── index.ts
+```
+
+**Key Principles:**
+- Use cases validate input, sanitize data, emit domain events
+- Queries fetch and transform data without side effects
+- Facades provide thin wrappers returning Result<T> for UI consumption
+- All errors mapped to AppError type with type discrimination
+- No external dependencies in application layer (uses domain interfaces)
