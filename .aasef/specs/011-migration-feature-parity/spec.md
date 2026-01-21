@@ -19,11 +19,18 @@ Complete the Clean Architecture migration by migrating from the existing `packag
 - Migrates existing code from `packages/shared/` to new structure
 - Validates all Flutter features work in Electron
 - Updates all imports across codebase
-- Removes mock data from UI components
+- **Verifies** mock data removal completed in Spec 010
+- **Verifies** main process initialization completed in Spec 010
+- **Verifies** App.tsx hook integration completed in Spec 010
+
+> [!NOTE]
+> Spec 010 now handles main process initialization, App.tsx integration, and mock data removal.
+> Spec 011 focuses on verification, migration completion, and Flutter feature parity.
 
 **This Spec Covers:**
 - Migration from `packages/shared/` structure
 - Flutter feature parity verification
+- **E2E integration verification** (Spec 010 deliverables)
 - Database seeding and validation
 - Rollback strategy implementation
 - Comprehensive test suite
@@ -497,7 +504,11 @@ verifyFeatures();
 
 ---
 
-### R4: Mock Data Removal
+### R4: Mock Data Removal Verification
+
+> [!IMPORTANT]
+> Mock data removal from App.tsx should have been completed in Spec 010.
+> This section verifies that removal and catches any remaining mock data.
 
 #### 4.1 Mock Data Audit
 
@@ -997,6 +1008,132 @@ describe('SqliteSpacesRepository', () => {
 6. Add React hook in `packages/react-ui/src/hooks/`
 7. Wire up in service registry
 
+```
+
+---
+
+### R8: E2E Integration Verification
+
+> [!IMPORTANT]
+> This section verifies that all Spec 010 deliverables are working end-to-end.
+
+#### 8.1 Spec 010 Deliverables Verification Checklist
+
+```bash
+#!/bin/bash
+# scripts/verify-e2e-integration.sh
+
+echo "=== E2E Integration Verification ==="
+echo ""
+
+# 1. Check ServiceBootstrap is called
+echo "1. Checking main process initialization..."
+if grep -q "ServiceBootstrap.initialize" packages/desktop/src/main/index.ts; then
+  echo "   ✅ ServiceBootstrap.initialize found in main/index.ts"
+else
+  echo "   ❌ ServiceBootstrap.initialize NOT found in main/index.ts"
+  exit 1
+fi
+
+# 2. Check SurrealDB is removed
+echo "2. Checking SurrealDB removal..."
+if grep -rq "surrealdb" packages/desktop/src/main/; then
+  echo "   ❌ SurrealDB references still exist in main/"
+  exit 1
+else
+  echo "   ✅ SurrealDB removed from main/"
+fi
+
+# 3. Check mock data removal
+echo "3. Checking mock data removal..."
+if grep -q "DEMO_SPACES" packages/desktop/src/renderer/App.tsx; then
+  echo "   ❌ DEMO_SPACES still exists in App.tsx"
+  exit 1
+else
+  echo "   ✅ DEMO_SPACES removed from App.tsx"
+fi
+
+# 4. Check InvalidationProvider
+echo "4. Checking InvalidationProvider..."
+if grep -q "InvalidationProvider" packages/desktop/src/renderer/App.tsx; then
+  echo "   ✅ InvalidationProvider found in App.tsx"
+else
+  echo "   ❌ InvalidationProvider NOT found in App.tsx"
+  exit 1
+fi
+
+# 5. Check useSpaces hook
+echo "5. Checking useSpaces hook usage..."
+if grep -rq "useSpaces" packages/desktop/src/renderer/; then
+  echo "   ✅ useSpaces hook in use"
+else
+  echo "   ❌ useSpaces hook NOT in use"
+  exit 1
+fi
+
+echo ""
+echo "=== All E2E checks passed! ==="
+```
+
+#### 8.2 Manual E2E Test Scenarios
+
+Execute these scenarios and verify each works:
+
+| # | Scenario | Steps | Expected Result |
+|---|----------|-------|-----------------|
+| 1 | App Launch | Start app | App shows loading, then displays spaces from database |
+| 2 | Create Space | Click "Add Space", fill form, submit | New space appears in sidebar and main view |
+| 3 | Delete Space | Right-click space, "Delete" | Space removed, items cascade deleted |
+| 4 | Rename Space | Double-click space name, type, Enter | Name updated in UI and database |
+| 5 | Reorder Spaces | Drag space card down one position | Order persisted after app restart |
+| 6 | Add Link | Click "Add Link", paste URL, submit | Link appears in tree with favicon |
+| 7 | Create Folder | Click "New Folder", name it | Folder appears in tree |
+| 8 | Pin Item | Right-click item, "Pin" | Item appears in pinned grid |
+| 9 | Drag Item | Drag link into folder | Item moved, tree updated |
+| 10 | Search | Type in search box | Matching items shown as results |
+
+#### 8.3 Database Persistence Verification
+
+```typescript
+// scripts/verify-persistence.ts
+import Database from 'better-sqlite3';
+import { app } from 'electron';
+import * as path from 'path';
+
+async function verifyPersistence() {
+  const userDataPath = app.getPath('userData');
+  const dbPath = path.join(userDataPath, 'spayce.sqlite');
+  
+  const db = new Database(dbPath);
+  
+  // Check tables exist
+  const tables = db.prepare(`
+    SELECT name FROM sqlite_master 
+    WHERE type='table' 
+    ORDER BY name
+  `).all();
+  
+  console.log('Tables in database:', tables.map((t: any) => t.name));
+  
+  // Count records
+  const spaceCount = db.prepare('SELECT COUNT(*) as count FROM spaces').get() as any;
+  const itemCount = db.prepare('SELECT COUNT(*) as count FROM space_items').get() as any;
+  
+  console.log(`Spaces: ${spaceCount.count}`);
+  console.log(`Items: ${itemCount.count}`);
+  
+  db.close();
+  
+  if (spaceCount.count === 0) {
+    console.warn('Warning: No spaces in database');
+  }
+}
+
+verifyPersistence();
+```
+
+---
+
 ### Database Changes
 1. Create migration file
 2. Update repository implementation
@@ -1037,7 +1174,8 @@ describe('SqliteSpacesRepository', () => {
 - [ ] Manual testing confirms feature parity
 - [ ] UI behavior matches Flutter app
 
-### Mock Data Removal
+### Mock Data Removal Verification
+- [ ] Verify Spec 010 removed DEMO_SPACES from App.tsx
 - [ ] Mock data audit script finds no matches
 - [ ] All components use real hooks for data
 - [ ] Loading states implemented

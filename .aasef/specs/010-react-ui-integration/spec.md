@@ -11,14 +11,24 @@ Implement the Presentation layer React integration including custom data hooks, 
 - **Spec 002**: Sidebar navigation (uses hooks for space data)
 - **Spec 003**: Spaces module (uses hooks for space items)
 - **Spec 007** (Core Domain Layer): Entity types for props
-- **Spec 008**: Infrastructure Layer (service registry)
-- **Spec 009**: Application Layer (facades, Result type)
+- **Spec 008**: Infrastructure Layer (service registry, ServiceBootstrap)
+- **Spec 009**: Application Layer - **ALL FACADES MUST BE COMPLETE**:
+  - SpacesFacade (registered in ServiceBootstrap)
+  - SpaceItemsFacade (registered in ServiceBootstrap)
+  - SearchFacade (registered in ServiceBootstrap)
+  - All 15 use cases implemented
+
+> [!IMPORTANT]
+> Spec 009 must have all 3 facades implemented and registered before starting Spec 010.
+> Hooks depend on facades being available via `serviceRegistry.get()`.
 
 **Integration Points:**
 - Consumes facades from Spec 009 via service registry
 - Uses entity types from Spec 007 for component props
 - Integrates with existing UI components from Specs 002, 003
 - Uses design system tokens from Spec 001 for error UI
+- Updates Electron main process to initialize services
+- Updates App.tsx to use hooks instead of mock data
 
 **This Spec Covers:**
 - React hooks for data fetching (useSpaces, useSpaceItems, etc.)
@@ -28,6 +38,8 @@ Implement the Presentation layer React integration including custom data hooks, 
 - Form validation hooks
 - Zustand UI stores (drag state, navigation state)
 - Loading and error state patterns
+- **Electron main process initialization (ServiceBootstrap)**
+- **App.tsx integration with hooks (replacing mock data)**
 
 ## User Stories
 
@@ -106,6 +118,335 @@ After completing this spec, update `.aasef/context/tech_decisions.md` to add:
 ---
 
 ## Requirements
+
+### R0: Spec 009 Facade Verification (PREREQUISITE)
+
+Before starting Spec 010 implementation, verify these Spec 009 deliverables are complete:
+
+#### 0.1 Facade Checklist
+
+```bash
+# Run this verification before starting Spec 010
+pnpm test --filter @spayce/core -- application/facades
+
+# All facades must be implemented and registered:
+# - SpacesFacade: getSpaces, createSpace, deleteSpace, renameSpace, updateSpace, reorderSpaces
+# - SpaceItemsFacade: getItems, createItem, deleteItem, moveItem, renameItem, reorderItems, pin/unpin
+# - SearchFacade: searchItems, getRecentItems, getMostVisitedItems
+```
+
+#### 0.2 Service Registration Verification
+
+```typescript
+// Verify in ServiceBootstrap that facades are registered:
+// packages/infrastructure/src/bootstrap/ServiceBootstrap.ts
+
+export class ServiceBootstrap {
+  static initialize(config: { databasePath: string }) {
+    // ... database setup ...
+    
+    // These MUST exist:
+    serviceRegistry.register(SERVICE_KEYS.SPACES_FACADE, new SpacesFacade(...));
+    serviceRegistry.register(SERVICE_KEYS.SPACE_ITEMS_FACADE, new SpaceItemsFacade(...));
+    serviceRegistry.register(SERVICE_KEYS.SEARCH_FACADE, new SearchFacade(...));
+  }
+}
+```
+
+> [!CAUTION]
+> If facades are not complete, **STOP** and complete Spec 009 first.
+> Hooks will crash with "Cannot read property of undefined" if facades are missing.
+
+---
+
+### R-MAIN: Electron Main Process Initialization
+
+#### MAIN.1 Update Main Process Entry Point
+
+Replace the existing SurrealDB initialization with ServiceBootstrap:
+
+```typescript
+// packages/desktop/src/main/index.ts
+import { app, BrowserWindow } from 'electron';
+import path from 'path';
+import { ServiceBootstrap } from '@spayce/infrastructure';
+import { createMainWindow } from './window';
+import { registerIpcHandlers } from './ipc/handlers';
+
+let mainWindow: BrowserWindow | null = null;
+
+async function initialize() {
+  try {
+    // Get Electron userData directory for database
+    const userDataPath = app.getPath('userData');
+    const databasePath = path.join(userDataPath, 'spayce.sqlite');
+    
+    console.log('Initializing services with database:', databasePath);
+    
+    // Initialize Clean Architecture services
+    await ServiceBootstrap.initialize({ databasePath });
+    console.log('Service registry initialized');
+
+    // Register IPC handlers for renderer communication
+    registerIpcHandlers();
+
+    // Create main window
+    mainWindow = createMainWindow();
+  } catch (error) {
+    console.error('Failed to initialize app:', error);
+    app.quit();
+  }
+}
+
+app.whenReady().then(initialize);
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) {
+    mainWindow = createMainWindow();
+  }
+});
+
+export { mainWindow };
+```
+
+#### MAIN.2 First Launch Database Copy
+
+On first launch, if Flutter database exists, copy it:
+
+```typescript
+// packages/desktop/src/main/database/firstLaunch.ts
+import { app } from 'electron';
+import * as fs from 'fs';
+import * as path from 'path';
+
+export async function copyFlutterDbIfNeeded(): Promise<string> {
+  const userDataPath = app.getPath('userData');
+  const electronDbPath = path.join(userDataPath, 'spayce.sqlite');
+  
+  // If Electron DB already exists, use it
+  if (fs.existsSync(electronDbPath)) {
+    return electronDbPath;
+  }
+  
+  // Look for Flutter database
+  const flutterPaths = [
+    path.join(app.getPath('documents'), 'spaces.sqlite'),
+    // macOS sandboxed location
+    path.join(app.getPath('home'), 'Library/Containers/com.spayce.frontend/Data/Documents/spaces.sqlite'),
+  ];
+  
+  for (const flutterPath of flutterPaths) {
+    if (fs.existsSync(flutterPath)) {
+      console.log('Copying Flutter database from:', flutterPath);
+      fs.copyFileSync(flutterPath, electronDbPath);
+      return electronDbPath;
+    }
+  }
+  
+  // No existing database - ServiceBootstrap will create one
+  console.log('No existing database found, will create new one');
+  return electronDbPath;
+}
+```
+
+#### MAIN.3 Remove Legacy SurrealDB Code
+
+```bash
+# Files to DELETE:
+rm -f packages/desktop/src/main/database/surrealdb.ts
+
+# Update imports in any files that referenced surrealdb.ts
+```
+
+---
+
+### R-APP: App.tsx Integration
+
+#### APP.1 Remove Mock Data
+
+Delete the DEMO_SPACES constant (~380 lines) from App.tsx:
+
+```typescript
+// DELETE ALL OF THIS (lines 14-387 in current App.tsx):
+// const DEMO_SPACES: Space[] = [ ... ];
+```
+
+#### APP.2 Wrap App with InvalidationProvider
+
+```typescript
+// packages/desktop/src/renderer/App.tsx
+import React from 'react';
+import { InvalidationProvider } from '@spayce/react-ui';
+import { AppContent } from './AppContent';
+
+export function App(): React.ReactElement {
+  return (
+    <InvalidationProvider>
+      <AppContent />
+    </InvalidationProvider>
+  );
+}
+```
+
+#### APP.3 Create AppContent with Hook Integration
+
+```typescript
+// packages/desktop/src/renderer/AppContent.tsx
+import React, { useState } from 'react';
+import { useSpaces } from '@spayce/react-ui/hooks';
+import { useCreateSpace, useDeleteSpace, useUpdateSpace, useReorderSpaces } from '@spayce/react-ui/hooks/mutations';
+import { Sidebar, SpacesScreen, ContextMenu } from '@spayce/shared';
+import type { Space, SpaceItem, SidebarMode, SidebarTabId } from '@spayce/shared';
+
+const DEFAULT_PROFILE_ID = 'default-profile';
+const DEFAULT_USER_ID = 'default-user';
+
+export function AppContent(): React.ReactElement {
+  // Fetch real data from database via hooks
+  const { data: spaces, loading, error, refetch } = useSpaces(DEFAULT_PROFILE_ID);
+  
+  // Mutation hooks
+  const { mutate: createSpace, loading: createLoading } = useCreateSpace();
+  const { mutate: deleteSpace } = useDeleteSpace();
+  const { mutate: updateSpace } = useUpdateSpace();
+  const { mutate: reorderSpaces } = useReorderSpaces();
+  
+  // UI state
+  const [sidebarActiveSpaceIndex, setSidebarActiveSpaceIndex] = useState(0);
+  const [spacesScreenActiveSpaceIndex, setSpacesScreenActiveSpaceIndex] = useState(0);
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>('fixed');
+  const [sidebarVisible, setSidebarVisible] = useState(true);
+  const [activeTab, setActiveTab] = useState<SidebarTabId>('spaces');
+  const [focusContext, setFocusContext] = useState<'sidebar' | 'spacesScreen'>('sidebar');
+  const [contextMenu, setContextMenu] = useState<{
+    item: SpaceItem;
+    spaceId: string;
+    position: { x: number; y: number };
+  } | null>(null);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#0D0D0D' }}>
+        <div>Loading spaces...</div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#0D0D0D' }}>
+        <div>
+          <h2>Error loading spaces</h2>
+          <p>{error.message}</p>
+          <button onClick={refetch}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  const spaceData = spaces || [];
+
+  // Handler implementations using mutation hooks
+  const handleCreateSpace = async (spaceData: {
+    name: string;
+    iconName: string;
+    accentColor: string;
+  }) => {
+    await createSpace({
+      profileId: DEFAULT_PROFILE_ID,
+      userId: DEFAULT_USER_ID,
+      name: spaceData.name,
+      iconName: spaceData.iconName,
+      accentColor: spaceData.accentColor,
+    });
+    // Invalidation happens automatically in the hook
+  };
+
+  const handleUpdateSpace = async (space: Space, updates: {
+    name: string;
+    iconName: string;
+    accentColor: string;
+  }) => {
+    await updateSpace({
+      spaceId: space.id,
+      profileId: DEFAULT_PROFILE_ID,
+      ...updates,
+    });
+  };
+
+  const handleReorderSpaces = async (oldIndex: number, newIndex: number) => {
+    const newOrder = [...spaceData];
+    const [removed] = newOrder.splice(oldIndex, 1);
+    newOrder.splice(newIndex, 0, removed);
+    
+    await reorderSpaces({
+      profileId: DEFAULT_PROFILE_ID,
+      spaceIds: newOrder.map(s => s.id),
+    });
+  };
+
+  // ... rest of handlers follow same pattern ...
+
+  return (
+    <div style={{ display: 'flex', width: '100vw', height: '100vh', backgroundColor: '#0D0D0D' }}>
+      <Sidebar
+        spaces={spaceData}
+        activeSpaceIndex={sidebarActiveSpaceIndex}
+        mode={sidebarMode}
+        activeTab={activeTab}
+        isVisible={sidebarVisible}
+        hasFocus={focusContext === 'sidebar'}
+        onSpaceSelect={setSidebarActiveSpaceIndex}
+        onTabChange={setActiveTab}
+        onCreateSpace={handleCreateSpace}
+        onEditSpace={handleUpdateSpace}
+        // ... other props ...
+      />
+      
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {activeTab === 'spaces' ? (
+          <SpacesScreen
+            spaces={spaceData}
+            activeSpaceIndex={spacesScreenActiveSpaceIndex}
+            hasFocus={focusContext === 'spacesScreen'}
+            onSpaceSelect={setSpacesScreenActiveSpaceIndex}
+            onReorderSpaces={handleReorderSpaces}
+            // ... other props ...
+          />
+        ) : (
+          <div>{/* Other tabs */}</div>
+        )}
+      </main>
+    </div>
+  );
+}
+```
+
+#### APP.4 Wire All Mutation Handlers
+
+All handlers must be updated to use mutation hooks:
+
+| Handler | Hook | Invalidation Keys |
+|---------|------|-------------------|
+| `handleCreateSpace` | `useCreateSpace` | 'spaces' |
+| `handleDeleteSpace` | `useDeleteSpace` | 'spaces', 'space-items:{spaceId}' |
+| `handleUpdateSpace` | `useUpdateSpace` | 'spaces' |
+| `handleReorderSpaces` | `useReorderSpaces` | 'spaces' |
+| `handleCreateItem` | `useCreateItem` | 'space-items', 'space-items:{spaceId}' |
+| `handleDeleteItem` | `useDeleteItem` | 'space-items', 'pins' |
+| `handleMoveItem` | `useMoveItem` | 'space-items' |
+| `handlePinItem` | `usePinItem` | 'pins' |
+| `handleUnpinItem` | `useUnpinItem` | 'pins' |
+
+---
 
 ### R1: Data Fetching Hooks
 
@@ -1166,6 +1507,30 @@ packages/react-ui/
 
 ## Acceptance Criteria
 
+### Spec 009 Prerequisite (BLOCKING)
+- [ ] SpacesFacade is implemented and registered in ServiceBootstrap
+- [ ] SpaceItemsFacade is implemented and registered in ServiceBootstrap
+- [ ] SearchFacade is implemented and registered in ServiceBootstrap
+- [ ] All 15 use cases are implemented (5 space, 7 item, 3 pin)
+- [ ] Facade tests pass: `pnpm test --filter @spayce/core -- application/facades`
+
+### Main Process Initialization
+- [ ] `packages/desktop/src/main/index.ts` imports ServiceBootstrap
+- [ ] ServiceBootstrap.initialize() called with correct database path
+- [ ] Database path uses `app.getPath('userData')` for Electron
+- [ ] SurrealDB code completely removed from main process
+- [ ] First launch copies Flutter database if it exists
+- [ ] Main process logs show "Service registry initialized"
+
+### App.tsx Integration
+- [ ] DEMO_SPACES constant removed from App.tsx (0 lines of mock data)
+- [ ] App is wrapped with `<InvalidationProvider>`
+- [ ] AppContent uses `useSpaces()` hook for data fetching
+- [ ] Loading state shown while spaces are loading
+- [ ] Error state shown if spaces fail to load
+- [ ] All mutation handlers use mutation hooks (see table)
+- [ ] No useState with mock data arrays remains
+
 ### Data Fetching Hooks
 - [ ] `useSpaces(profileId)` returns `{ data, loading, error, refetch }`
 - [ ] `useSpaceItems(spaceId)` returns tree-structured items
@@ -1218,23 +1583,29 @@ packages/react-ui/
 - [ ] `SpaceListSkeleton` shows appropriate loading UI
 - [ ] Skeletons use design system tokens
 
-### Integration
+### End-to-End Integration
 - [ ] Package builds successfully
 - [ ] All hooks work when mounted in React app
 - [ ] Error boundaries work in component tree
 - [ ] Invalidation system triggers refetches
+- [ ] App launches and displays real data from database
+- [ ] Create space works and persists to database
+- [ ] Delete space works and removes from database
+- [ ] Reorder spaces works via drag and drop
 
 ## Dependencies
 
 - 001 (project-foundation)
 - 007-core-domain-layer
 - 008 (infrastructure-layer)
-- 009 (application-layer)
+- 009 (application-layer) - **ALL FACADES MUST BE COMPLETE**
 
 ## Estimated Duration
-3-4 days
+4-5 days (expanded to include main process and App.tsx integration)
 
 ## Related Specs
-- **Spec 009**: Provides facades consumed by hooks
+- **Spec 009**: Provides facades consumed by hooks - **MUST BE FULLY COMPLETE**
 - **Spec 002**: Sidebar uses these hooks for data
 - **Spec 003**: Spaces module uses these hooks
+- **Spec 011**: Verification of end-to-end integration
+
