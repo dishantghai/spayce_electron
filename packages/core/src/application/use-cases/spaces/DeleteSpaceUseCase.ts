@@ -1,6 +1,6 @@
-import type { ISpacesRepository, IEventBus } from '../../domain';
-import { SpaceDeletedEvent } from '../../domain/events/SpaceEvents';
-import { EntityNotFoundError } from '../../domain/errors/EntityNotFoundError';
+import type { ISpacesRepository, IEventBus } from '../../../domain';
+import { SpaceDeletedEvent } from '../../../domain/events/SpaceEvents';
+import { EntityNotFoundError } from '../../../domain/errors/EntityNotFoundError';
 
 export interface DeleteSpaceInput {
     spaceId: string;

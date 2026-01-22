@@ -1,8 +1,7 @@
-import type { ISpacesRepository } from '../../domain';
-import type { SpaceEntity } from '../../domain/entities/Space';
-import { EntityNotFoundError } from '../../domain/errors/EntityNotFoundError';
-import { ValidationError } from '../../domain/errors/ValidationError';
-import { FormatValidators, DataSanitizer } from '../../domain/validators';
+import type { ISpacesRepository, SpaceEntity } from '../../../domain';
+import { EntityNotFoundError } from '../../../domain/errors/EntityNotFoundError';
+import { ValidationError } from '../../../domain/errors/ValidationError';
+import { DataSanitizer, FormatValidators } from '../../../domain/validators';
 
 export interface UpdateSpaceInput {
     spaceId: string;

@@ -21,8 +21,8 @@
     "started_at": "2026-01-21T13:24:59.841471",
     "tests": {
       "linked_files": [],
-      "last_run": null,
-      "last_result": null,
+      "last_run": "2026-01-21T14:03:26.745278",
+      "last_result": "passed",
       "passed": 0,
       "failed": 0,
       "total": 0

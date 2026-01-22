@@ -200,39 +200,157 @@
     font-size: 14px;
 }
 
-/* Empty State */
+/* Empty State - Pixel-perfect from Flutter WorkspaceZeroState */
 .emptyState {
     flex: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 16px;
-    color: #6B7280;
+    background-color: #0B0B0B;
+    /* WorkspaceTheme.workspaceBg */
 }
 
-.emptyStateText {
-    font-size: 16px;
+/* Illustration Container */
+.emptyStateIllustration {
+    width: 120px;
+    height: 120px;
+    background-color: #1E1E1E;
+    /* WorkspaceTheme.activeSurface */
+    border-radius: 16px;
+    position: relative;
+    margin-bottom: 32px;
+}
+
+/* Decorative dots in illustration */
+.emptyStateDot {
+    width: 12px;
+    height: 12px;
+    background-color: rgba(156, 163, 175, 0.5);
+    /* textSecondary with 0.5 alpha */
+    border-radius: 4px;
+    position: absolute;
+}
+
+.emptyStateDot:nth-child(1) {
+    top: 20px;
+    left: 20px;
+}
+
+.emptyStateDot:nth-child(2) {
+    top: 20px;
+    right: 40px;
+}
+
+.emptyStateDot:nth-child(3) {
+    bottom: 40px;
+    left: 20px;
+}
+
+.emptyStateDot:nth-child(4) {
+    bottom: 40px;
+    right: 40px;
+}
+
+/* Plus icon in illustration */
+.emptyStateIllustrationPlus {
+    position: absolute;
+    top: 12px;
+    right: 12px;
     color: #9CA3AF;
+    /* WorkspaceTheme.textSecondary */
 }
 
+/* Folder icon in illustration */
+.emptyStateIllustrationFolder {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    color: #FBBF24;
+    /* WorkspaceTheme.folderIconColor */
+}
+
+/* Welcome heading */
+.emptyStateHeading {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: #FFFFFF;
+    /* WorkspaceTheme.textPrimary */
+    line-height: 1.4;
+    margin: 0 0 16px 0;
+}
+
+/* Description text */
+.emptyStateDescription {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #9CA3AF;
+    /* WorkspaceTheme.textSecondary */
+    line-height: 1.6;
+    text-align: center;
+    max-width: 400px;
+    margin: 0 0 32px 0;
+}
+
+/* Primary button - Create Space */
 .emptyStateButton {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 12px 24px;
+    padding: 14px 24px;
     border-radius: 8px;
-    background-color: #6D5AE6;
+    background-color: #1A1A1A;
+    /* WorkspaceTheme.statusBar */
     border: none;
-    color: white;
+    color: #FFFFFF;
+    /* WorkspaceTheme.textPrimary */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 150ms ease;
+    transition: background-color 150ms ease, transform 150ms ease;
 }
 
 .emptyStateButton:hover {
-    background-color: #5D4AD6;
+    background-color: #262626;
+    /* Slightly lighter */
+    transform: translateY(-1px);
+}
+
+.emptyStateButton:active {
+    transform: translateY(0);
+}
+
+/* Secondary button - Open existing folder */
+.emptyStateSecondaryButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    margin-top: 16px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    /* WorkspaceTheme.textSecondary */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: color 150ms ease;
+}
+
+.emptyStateSecondaryButton:hover {
+    color: #E5E7EB;
+    /* Lighter on hover */
+}
+
+/* Legacy simple empty state text (kept for compatibility) */
+.emptyStateText {
+    font-size: 16px;
+    color: #9CA3AF;
 }
 
 /* Focus outline for keyboard navigation - removed blue border */

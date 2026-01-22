@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Folder, FolderOpen } from 'lucide-react';
 import type { Space, SpaceItem } from '../../types';
 import { SpaceCard } from './SpaceCard';
 import { SpacesBottomBar } from './SpacesBottomBar';
@@ -354,15 +354,48 @@ export function SpacesScreen({
         );
     }
 
-    // Empty state
+    // Empty state - Pixel-perfect from Flutter WorkspaceZeroState
     if (spaces.length === 0) {
         return (
             <div className={styles.spacesScreen}>
                 <div className={styles.emptyState}>
-                    <span className={styles.emptyStateText}>No spaces yet</span>
+                    {/* Illustration */}
+                    <div className={styles.emptyStateIllustration}>
+                        {/* Decorative dots */}
+                        <div className={styles.emptyStateDot} />
+                        <div className={styles.emptyStateDot} />
+                        <div className={styles.emptyStateDot} />
+                        <div className={styles.emptyStateDot} />
+                        {/* Plus icon */}
+                        <div className={styles.emptyStateIllustrationPlus}>
+                            <Plus size={16} />
+                        </div>
+                        {/* Folder icon */}
+                        <div className={styles.emptyStateIllustrationFolder}>
+                            <Folder size={28} />
+                        </div>
+                    </div>
+
+                    {/* Welcome heading */}
+                    <h1 className={styles.emptyStateHeading}>
+                        Welcome to your Spaces
+                    </h1>
+
+                    {/* Description */}
+                    <p className={styles.emptyStateDescription}>
+                        This is your new command center. Create a space to start organizing your files, managing your learning resources, and building your next big project.
+                    </p>
+
+                    {/* Primary button */}
                     <button className={styles.emptyStateButton} onClick={onAddSpace}>
-                        <Plus size={16} />
-                        Create your first space
+                        <Plus size={18} />
+                        Create Space
+                    </button>
+
+                    {/* Secondary button */}
+                    <button className={styles.emptyStateSecondaryButton} onClick={onAddSpace}>
+                        <FolderOpen size={18} />
+                        Open existing folder
                     </button>
                 </div>
             </div>

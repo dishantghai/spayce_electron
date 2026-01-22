@@ -29,15 +29,12 @@
         "typecheck": "tsc --noEmit"
     },
     "dependencies": {
+        "@spayce/core": "workspace:*",
         "better-sqlite3": "^11.0.0"
     },
     "devDependencies": {
-        "@spayce/core": "workspace:*",
         "@types/better-sqlite3": "^7.6.11",
         "typescript": "^5.4.0",
         "vitest": "^1.6.0"
-    },
-    "peerDependencies": {
-        "@spayce/core": "workspace:*"
     }
 }

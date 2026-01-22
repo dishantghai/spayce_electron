@@ -18,20 +18,40 @@
         "jsx": "react-jsx",
         "baseUrl": ".",
         "paths": {
+            "@spayce/shared": [
+                "packages/shared/src/index.ts"
+            ],
             "@spayce/shared/*": [
                 "packages/shared/src/*"
+            ],
+            "@spayce/core": [
+                "packages/core/src/index.ts"
+            ],
+            "@spayce/core/*": [
+                "packages/core/src/*"
+            ],
+            "@spayce/infrastructure": [
+                "packages/infrastructure/src/index.ts"
+            ],
+            "@spayce/infrastructure/*": [
+                "packages/infrastructure/src/*"
+            ],
+            "@spayce/react-ui": [
+                "packages/react-ui/src/index.ts"
+            ],
+            "@spayce/react-ui/*": [
+                "packages/react-ui/src/*"
             ],
             "@spayce/desktop/*": [
                 "packages/desktop/src/*"
             ]
         }
     },
-    "references": [
-        {
-            "path": "./packages/shared"
-        },
-        {
-            "path": "./packages/desktop"
-        }
+    "include": [
+        "packages/*/src/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "**/dist/**"
     ]
 }

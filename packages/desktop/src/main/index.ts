@@ -1,16 +1,41 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { createMainWindow } from './window';
-import { initDatabase } from './database/surrealdb';
+import { ServiceBootstrap } from '@spayce/infrastructure';
 import { registerIpcHandlers } from './ipc/handlers';
 
 let mainWindow: BrowserWindow | null = null;
 
+// Get the project root directory (spayce_electron/)
+function getProjectRoot(): string {
+    // In development, __dirname is packages/desktop/dist/
+    // Go up 3 levels: dist/ -> desktop/ -> packages/ -> spayce_electron/
+    if (app.isPackaged) {
+        return path.join(app.getAppPath(), '..');
+    }
+    return path.join(__dirname, '../../..');
+}
+
 async function initialize() {
     try {
-        // Initialize SurrealDB
-        await initDatabase();
-        console.log('SurrealDB initialized');
+        // Initialize services with SQLite database
+        // In development, use the project database; in production, use user data path
+        const isDev = !app.isPackaged;
+        const projectRoot = getProjectRoot();
+
+        const databasePath = isDev
+            ? path.join(projectRoot, 'resources/db/spaces.sqlite')
+            : path.join(app.getPath('userData'), 'spayce.db');
+
+        console.log('[Spayce] Project root:', projectRoot);
+        console.log('[Spayce] Database path:', databasePath);
+        console.log('[Spayce] Is packaged:', app.isPackaged);
+
+        ServiceBootstrap.initialize({
+            databasePath,
+            logPrefix: '[Spayce]',
+        });
+        console.log('[Spayce] Services initialized with database at:', databasePath);
 
         // Register IPC handlers
         registerIpcHandlers();

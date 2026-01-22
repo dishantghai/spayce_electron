@@ -1,18 +1,32 @@
 {
-    "id": "011",
-    "name": "migration-feature-parity",
-    "status": "pending",
-    "priority": "critical",
-    "dependencies": [
-        "001",
-        "002",
-        "003",
-        "007",
-        "008",
-        "009",
-        "010"
-    ],
-    "estimated_days": 7,
-    "created_at": "2026-01-20T11:05:00.000000",
-    "updated_at": "2026-01-21T10:10:00.000000"
+  "id": "011",
+  "name": "migration-feature-parity",
+  "status": "in_progress",
+  "priority": "critical",
+  "dependencies": [
+    "001",
+    "002",
+    "003",
+    "007",
+    "008",
+    "009",
+    "010"
+  ],
+  "estimated_days": 7,
+  "created_at": "2026-01-20T11:05:00.000000",
+  "updated_at": "2026-01-21T10:10:00.000000",
+  "implementation_started": "2026-01-21T14:59:54.183714",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-21T14:59:54.186003",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  }
 }

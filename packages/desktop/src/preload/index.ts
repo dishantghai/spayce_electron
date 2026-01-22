@@ -1,18 +1,34 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 const electronAPI = {
-    // Database operations
-    db: {
-        query: (sql: string, vars?: Record<string, unknown>) =>
-            ipcRenderer.invoke('db:query', sql, vars),
-        create: (table: string, data: unknown) =>
-            ipcRenderer.invoke('db:create', table, data),
-        select: (table: string) =>
-            ipcRenderer.invoke('db:select', table),
-        update: (id: string, data: unknown) =>
-            ipcRenderer.invoke('db:update', id, data),
-        delete: (id: string) =>
-            ipcRenderer.invoke('db:delete', id),
+    // Spaces operations
+    spaces: {
+        getAll: (profileId: string) => ipcRenderer.invoke('spaces:getAll', profileId),
+        create: (input: { profileId: string; userId: string; name: string; iconName: string; accentColor: string }) =>
+            ipcRenderer.invoke('spaces:create', input),
+        delete: (spaceId: string, profileId: string) => ipcRenderer.invoke('spaces:delete', spaceId, profileId),
+        rename: (spaceId: string, newName: string) => ipcRenderer.invoke('spaces:rename', spaceId, newName),
+        update: (spaceId: string, updates: { name?: string; iconName?: string; accentColor?: string; isExpanded?: boolean }) =>
+            ipcRenderer.invoke('spaces:update', spaceId, updates),
+        reorder: (profileId: string, spaceIds: string[]) => ipcRenderer.invoke('spaces:reorder', profileId, spaceIds),
+    },
+
+    // Items operations
+    items: {
+        getBySpace: (spaceId: string) => ipcRenderer.invoke('items:getBySpace', spaceId),
+        create: (input: { spaceId: string; name: string; type: string; path: string; parentId?: string }) =>
+            ipcRenderer.invoke('items:create', input),
+        delete: (itemId: string) => ipcRenderer.invoke('items:delete', itemId),
+        move: (itemId: string, targetSpaceId: string, targetParentId?: string, toPosition?: number) =>
+            ipcRenderer.invoke('items:move', itemId, targetSpaceId, targetParentId, toPosition),
+        rename: (itemId: string, newName: string) => ipcRenderer.invoke('items:rename', itemId, newName),
+    },
+
+    // Search operations
+    search: {
+        items: (query: string) => ipcRenderer.invoke('search:items', query),
+        recent: (limit?: number) => ipcRenderer.invoke('search:recent', limit),
+        mostVisited: (limit?: number) => ipcRenderer.invoke('search:mostVisited', limit),
     },
 
     // App info

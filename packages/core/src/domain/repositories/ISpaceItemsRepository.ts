@@ -25,4 +25,8 @@ export interface ISpaceItemsRepository {
     reorderPins(spaceId: string, orderedIds: string[]): Promise<void>;
 
     incrementVisitCount(itemId: string): Promise<void>;
+
+    deleteItemsBySpaceId(spaceId: string): Promise<void>;
+    isDuplicateUrl(profileId: string, url: string): Promise<boolean>;
+    renameItem(itemId: string, newName: string): Promise<void>;
 }

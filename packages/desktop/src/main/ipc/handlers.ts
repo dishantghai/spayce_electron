@@ -1,31 +1,108 @@
 import { ipcMain } from 'electron';
-import { getDatabase } from '../database/surrealdb';
+import { serviceRegistry, SERVICE_KEYS } from '@spayce/infrastructure';
+import type { SpacesFacade, SpaceItemsFacade, SearchFacade } from '@spayce/core/application';
 
 export function registerIpcHandlers(): void {
-    // Database operations
-    ipcMain.handle('db:query', async (_, sql: string, vars?: Record<string, unknown>) => {
-        const db = getDatabase();
-        return db.query(sql, vars);
+    // Spaces operations
+    ipcMain.handle('spaces:getAll', async (_, profileId: string) => {
+        const facade = serviceRegistry.get<SpacesFacade>(SERVICE_KEYS.SPACES_FACADE);
+        return facade.getSpaces(profileId);
     });
 
-    ipcMain.handle('db:create', async (_, table: string, data: unknown) => {
-        const db = getDatabase();
-        return db.create(table, data);
+    ipcMain.handle('spaces:create', async (_, input: {
+        profileId: string;
+        userId: string;
+        name: string;
+        iconName: string;
+        accentColor: string;
+    }) => {
+        const facade = serviceRegistry.get<SpacesFacade>(SERVICE_KEYS.SPACES_FACADE);
+        return facade.createSpace(input);
     });
 
-    ipcMain.handle('db:select', async (_, table: string) => {
-        const db = getDatabase();
-        return db.select(table);
+    ipcMain.handle('spaces:delete', async (_, spaceId: string, profileId: string) => {
+        const facade = serviceRegistry.get<SpacesFacade>(SERVICE_KEYS.SPACES_FACADE);
+        return facade.deleteSpace(spaceId, profileId);
     });
 
-    ipcMain.handle('db:update', async (_, id: string, data: unknown) => {
-        const db = getDatabase();
-        return db.update(id, data);
+    ipcMain.handle('spaces:rename', async (_, spaceId: string, newName: string) => {
+        const facade = serviceRegistry.get<SpacesFacade>(SERVICE_KEYS.SPACES_FACADE);
+        return facade.renameSpace(spaceId, newName);
     });
 
-    ipcMain.handle('db:delete', async (_, id: string) => {
-        const db = getDatabase();
-        return db.delete(id);
+    ipcMain.handle('spaces:update', async (_, spaceId: string, updates: {
+        name?: string;
+        iconName?: string;
+        accentColor?: string;
+        isExpanded?: boolean;
+    }) => {
+        const facade = serviceRegistry.get<SpacesFacade>(SERVICE_KEYS.SPACES_FACADE);
+        return facade.updateSpace({ spaceId, ...updates });
+    });
+
+    ipcMain.handle('spaces:reorder', async (_, profileId: string, spaceIds: string[]) => {
+        const facade = serviceRegistry.get<SpacesFacade>(SERVICE_KEYS.SPACES_FACADE);
+        return facade.reorderSpaces(profileId, spaceIds);
+    });
+
+    // Space items operations
+    ipcMain.handle('items:getBySpace', async (_, spaceId: string) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.getItems(spaceId);
+    });
+
+    ipcMain.handle('items:create', async (_, input: {
+        spaceId: string;
+        name: string;
+        type: string;
+        path: string;
+        parentId?: string;
+    }) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        // Cast type to SpaceItemType enum
+        return facade.createItem({
+            ...input,
+            type: input.type as any, // Type will be validated by facade
+            parentId: input.parentId ?? null,
+        });
+    });
+
+    ipcMain.handle('items:delete', async (_, itemId: string) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.deleteItem(itemId);
+    });
+
+    ipcMain.handle('items:move', async (_, itemId: string, targetSpaceId: string, targetParentId?: string, toPosition?: number) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.moveItem({
+            itemId,
+            toSpaceId: targetSpaceId,
+            toParentId: targetParentId ?? null,
+            toPosition: toPosition ?? 0,
+        });
+    });
+
+    ipcMain.handle('items:rename', async (_, itemId: string, newName: string) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.renameItem(itemId, newName);
+    });
+
+    // Search operations - using default profile for now
+    const DEFAULT_PROFILE_ID = 'default-profile';
+
+    ipcMain.handle('search:items', async (_, query: string) => {
+        const facade = serviceRegistry.get<SearchFacade>(SERVICE_KEYS.SEARCH_FACADE);
+        return facade.search(DEFAULT_PROFILE_ID, query);
+    });
+
+    ipcMain.handle('search:recent', async (_, limit?: number) => {
+        const facade = serviceRegistry.get<SearchFacade>(SERVICE_KEYS.SEARCH_FACADE);
+        return facade.getRecent(DEFAULT_PROFILE_ID, limit);
+    });
+
+    ipcMain.handle('search:mostVisited', async (_, limit?: number) => {
+        const facade = serviceRegistry.get<SearchFacade>(SERVICE_KEYS.SEARCH_FACADE);
+        return facade.getMostVisited(DEFAULT_PROFILE_ID, limit);
     });
 
     // App info

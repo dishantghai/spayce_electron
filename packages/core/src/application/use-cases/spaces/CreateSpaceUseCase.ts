@@ -1,8 +1,7 @@
-import type { ISpacesRepository, IEventBus } from '../../domain';
-import { SpaceCreatedEvent } from '../../domain/events/SpaceEvents';
-import { CreateSpaceValidator, DataSanitizer } from '../../domain/validators';
-import { generateId } from '../common/idGenerator';
-import type { SpaceEntity } from '../../domain/entities/Space';
+import type { ISpacesRepository, IEventBus, SpaceEntity } from '../../../domain';
+import { SpaceCreatedEvent } from '../../../domain/events/SpaceEvents';
+import { CreateSpaceValidator, DataSanitizer } from '../../../domain/validators';
+import { generateId } from '../../common/idGenerator';
 
 export interface CreateSpaceInput {
     profileId: string;

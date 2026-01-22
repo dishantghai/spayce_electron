@@ -37,3 +37,4 @@ release/
 # Misc
 .cache/
 tmp/
+resources/db/spaces.sqlite

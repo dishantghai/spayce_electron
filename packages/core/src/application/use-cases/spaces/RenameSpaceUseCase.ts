@@ -1,8 +1,8 @@
-import type { ISpacesRepository, IEventBus } from '../../domain';
-import { SpaceRenamedEvent } from '../../domain/events/SpaceEvents';
-import { EntityNotFoundError } from '../../domain/errors/EntityNotFoundError';
-import { ValidationError } from '../../domain/errors/ValidationError';
-import { DataSanitizer } from '../../domain/validators';
+import type { ISpacesRepository, IEventBus } from '../../../domain';
+import { SpaceRenamedEvent } from '../../../domain/events/SpaceEvents';
+import { EntityNotFoundError } from '../../../domain/errors/EntityNotFoundError';
+import { ValidationError } from '../../../domain/errors/ValidationError';
+import { DataSanitizer } from '../../../domain/validators';
 
 export interface RenameSpaceInput {
     spaceId: string;

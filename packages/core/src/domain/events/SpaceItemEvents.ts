@@ -25,3 +25,9 @@ export class SpaceItemPinnedEvent implements DomainEvent {
     readonly timestamp = new Date();
     constructor(readonly payload: { itemId: string; spaceId: string; position: number }) { }
 }
+
+export class SpaceItemRenamedEvent implements DomainEvent {
+    readonly type = 'space-item.renamed' as const;
+    readonly timestamp = new Date();
+    constructor(readonly payload: { itemId: string; spaceId: string; oldName: string; newName: string }) { }
+}

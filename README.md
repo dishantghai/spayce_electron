@@ -66,6 +66,27 @@ Design tokens are defined in `packages/shared/src/theme/`:
 - **Shadows**: SpayceShadows (box shadows)
 - **Typography**: SpayceTypography (fonts & sizes)
 
+## Migration & Rollback
+
+### Pre-Migration Backup
+```bash
+./scripts/backup-before-migration.sh
+```
+Creates a git backup branch and database backup before migration.
+
+### Rollback Procedure
+```bash
+./scripts/rollback-migration.sh <timestamp>
+```
+Restores the system to a previous backup state. Recovery time: < 2 hours.
+
+### Migration Scripts
+- `scripts/migrate-db.ts` - Database schema migration
+- `scripts/migrate-imports.sh` - Import path migration
+- `scripts/copy-flutter-db.sh` - Copy Flutter database
+- `scripts/verify-features.ts` - Verify feature parity
+- `scripts/verify-e2e-integration.sh` - E2E verification
+
 ## Reference
 
 - Old Flutter codebase: `/Users/Shared/ALL WORKSPACE/projects/spayce`

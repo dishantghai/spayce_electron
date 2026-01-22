@@ -1,5 +1,5 @@
-import type { ISpacesRepository } from '../../domain';
-import { ValidationError } from '../../domain/errors/ValidationError';
+import type { ISpacesRepository } from '../../../domain';
+import { ValidationError } from '../../../domain/errors/ValidationError';
 
 export interface ReorderSpacesInput {
     profileId: string;

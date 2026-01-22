@@ -15,20 +15,7 @@
         "resolveJsonModule": true,
         "isolatedModules": true,
         "jsx": "react-jsx",
-        "composite": true,
-        "rootDir": "src",
-        "outDir": "dist",
-        "declaration": true,
-        "declarationMap": true,
-        "baseUrl": ".",
-        "paths": {
-            "@spayce/shared/*": [
-                "../shared/src/*"
-            ],
-            "@spayce/desktop/*": [
-                "src/*"
-            ]
-        }
+        "noEmit": true
     },
     "include": [
         "src/**/*"
@@ -36,10 +23,5 @@
     "exclude": [
         "node_modules",
         "dist"
-    ],
-    "references": [
-        {
-            "path": "../shared"
-        }
     ]
 }

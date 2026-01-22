@@ -343,6 +343,44 @@ export class SqliteSpaceItemsRepository implements ISpaceItemsRepository {
         }
     }
 
+    async deleteItemsBySpaceId(spaceId: string): Promise<void> {
+        try {
+            this.db
+                .prepare('DELETE FROM space_items WHERE space_id = ?')
+                .run(spaceId);
+        } catch (error) {
+            throw new DatabaseError('deleteItemsBySpaceId', error as Error);
+        }
+    }
+
+    async isDuplicateUrl(profileId: string, url: string): Promise<boolean> {
+        try {
+            const row = this.db
+                .prepare(
+                    `
+                SELECT COUNT(*) as count FROM space_items si
+                INNER JOIN spaces s ON si.space_id = s.id
+                WHERE s.profile_id = ? AND si.path = ? AND si.type = 'link'
+            `
+                )
+                .get(profileId, url) as { count: number };
+
+            return row.count > 0;
+        } catch (error) {
+            throw new DatabaseError('isDuplicateUrl', error as Error);
+        }
+    }
+
+    async renameItem(itemId: string, newName: string): Promise<void> {
+        try {
+            this.db
+                .prepare('UPDATE space_items SET name = ? WHERE id = ?')
+                .run(newName, itemId);
+        } catch (error) {
+            throw new DatabaseError('renameItem', error as Error);
+        }
+    }
+
     private mapRowToEntity(row: SpaceItemRow): SpaceItemEntity {
         return {
             id: row.id,
