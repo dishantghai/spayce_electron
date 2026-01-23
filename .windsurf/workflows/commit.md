@@ -1,0 +1,1 @@
+Create a commit with a detailed commit message for everything that has been created since the last commit, check git log for diffs, decide which all files/ folders even from the untracked ones need to be staged and then create the Message. Stage and Commit in different steps.
