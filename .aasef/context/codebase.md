@@ -25,24 +25,40 @@ External service implementations and dependency injection.
 - `src/events/EventBus.ts` - Domain event publishing
 
 ### @spayce/react-ui
-Reusable React UI layer with hooks and components.
-- `src/hooks/useSpaces.ts` - Fetch spaces data
-- `src/hooks/useSpaceItems.ts` - Fetch items for a space
-- `src/hooks/usePinnedItems.ts` - Fetch pinned items
-- `src/hooks/useRecentItems.ts` - Fetch recently visited items
-- `src/hooks/mutations/` - Mutation hooks (useCreateSpace, useDeleteItem, etc.)
-- `src/hooks/common/InvalidationContext.tsx` - Cache invalidation
-- `src/components/` - Reusable UI components
-- `src/stores/` - UI-only state (Zustand)
+Reusable React UI layer with hooks, components, theme, and stores.
+- `src/theme/` - Design tokens (colors, spacing, typography, radius, shadows, animations)
+- `src/components/` - All UI components migrated from packages/shared:
+  - `Sidebar.tsx`, `SidebarTabs.tsx` - Navigation components
+  - `SpacesScreen.tsx`, `SpaceCard.tsx` - Spaces management
+  - `TreeView.tsx`, `TreeItem.tsx` - Hierarchical item display
+  - `ContextMenu.tsx` - Right-click context menus
+  - `CreateSpaceView.tsx` - Space creation form
+  - `PinnedLinksGrid.tsx` - Pinned items display
+  - `BottomBar.tsx`, `SpaceHeader.tsx` - UI chrome
+  - `error/` - Error boundary components
+  - `common/` - Shared components (Skeleton)
+- `src/stores/` - UI-only state (Zustand):
+  - `navigationUiStore.ts` - Sidebar state, active tab
+  - `dragDropUiStore.ts` - Drag and drop state
+- `src/types/` - UI type definitions (Space, SpaceItem, etc.)
+- `src/hooks/` - Data hooks (NOT exported from main index - require Node.js environment)
+  - For Electron renderer, use IPC-based hooks from @spayce/desktop
 
 ### @spayce/desktop
 Electron application shell.
-- `src/main/` - Main process (window management, IPC)
-- `src/renderer/` - React app entry point
+- `src/main/` - Main process:
+  - `index.ts` - App initialization
+  - `window.ts` - Window management
+  - `ipc/handlers.ts` - IPC handlers for all operations
+  - `services/LocalFileSystemService.ts` - File system dialog operations
+- `src/renderer/` - React app entry point:
+  - `App.tsx` - Main application component
+  - `hooks/useSpacesData.ts` - IPC-based data hook
+  - `ipc/spacesApi.ts` - IPC client API
 - `src/preload/` - Secure IPC bridge
 
-### packages/shared/ [DEPRECATED]
-Legacy shared code - migrated to @spayce/core and @spayce/react-ui.
+### packages/shared/ [REMOVED]
+Legacy shared code has been fully migrated to @spayce/react-ui and removed from the codebase.
 
 ## Key Directories
 - `project_ops/` - Project documentation and migration specifications

@@ -10,9 +10,9 @@ Spayce Electron follows **Clean Architecture** principles with clear separation 
 packages/
 ├── core/           # Domain & Application layers (pure TypeScript)
 ├── infrastructure/ # External services, database, DI
-├── react-ui/       # React components, hooks, UI state
+├── react-ui/       # React components, theme, stores (browser-safe)
 ├── desktop/        # Electron main/renderer processes
-└── shared/         # [DEPRECATED] Legacy shared code
+└── shared/         # [REMOVED] Migrated to react-ui
 ```
 
 ## Layer Dependencies
@@ -58,14 +58,15 @@ The dependency rule is: **outer layers depend on inner layers, never the reverse
 **Key Principle**: Implements interfaces defined in @spayce/core.
 
 ### @spayce/react-ui
-**Purpose**: Reusable React UI layer
+**Purpose**: Browser-safe React UI layer (no Node.js dependencies)
 
-- **Hooks**: Data fetching (useSpaces, useSpaceItems, usePinnedItems)
-- **Mutations**: State mutations (useCreateSpace, useDeleteItem, etc.)
-- **Components**: Reusable UI components
-- **Stores**: UI-only state (Zustand)
+- **Components**: All UI components (Sidebar, SpacesScreen, TreeView, etc.)
+- **Theme**: Design tokens (colors, spacing, typography, radius, shadows)
+- **Stores**: UI-only state (Zustand - navigationUiStore, dragDropUiStore)
+- **Types**: UI-layer type definitions
 
-**Key Principle**: Depends on @spayce/core for types, not infrastructure.
+**Key Principle**: Must be browser-safe. No imports from @spayce/infrastructure.
+**Note**: Hooks that use serviceRegistry are NOT exported from main index.
 
 ### @spayce/desktop
 **Purpose**: Electron application shell
@@ -76,32 +77,44 @@ The dependency rule is: **outer layers depend on inner layers, never the reverse
 
 **Key Principle**: Thin shell that composes other packages.
 
-## Data Flow
+## Data Flow (Electron IPC)
 
 ```
-User Action
+User Action (Renderer Process)
     │
     ▼
-React Component (react-ui)
+React Component (@spayce/react-ui)
     │
     ▼
-Custom Hook (useSpaces, useMutation)
+IPC Hook (useSpacesData from @spayce/desktop)
+    │
+    ▼
+IPC API (spacesApi.getAll())
+    │
+    ▼
+Preload Bridge (contextBridge.exposeInMainWorld)
+    │
+    ▼
+================== IPC Channel ==================
+    │
+    ▼
+IPC Handler (Main Process - handlers.ts)
     │
     ▼
 Facade (SpacesFacade)
     │
     ▼
-Use Case (CreateSpaceUseCase)
+Use Case (GetSpacesUseCase)
     │
     ▼
-Repository Interface (ISpacesRepository)
-    │
-    ▼
-SQLite Repository (SqliteSpacesRepository)
+Repository (SqliteSpacesRepository)
     │
     ▼
 Database (better-sqlite3)
 ```
+
+**Critical**: Native Node.js modules (better-sqlite3) can ONLY run in the main process.
+The renderer process must use IPC to communicate with the main process for all data operations.
 
 ## Key Patterns
 
@@ -183,16 +196,19 @@ interface SpaceEntity {
 | last_synced_at | INTEGER | Unix timestamp (nullable) |
 | is_watching | INTEGER | Boolean (0/1) |
 
-## Migration from packages/shared/
+## Migration from packages/shared/ [COMPLETED]
 
-The legacy `packages/shared/` has been migrated to the new structure:
+The legacy `packages/shared/` has been **fully migrated and removed**:
 
 | Old Location | New Location |
 |--------------|--------------|
-| `@spayce/shared/types` | `@spayce/core` |
-| `@spayce/shared/hooks` | `@spayce/react-ui/hooks` |
-| `@spayce/shared/stores/spaces` | `@spayce/react-ui/hooks` |
+| `@spayce/shared/types` | `@spayce/react-ui/types` |
+| `@spayce/shared/stores` | `@spayce/react-ui/stores` |
 | `@spayce/shared/components` | `@spayce/react-ui/components` |
+| `@spayce/shared/theme` | `@spayce/react-ui/theme` |
+
+**Important**: Data hooks that require Node.js (serviceRegistry) are NOT exported from `@spayce/react-ui`.
+For Electron apps, use IPC-based hooks from `@spayce/desktop/src/renderer/hooks`.
 
 ## Flutter Feature Parity
 
