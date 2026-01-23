@@ -1,6 +1,11 @@
 import { ipcMain } from 'electron';
-import { serviceRegistry, SERVICE_KEYS } from '@spayce/infrastructure';
+import {
+    serviceRegistry,
+    SERVICE_KEYS,
+    MetadataExtractionService
+} from '@spayce/infrastructure';
 import type { SpacesFacade, SpaceItemsFacade, SearchFacade } from '@spayce/core/application';
+import { LocalFileSystemService } from '../services/LocalFileSystemService';
 
 export function registerIpcHandlers(): void {
     // Spaces operations
@@ -87,6 +92,42 @@ export function registerIpcHandlers(): void {
         return facade.renameItem(itemId, newName);
     });
 
+    ipcMain.handle('items:reorder', async (_, spaceId: string, parentId: string | null, orderedItemIds: string[]) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.reorderItems({ spaceId, parentId, orderedItemIds });
+    });
+
+    ipcMain.handle('items:incrementVisit', async (_, itemId: string) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.incrementVisitCount(itemId);
+    });
+
+    ipcMain.handle('items:updateMetadata', async (_, itemId: string, metadata: {
+        name?: string;
+        description?: string | null;
+        faviconUrl?: string | null;
+        isExpanded?: boolean;
+    }) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.updateItemMetadata({ itemId, ...metadata });
+    });
+
+    // Pin operations
+    ipcMain.handle('items:pin', async (_, itemId: string) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.pinItem(itemId);
+    });
+
+    ipcMain.handle('items:unpin', async (_, itemId: string) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.unpinItem(itemId);
+    });
+
+    ipcMain.handle('items:reorderPins', async (_, spaceId: string, orderedItemIds: string[]) => {
+        const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+        return facade.reorderPins(spaceId, orderedItemIds);
+    });
+
     // Search operations - using default profile for now
     const DEFAULT_PROFILE_ID = 'default-profile';
 
@@ -103,6 +144,85 @@ export function registerIpcHandlers(): void {
     ipcMain.handle('search:mostVisited', async (_, limit?: number) => {
         const facade = serviceRegistry.get<SearchFacade>(SERVICE_KEYS.SEARCH_FACADE);
         return facade.getMostVisited(DEFAULT_PROFILE_ID, limit);
+    });
+
+    // Metadata extraction operations
+    const metadataService = new MetadataExtractionService();
+
+    ipcMain.handle('metadata:extract', async (_, url: string) => {
+        try {
+            return { success: true, data: await metadataService.extractMetadata(url) };
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    type: 'system',
+                    message: error instanceof Error ? error.message : 'Failed to extract metadata'
+                }
+            };
+        }
+    });
+
+    ipcMain.handle('metadata:extractFavicon', async (_, url: string) => {
+        try {
+            return { success: true, data: await metadataService.extractFavicon(url) };
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    type: 'system',
+                    message: error instanceof Error ? error.message : 'Failed to extract favicon'
+                }
+            };
+        }
+    });
+
+    // File system operations
+    const fileSystemService = new LocalFileSystemService();
+
+    ipcMain.handle('fs:selectFolder', async () => {
+        try {
+            const path = await fileSystemService.selectFolder();
+            return { success: true, data: path };
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    type: 'system',
+                    message: error instanceof Error ? error.message : 'Failed to select folder'
+                }
+            };
+        }
+    });
+
+    ipcMain.handle('fs:selectFile', async () => {
+        try {
+            const path = await fileSystemService.selectFile();
+            return { success: true, data: path };
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    type: 'system',
+                    message: error instanceof Error ? error.message : 'Failed to select file'
+                }
+            };
+        }
+    });
+
+    ipcMain.handle('fs:loadFolderChildren', async (_, folderPath: string) => {
+        try {
+            const children = await fileSystemService.loadFolderChildren(folderPath);
+            return { success: true, data: children };
+        } catch (error) {
+            return {
+                success: false,
+                error: {
+                    type: 'system',
+                    message: error instanceof Error ? error.message : 'Failed to load folder children'
+                }
+            };
+        }
     });
 
     // App info

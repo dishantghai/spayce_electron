@@ -14,6 +14,7 @@ import {
     IncrementVisitCountUseCase,
     UpdateItemMetadataUseCase,
 } from '../use-cases/items';
+import { PinItemUseCase, UnpinItemUseCase, ReorderPinsUseCase } from '../use-cases/pins';
 import { GetSpaceItemsQuery, type SpaceItemWithChildren } from '../queries';
 
 export class SpaceItemsFacade {
@@ -25,6 +26,9 @@ export class SpaceItemsFacade {
         private readonly reorderItemsUseCase: ReorderItemsUseCase,
         private readonly incrementVisitCountUseCase: IncrementVisitCountUseCase,
         private readonly updateItemMetadataUseCase: UpdateItemMetadataUseCase,
+        private readonly pinItemUseCase: PinItemUseCase,
+        private readonly unpinItemUseCase: UnpinItemUseCase,
+        private readonly reorderPinsUseCase: ReorderPinsUseCase,
         private readonly getSpaceItemsQuery: GetSpaceItemsQuery
     ) { }
 
@@ -118,6 +122,33 @@ export class SpaceItemsFacade {
         try {
             const item = await this.updateItemMetadataUseCase.execute(input);
             return ok(item);
+        } catch (error) {
+            return err(this.mapError(error));
+        }
+    }
+
+    async pinItem(itemId: string): Promise<Result<void, AppError>> {
+        try {
+            await this.pinItemUseCase.execute({ itemId });
+            return ok(undefined);
+        } catch (error) {
+            return err(this.mapError(error));
+        }
+    }
+
+    async unpinItem(itemId: string): Promise<Result<void, AppError>> {
+        try {
+            await this.unpinItemUseCase.execute({ itemId });
+            return ok(undefined);
+        } catch (error) {
+            return err(this.mapError(error));
+        }
+    }
+
+    async reorderPins(spaceId: string, orderedItemIds: string[]): Promise<Result<void, AppError>> {
+        try {
+            await this.reorderPinsUseCase.execute({ spaceId, orderedItemIds });
+            return ok(undefined);
         } catch (error) {
             return err(this.mapError(error));
         }

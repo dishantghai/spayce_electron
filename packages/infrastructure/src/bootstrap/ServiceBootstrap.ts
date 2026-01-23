@@ -24,6 +24,9 @@ import {
     ReorderItemsUseCase,
     IncrementVisitCountUseCase,
     UpdateItemMetadataUseCase,
+    PinItemUseCase,
+    UnpinItemUseCase,
+    ReorderPinsUseCase,
 } from '@spayce/core/application';
 
 // Import queries
@@ -100,6 +103,9 @@ export class ServiceBootstrap {
                 new ReorderItemsUseCase(itemsRepo),
                 new IncrementVisitCountUseCase(itemsRepo),
                 new UpdateItemMetadataUseCase(itemsRepo),
+                new PinItemUseCase(itemsRepo, eventBus),
+                new UnpinItemUseCase(itemsRepo),
+                new ReorderPinsUseCase(itemsRepo, spacesRepo),
                 new GetSpaceItemsQuery(itemsRepo)
             );
         });
