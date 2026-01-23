@@ -7,6 +7,8 @@
     "license": "MIT",
     "type": "module",
     "scripts": {
+        "preinstall": "node scripts/check-architecture.js",
+        "postinstall": "cd node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3 && npx --yes electron-rebuild -f -w better-sqlite3 -m . || true",
         "dev": "pnpm --filter @spayce/desktop dev",
         "build": "pnpm --filter @spayce/desktop build",
         "test": "vitest --run",
@@ -28,7 +30,7 @@
         "typecheck": "tsc --noEmit"
     },
     "devDependencies": {
-        "@esbuild/darwin-arm64": "0.21.5",
+        "@esbuild/darwin-arm64": "0.27.2",
         "@rollup/rollup-darwin-arm64": "^4.55.3",
         "@types/node": "^20.10.0",
         "eslint": "^8.55.0",

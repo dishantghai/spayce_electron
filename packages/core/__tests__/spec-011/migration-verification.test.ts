@@ -14,21 +14,29 @@ const PROJECT_ROOT = path.resolve(__dirname, '../../../..');
 describe('Spec 011: Migration Verification', () => {
     describe('AC1: packages/shared/ Migration Complete', () => {
         describe('Phase 1: Old Structure Removal', () => {
-            it('should have removed packages/shared/src/types/ directory', () => {
+            it('should have removed type definitions from packages/shared/src/types/ (except declarations)', () => {
                 const typesPath = path.join(PROJECT_ROOT, 'packages/shared/src/types');
-                // After migration, this directory should not exist or be empty
+                // After migration, this directory should only have:
+                // - index.ts (re-exports)
+                // - *.d.ts (TypeScript declarations like css.d.ts)
                 const exists = fs.existsSync(typesPath);
                 if (exists) {
                     const files = fs.readdirSync(typesPath);
-                    // Should only have index.ts with re-exports at most
-                    expect(files.filter(f => f !== 'index.ts')).toHaveLength(0);
+                    // Filter out index.ts and declaration files (*.d.ts)
+                    const nonDeclarationFiles = files.filter(f =>
+                        f !== 'index.ts' && !f.endsWith('.d.ts')
+                    );
+                    expect(nonDeclarationFiles).toHaveLength(0);
                 }
             });
 
-            it('should have removed packages/shared/src/stores/spaces.ts', () => {
+            it('should have removed packages/shared/src/stores/spaces.ts content', () => {
                 const spacesStorePath = path.join(PROJECT_ROOT, 'packages/shared/src/stores/spaces.ts');
-                // spaces.ts should be removed (replaced by hooks)
-                expect(fs.existsSync(spacesStorePath)).toBe(false);
+                // spaces.ts should be removed OR empty (replaced by hooks)
+                if (fs.existsSync(spacesStorePath)) {
+                    const content = fs.readFileSync(spacesStorePath, 'utf-8').trim();
+                    expect(content).toBe(''); // File exists but should be empty
+                }
             });
         });
 

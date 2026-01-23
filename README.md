@@ -33,12 +33,44 @@ spayce_electron/
 
 ## Getting Started
 
+### Prerequisites
+
+**Important for Apple Silicon (M1/M2/M3) Macs:**
+
+This project uses native Node.js modules (`better-sqlite3`) that must match your system architecture. You **must** use arm64 Node.js on Apple Silicon Macs.
+
+**Verify your Node.js architecture:**
 ```bash
-# Install dependencies
+node -p "process.arch"  # Should output "arm64" on Apple Silicon
+```
+
+**If it shows "x64", fix it:**
+```bash
+# Uninstall the wrong version
+nvm uninstall $(nvm current)
+
+# Install arm64 version
+arch -arm64 nvm install --lts
+
+# Verify
+node -p "process.arch"  # Should now show "arm64"
+```
+
+The project includes automatic architecture validation. If there's a mismatch, `pnpm install` will fail with helpful instructions.
+
+**Note:** This project uses Electron, which bundles its own Node.js runtime (v20). The `postinstall` script automatically rebuilds `better-sqlite3` for Electron's Node.js version.
+
+### Installation
+
+```bash
+# Install dependencies (runs architecture check + Electron rebuild automatically)
 pnpm install
 
-# Start development
-pnpm dev
+# Start development (use the convenience script)
+./scripts/dev.sh
+
+# Or manually with correct Node.js version
+source ~/.nvm/nvm.sh && nvm use v22.17.1 && pnpm run dev
 
 # Run tests
 pnpm test

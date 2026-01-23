@@ -1,5 +1,5 @@
-import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import React from 'react';
 import { ErrorFallback } from '../../../src/components/error/ErrorFallback';
 
@@ -11,6 +11,10 @@ const defaultProps = {
 };
 
 describe('Feature: 010 - ErrorFallback Component', () => {
+    afterEach(() => {
+        cleanup();
+        vi.clearAllMocks();
+    });
     describe('AC1: ErrorFallback displays user-friendly message', () => {
         test('should display "Something went wrong" title', () => {
             render(<ErrorFallback {...defaultProps} />);

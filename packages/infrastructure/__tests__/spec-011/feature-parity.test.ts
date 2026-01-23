@@ -15,7 +15,6 @@ import {
     TEST_USER_ID,
     type TestDbContext
 } from '../helpers/testDb';
-import { testLogger } from '../helpers/testLogger';
 
 describe('Spec 011: Flutter Feature Parity', () => {
     let ctx: TestDbContext;

@@ -1,5 +1,5 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import React from 'react';
 import { DomainErrorBoundary } from '../../../src/components/error/DomainErrorBoundary';
 
@@ -14,6 +14,10 @@ describe('Feature: 010 - DomainErrorBoundary', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         vi.spyOn(console, 'error').mockImplementation(() => { });
+    });
+
+    afterEach(() => {
+        cleanup();
     });
 
     describe('AC1: DomainErrorBoundary catches component errors', () => {

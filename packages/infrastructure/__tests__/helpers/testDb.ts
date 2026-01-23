@@ -3,10 +3,92 @@
  */
 
 import Database from 'better-sqlite3';
+import { execSync } from 'child_process';
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
 import { DatabaseInitializer } from '../../src/persistence/sqlite/DatabaseInitializer';
 import { SqliteSpacesRepository } from '../../src/persistence/sqlite/SqliteSpacesRepository';
 import { SqliteSpaceItemsRepository } from '../../src/persistence/sqlite/SqliteSpaceItemsRepository';
 import { testLogger } from './testLogger';
+
+// ============================================================================
+// ARCHITECTURE CHECK - Detect native module compatibility
+// ============================================================================
+
+/**
+ * Gets the actual hardware architecture (handles Rosetta on macOS)
+ */
+export function getHardwareArch(): string {
+    const platform = os.platform();
+    if (platform === 'darwin') {
+        try {
+            const cpuBrand = execSync('sysctl -n machdep.cpu.brand_string', { encoding: 'utf-8' });
+            if (cpuBrand.includes('Apple')) {
+                return 'arm64';
+            }
+        } catch {
+            try {
+                const uname = execSync('uname -m', { encoding: 'utf-8' }).trim();
+                if (uname === 'arm64') return 'arm64';
+            } catch { /* ignore */ }
+        }
+    }
+    return os.arch();
+}
+
+/**
+ * Gets the architecture of the better-sqlite3 native module
+ */
+export function getNativeModuleArch(): string | null {
+    const workspaceRoot = path.resolve(__dirname, '../../../..');
+    const possiblePaths = [
+        path.join(workspaceRoot, 'node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3/build/Release/better_sqlite3.node'),
+        path.join(workspaceRoot, 'node_modules/better-sqlite3/build/Release/better_sqlite3.node'),
+    ];
+
+    for (const nodePath of possiblePaths) {
+        if (fs.existsSync(nodePath)) {
+            try {
+                const fileOutput = execSync(`file "${nodePath}"`, { encoding: 'utf-8' });
+                if (fileOutput.includes('arm64')) return 'arm64';
+                if (fileOutput.includes('x86_64')) return 'x64';
+            } catch { /* ignore */ }
+        }
+    }
+    return null;
+}
+
+/**
+ * Checks if native SQLite tests can run (architecture matches)
+ */
+export function canRunNativeTests(): boolean {
+    const nodeArch = process.arch;
+    const nativeArch = getNativeModuleArch();
+
+    // If we can't determine native arch, assume it won't work
+    if (!nativeArch) {
+        return false;
+    }
+
+    // Node x64 can't load arm64 native modules (even under Rosetta)
+    if (nodeArch === 'x64' && nativeArch === 'arm64') {
+        return false;
+    }
+
+    // Check if architectures match
+    return nodeArch === nativeArch;
+}
+
+/**
+ * Returns reason why native tests can't run, or null if they can
+ */
+export function getNativeTestSkipReason(): string | null {
+    if (canRunNativeTests()) return null;
+    const nodeArch = process.arch;
+    const nativeArch = getNativeModuleArch();
+    return `Architecture mismatch: Node.js is ${nodeArch}, native module is ${nativeArch}`;
+}
 
 export interface TestDbContext {
     db: Database.Database;

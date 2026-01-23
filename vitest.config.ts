@@ -10,6 +10,12 @@ export default defineConfig({
         include: ['packages/*/__tests__/**/*.{test,spec}.{ts,tsx}'],
         exclude: ['**/node_modules/**', '**/dist/**'],
 
+        // Environment overrides for specific packages
+        environmentMatchGlobs: [
+            // React UI tests need jsdom for DOM testing
+            ['packages/react-ui/__tests__/**/*.{test,spec}.{ts,tsx}', 'jsdom'],
+        ],
+
         // Performance optimizations
         pool: 'forks',
         poolOptions: {

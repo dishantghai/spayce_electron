@@ -9,8 +9,8 @@ importers:
   .:
     devDependencies:
       '@esbuild/darwin-arm64':
-        specifier: 0.21.5
-        version: 0.21.5
+        specifier: 0.27.2
+        version: 0.27.2
       '@rollup/rollup-darwin-arm64':
         specifier: ^4.55.3
         version: 4.55.3
@@ -3303,10 +3303,10 @@ snapshots:
   '@esbuild/android-x64@0.27.2':
     optional: true
 
-  '@esbuild/darwin-arm64@0.21.5': {}
-
-  '@esbuild/darwin-arm64@0.27.2':
+  '@esbuild/darwin-arm64@0.21.5':
     optional: true
+
+  '@esbuild/darwin-arm64@0.27.2': {}
 
   '@esbuild/darwin-x64@0.21.5':
     optional: true

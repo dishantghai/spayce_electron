@@ -17,35 +17,18 @@ import {
     getTestDbPath,
     cleanupTestDb,
     verifyDatabaseSchema,
-    findNativeModule,
 } from '../setup/test-utils';
 import { ServiceBootstrap, serviceRegistry, SERVICE_KEYS, DatabaseInitializer } from '@spayce/infrastructure';
 
-// Helper to check if we can run native module tests
-function canRunNativeTests(): boolean {
-    const moduleInfo = findNativeModule('better-sqlite3');
-    if (moduleInfo.architecture && moduleInfo.architecture !== process.arch) {
-        return false;
-    }
-    return true;
-}
-
 describe('Database Integration', () => {
-    describe('Development Database (skip if arch mismatch)', () => {
+    describe('Development Database', () => {
         const devDbPath = path.join(WORKSPACE_ROOT, 'resources', 'db', 'spaces.sqlite');
-        let canRun = false;
-
-        beforeAll(() => {
-            canRun = canRunNativeTests();
-            if (!canRun) console.log('Skipping: arch mismatch');
-        });
 
         it('should have development database file', () => {
             expect(fs.existsSync(devDbPath)).toBe(true);
         });
 
         it('should have valid database schema', () => {
-            if (!canRun) return;
             const result = verifyDatabaseSchema(devDbPath);
             expect(result.valid).toBe(true);
             if (!result.valid) {
@@ -54,14 +37,12 @@ describe('Database Integration', () => {
         });
 
         it('should have required tables', () => {
-            if (!canRun) return;
             const result = verifyDatabaseSchema(devDbPath);
             expect(result.tables).toContain('spaces');
             expect(result.tables).toContain('space_items');
         });
 
         it('should have seeded data', () => {
-            if (!canRun) return;
             const db = new Database(devDbPath, { readonly: true });
             const spaces = db.prepare('SELECT COUNT(*) as count FROM spaces').get() as { count: number };
             expect(spaces.count).toBeGreaterThan(0);
@@ -69,26 +50,21 @@ describe('Database Integration', () => {
         });
     });
 
-    describe('Database Initialization (skip if arch mismatch)', () => {
+    describe('Database Initialization', () => {
         let testDbPath: string;
         let db: Database.Database;
-        let canRun = false;
 
         beforeEach(() => {
-            if (!canRunNativeTests()) return;
-            canRun = true;
             testDbPath = getTestDbPath();
             db = new Database(testDbPath);
         });
 
         afterEach(() => {
-            if (!canRun) return;
             db.close();
             cleanupTestDb(testDbPath);
         });
 
         it('should create all required tables', () => {
-            if (!canRun) return;
             const initializer = new DatabaseInitializer(db);
             initializer.initialize();
 
@@ -101,7 +77,6 @@ describe('Database Integration', () => {
         });
 
         it('should create spaces table with correct columns', () => {
-            if (!canRun) return;
             const initializer = new DatabaseInitializer(db);
             initializer.initialize();
 
@@ -120,7 +95,6 @@ describe('Database Integration', () => {
         });
 
         it('should create space_items table with correct columns', () => {
-            if (!canRun) return;
             const initializer = new DatabaseInitializer(db);
             initializer.initialize();
 
@@ -137,7 +111,6 @@ describe('Database Integration', () => {
         });
 
         it('should be idempotent (can run multiple times)', () => {
-            if (!canRun) return;
             const initializer = new DatabaseInitializer(db);
 
             // Run twice - should not throw
@@ -148,45 +121,33 @@ describe('Database Integration', () => {
         });
     });
 
-    describe('Service Bootstrap Database Integration (skip if arch mismatch)', () => {
+    describe('Service Bootstrap Database Integration', () => {
         let testDbPath: string;
-        let canRun = false;
 
         beforeAll(() => {
-            if (!canRunNativeTests()) {
-                console.log('Skipping Service Bootstrap tests: arch mismatch');
-                return;
-            }
-            canRun = true;
             testDbPath = getTestDbPath();
             ServiceBootstrap.initialize({ databasePath: testDbPath });
         });
 
         afterAll(() => {
-            if (canRun) {
-                ServiceBootstrap.shutdown();
-                cleanupTestDb(testDbPath);
-            }
+            ServiceBootstrap.shutdown();
+            cleanupTestDb(testDbPath);
         });
 
         it('should create database file', () => {
-            if (!canRun) return;
             expect(fs.existsSync(testDbPath)).toBe(true);
         });
 
         it('should register database in service registry', () => {
-            if (!canRun) return;
             expect(serviceRegistry.has(SERVICE_KEYS.DATABASE)).toBe(true);
         });
 
         it('should register repositories', () => {
-            if (!canRun) return;
             expect(serviceRegistry.has(SERVICE_KEYS.SPACES_REPOSITORY)).toBe(true);
             expect(serviceRegistry.has(SERVICE_KEYS.SPACE_ITEMS_REPOSITORY)).toBe(true);
         });
 
         it('should support CRUD operations through repository', async () => {
-            if (!canRun) return;
             const spacesRepo = serviceRegistry.get<any>(SERVICE_KEYS.SPACES_REPOSITORY);
 
             // Create
@@ -219,26 +180,20 @@ describe('Database Integration', () => {
         });
     });
 
-    describe('Database Concurrency (skip if arch mismatch)', () => {
+    describe('Database Operations Performance', () => {
         let testDbPath: string;
-        let canRun = false;
 
         beforeAll(() => {
-            if (!canRunNativeTests()) return;
-            canRun = true;
             testDbPath = getTestDbPath();
             ServiceBootstrap.initialize({ databasePath: testDbPath });
         });
 
         afterAll(() => {
-            if (canRun) {
-                ServiceBootstrap.shutdown();
-                cleanupTestDb(testDbPath);
-            }
+            ServiceBootstrap.shutdown();
+            cleanupTestDb(testDbPath);
         });
 
         it('should handle concurrent reads', async () => {
-            if (!canRun) return;
             const spacesRepo = serviceRegistry.get<any>(SERVICE_KEYS.SPACES_REPOSITORY);
 
             // Create test data
@@ -269,33 +224,26 @@ describe('Database Integration', () => {
         });
     });
 
-    describe('Database Error Handling (skip if arch mismatch)', () => {
+    describe('Database Error Handling', () => {
         let testDbPath: string;
-        let canRun = false;
 
         beforeAll(() => {
-            if (!canRunNativeTests()) return;
-            canRun = true;
             testDbPath = getTestDbPath();
             ServiceBootstrap.initialize({ databasePath: testDbPath });
         });
 
         afterAll(() => {
-            if (canRun) {
-                ServiceBootstrap.shutdown();
-                cleanupTestDb(testDbPath);
-            }
+            ServiceBootstrap.shutdown();
+            cleanupTestDb(testDbPath);
         });
 
         it('should handle non-existent ID gracefully', async () => {
-            if (!canRun) return;
             const spacesRepo = serviceRegistry.get<any>(SERVICE_KEYS.SPACES_REPOSITORY);
             const result = await spacesRepo.getSpaceById('non-existent-id');
             expect(result).toBeNull();
         });
 
         it('should return empty array for profile with no spaces', async () => {
-            if (!canRun) return;
             const spacesRepo = serviceRegistry.get<any>(SERVICE_KEYS.SPACES_REPOSITORY);
             const result = await spacesRepo.getAllSpaces('non-existent-profile');
             expect(result).toEqual([]);
@@ -303,16 +251,10 @@ describe('Database Integration', () => {
     });
 });
 
-describe('Database Seeding (skip if arch mismatch)', () => {
+describe('Database Seeding', () => {
     const devDbPath = path.join(WORKSPACE_ROOT, 'resources', 'db', 'spaces.sqlite');
-    let canRun = false;
-
-    beforeAll(() => {
-        canRun = canRunNativeTests();
-    });
 
     it('should have expected seed data structure', () => {
-        if (!canRun) return;
         const db = new Database(devDbPath, { readonly: true });
 
         const spaces = db.prepare('SELECT * FROM spaces LIMIT 5').all() as any[];
@@ -329,7 +271,6 @@ describe('Database Seeding (skip if arch mismatch)', () => {
     });
 
     it('should have items linked to spaces', () => {
-        if (!canRun) return;
         const db = new Database(devDbPath, { readonly: true });
 
         const items = db.prepare('SELECT * FROM space_items LIMIT 5').all() as any[];

@@ -193,20 +193,9 @@ async function checkNativeModules() {
         }
     }
 
-    // Test loading the module
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const Database = await import('better-sqlite3');
-        const db = new Database.default(':memory:');
-        db.close();
-        success('better-sqlite3 loads successfully');
-    } catch (e) {
-        error(`better-sqlite3 failed to load: ${e.message}`);
-        if (e.message.includes('incompatible architecture')) {
-            info('Fix: Rebuild for correct architecture:');
-            info('  npx electron-rebuild -f -w better-sqlite3');
-        }
-    }
+    // Note: Skip loading test - better-sqlite3 is built for Electron's Node.js (v20)
+    // but this health check runs with system Node.js (v22). This is expected.
+    info('better-sqlite3 is built for Electron runtime (skipping load test)');
 }
 
 async function checkDatabase() {
@@ -233,22 +222,8 @@ async function checkDatabase() {
             'Invalid SQLite database file'
         );
 
-        // Check for data
-        try {
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            const Database = (await import('better-sqlite3')).default;
-            const db = new Database(devDbPath, { readonly: true });
-            const result = db.prepare('SELECT COUNT(*) as count FROM spaces').get();
-            db.close();
-
-            if (result.count > 0) {
-                success(`Database has ${result.count} seeded spaces`);
-            } else {
-                warning('Database is empty - Run seed script');
-            }
-        } catch (e) {
-            warning(`Could not verify database content: ${e.message}`);
-        }
+        // Skip database content check - better-sqlite3 is built for Electron runtime
+        info('Database content check skipped (requires Electron runtime)');
     }
 }
 
