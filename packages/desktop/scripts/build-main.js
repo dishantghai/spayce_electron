@@ -18,7 +18,6 @@ const workspaceAliases = {
     '@spayce/core': path.join(workspaceRoot, 'packages/core/src'),
     '@spayce/infrastructure': path.join(workspaceRoot, 'packages/infrastructure/src'),
     '@spayce/react-ui': path.join(workspaceRoot, 'packages/react-ui/src'),
-    '@spayce/shared': path.join(workspaceRoot, 'packages/shared/src'),
 };
 
 const commonOptions = {

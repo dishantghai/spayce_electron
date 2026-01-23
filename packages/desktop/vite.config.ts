@@ -9,15 +9,32 @@ export default defineConfig({
     build: {
         outDir: '../../dist/renderer',
         emptyOutDir: true,
+        rollupOptions: {
+            external: [
+                'better-sqlite3',
+                'electron',
+                'fs',
+                'path',
+                'util',
+            ],
+        },
     },
     resolve: {
         alias: {
-            '@spayce/shared': path.resolve(__dirname, '../shared/src'),
+            '@spayce/react-ui': path.resolve(__dirname, '../react-ui/src'),
             '@spayce/desktop': path.resolve(__dirname, 'src'),
             'react-native': 'react-native-web',
         },
     },
     server: {
         port: 5173,
+        strictPort: true,
+    },
+    optimizeDeps: {
+        exclude: [
+            'better-sqlite3',
+            '@spayce/infrastructure',
+            '@spayce/core',
+        ],
     },
 });

@@ -1,3 +1,6 @@
+// Infrastructure - Persistence & External Adapters Layer
+// Implements repository interfaces and external service adapters
+
 export * from './bootstrap';
 export * from './di';
 export * from './errors';

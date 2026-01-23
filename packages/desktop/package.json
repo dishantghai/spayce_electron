@@ -30,7 +30,6 @@
         "@spayce/core": "workspace:*",
         "@spayce/infrastructure": "workspace:*",
         "@spayce/react-ui": "workspace:*",
-        "@spayce/shared": "workspace:*",
         "better-sqlite3": "^11.10.0",
         "electron-store": "^8.1.0",
         "lucide-react": "^0.309.0",

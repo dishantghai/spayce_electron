@@ -5,8 +5,8 @@ import {
     ContextMenu,
     Sidebar,
     SpacesScreen,
-} from '@spayce/shared';
-import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/shared';
+} from '@spayce/react-ui';
+import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
 

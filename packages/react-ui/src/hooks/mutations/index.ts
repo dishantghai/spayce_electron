@@ -7,3 +7,8 @@ export * from './useDeleteItem';
 export * from './useMoveItem';
 export * from './usePinItem';
 export * from './useUnpinItem';
+export * from './useRenameItem';
+export * from './useUpdateItemMetadata';
+export * from './useReorderItems';
+export * from './useIncrementVisitCount';
+export * from './useReorderPins';

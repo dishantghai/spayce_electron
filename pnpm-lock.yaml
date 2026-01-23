@@ -50,9 +50,6 @@ importers:
       '@spayce/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@spayce/shared':
-        specifier: workspace:*
-        version: link:../shared
       better-sqlite3:
         specifier: ^11.10.0
         version: 11.10.0
@@ -139,6 +136,9 @@ importers:
       '@spayce/infrastructure':
         specifier: workspace:*
         version: link:../infrastructure
+      lucide-react:
+        specifier: ^0.309.0
+        version: 0.309.0(react@18.3.1)
       react:
         specifier: ^18.2.0
         version: 18.3.1

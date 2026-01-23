@@ -42,7 +42,6 @@ export default defineConfig({
             '@spayce/core': path.resolve(__dirname, '../core/src'),
             '@spayce/infrastructure': path.resolve(__dirname, '../infrastructure/src'),
             '@spayce/react-ui': path.resolve(__dirname, '../react-ui/src'),
-            '@spayce/shared': path.resolve(__dirname, '../shared/src'),
         },
     },
 });

@@ -1,0 +1,105 @@
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    padding: 16px;
+    background-color: var(--color-bg-dark, #0F0B1A);
+}
+
+.card {
+    max-width: 28rem;
+    width: 100%;
+    padding: 24px;
+    text-align: center;
+    background: var(--color-bg-surface, #1A1628);
+    border-radius: 12px;
+    border: 1px solid var(--color-border-dark, #374151);
+}
+
+.iconContainer {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.icon {
+    height: 3rem;
+    width: 3rem;
+    color: var(--color-error, #EF4444);
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--color-text-primary, #E5E7EB);
+}
+
+.message {
+    color: var(--color-text-muted, #6B7280);
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
+.errorDetails {
+    margin-bottom: 24px;
+    padding: 12px;
+    background: var(--color-bg-accent, #2D2645);
+    border-radius: 8px;
+    text-align: left;
+}
+
+.errorMessage {
+    font-size: 12px;
+    font-family: var(--font-mono, 'JetBrains Mono', monospace);
+    color: var(--color-error, #EF4444);
+    margin: 0;
+    word-break: break-word;
+}
+
+.errorId {
+    font-size: 11px;
+    color: var(--color-text-muted, #6B7280);
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.buttonPrimary,
+.buttonSecondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.buttonPrimary {
+    background: var(--color-primary, #6D5AE6);
+    color: #ffffff;
+    border: none;
+}
+
+.buttonPrimary:hover {
+    background: #5a4ad1;
+}
+
+.buttonSecondary {
+    background: transparent;
+    color: var(--color-text-primary, #E5E7EB);
+    border: 1px solid var(--color-border-dark, #374151);
+}
+
+.buttonSecondary:hover {
+    background: var(--color-bg-accent, #2D2645);
+}

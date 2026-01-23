@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useCallback, useRef } from 'react';
+import { useEventBusInvalidation } from './useEventBusInvalidation';
 
 type InvalidationCallback = () => void | Promise<void>;
 
@@ -39,6 +40,9 @@ export function InvalidationProvider({ children }: InvalidationProviderProps): R
             });
         }
     }, []);
+
+    // Connect to event bus for automatic invalidation
+    useEventBusInvalidation(invalidate);
 
     return (
         <InvalidationContext.Provider value={{ subscribe, invalidate }}>

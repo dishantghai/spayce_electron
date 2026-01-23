@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { spacesApi, itemsApi } from '../ipc/spacesApi';
-import type { Space, SpaceItem } from '@spayce/shared';
+import type { Space, SpaceItem } from '@spayce/react-ui';
 
 interface UseSpacesDataResult {
     spaces: Space[];
