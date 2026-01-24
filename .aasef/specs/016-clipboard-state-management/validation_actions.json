@@ -1,0 +1,102 @@
+[
+  {
+    "id": "e7f064c2-6af9-47dc-98af-e7de97c7c0b8",
+    "intent": "Fixed",
+    "item": "**URL validation logic unclear**: The regex pattern is provided but where/how URL validation occurs in the flow isn't specified",
+    "category": "gap",
+    "ai_suggestion": "## Fix for URL Validation Logic Gap\n\n### What needs to be added/changed:\nAdd a clear **Validation Flow** section that specifies:\n1. **When** URL validation occurs (on input blur, form submit, or real-time)\n2. **Where** validation is handled (component level vs store level)\n3. **Error handling** and user feedback mechanism\n\n### Where in the spec:\nAdd after the current regex pattern definition:\n\n```markdown\n## Validation Flow\n- **Trigger**: Validate on input blur and form submission\n- **Location**: Handle validation in the InlineInputStore (from SPEC-013)\n- **Process**:\n  1. Apply regex pattern validation\n  2. Update validation state in store\n  3. Display inline error message if invalid\n  4. Prevent submission until valid\n\n## Error States\n- Invalid URL: Show \"Please enter a valid URL\" below input\n- Empty required field: Show \"URL is required\"\n- Validation styling: Red border + error text\n```\n\n### Overlap handling:\nThis should **reference SPEC-013** since URL validation is part of inline input functionality:\n- Add dependency: `Depends on: SPEC-013 (InlineInputStore for validation state)`\n- Use consistent validation patterns with other inline inputs\n\n### Integration point:\nThe URL validation should integrate with SPEC-013's `InlineInputStore` validation system rather than creating separate validation logic.\n\nThis ensures consistent validation behavior across all inline input types (folders, links, renames).",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T15:05:08.602873"
+  },
+  {
+    "id": "e988115b-d6d2-4489-a155-84346f68a35e",
+    "intent": "Fixed",
+    "item": "**Paste operation missing**: The spec focuses on copy/cut but doesn't define the paste operation that would consume the clipboard state",
+    "category": "gap",
+    "ai_suggestion": "## Gap Fix: Add Paste Operation Definition\n\n### What needs to be added:\nThe spec needs a complete paste operation definition that consumes clipboard state and integrates with the existing copy/cut operations.\n\n### Where to add it:\nAdd a new section **\"Paste Operations\"** after the copy/cut operations section, and update the interface definitions.\n\n### Specific additions needed:\n\n1. **Paste Operation Method:**\n```typescript\ninterface ClipboardStore {\n  // ... existing methods\n  pasteItems: (targetId: string, position?: 'before' | 'after' | 'inside') => Promise<void>\n  canPaste: (targetId: string) => boolean\n}\n```\n\n2. **Paste Logic Definition:**\n- Validate paste target compatibility with clipboard content type\n- Handle different paste contexts (folder-to-folder, link operations, etc.)\n- Clear clipboard state after successful paste\n- Provide user feedback for invalid paste attempts\n\n3. **Integration Points:**\n- Keyboard shortcut handling (Ctrl+V)\n- Context menu paste option\n- Visual paste indicators when items are available\n\n### Dependencies to add:\n- **SPEC-016** (Multi-selection): Paste should work with multi-selected clipboard content\n- **SPEC-014** (Drag-drop): Share drop validation logic for paste target validation\n\n### Example paste operation:\n```typescript\npasteItems: async (targetId: string, position = 'inside') => {\n  const { items, operation } = get().clipboardState\n  if (!items.length || !canPaste(targetId)) return\n  \n  // Execute paste based on operation type\n  if (operation === 'cut') {\n    await moveItems(items, targetId, position)\n  } else {\n    await duplicateItems(items, targetId, position)\n  }\n  \n  set({ clipboardState: { items: [], operation: null } })\n}\n```\n\nThis ensures the clipboard system is complete and follows the established patterns from related specs.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T15:07:01.599497"
+  },
+  {
+    "id": "effd2ffe-11ab-4660-a236-53b38c37266a",
+    "intent": "Resolve",
+    "item": "**Potential overlap with SPEC-016**: Multi-selection clipboard operations will need to integrate with the multi-selection state management being implemented in SPEC-016",
+    "category": "cross_spec",
+    "ai_suggestion": "**What needs to be added/changed:**\nAdd a dependency section referencing SPEC-016 and specify the shared state management interface for multi-selection operations.\n\n**Where in the spec:**\nAdd to the beginning under \"Dependencies\" and update the technical implementation section to define how clipboard operations will consume SPEC-016's selection state.\n\n**Example template:**\n```\nDependencies: SPEC-016 (Multi-selection State Management)\nInterface: Clipboard operations must use SPEC-016's getSelectedItems() and onSelectionChange() methods rather than maintaining separate selection tracking.\n```",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T14:59:40.633164"
+  },
+  {
+    "id": "b696410d-78d9-49c4-91a5-2a6ca06d28ed",
+    "intent": "Resolve",
+    "item": "**Dependency timing**: This spec depends on SPEC-007 (SpaceItem entity) but doesn't verify the entity structure matches the clipboard requirements",
+    "category": "cross_spec",
+    "ai_suggestion": "**Fix: Add dependency validation section**\n\n1. **What to add**: Create a \"Dependencies & Validation\" section that explicitly maps SpaceItem entity fields to clipboard data requirements and includes validation criteria.\n\n2. **Where**: Add this section immediately after the current dependencies list but before the main feature description.\n\n3. **Template**:\n```\n## Dependencies & Validation\n- SPEC-007 SpaceItem entity MUST include: `id`, `title`, `content`, `metadata.lastModified`\n- Validation: Verify SpaceItem.serialize() output matches clipboard.data schema before implementation\n```",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T14:59:40.633325"
+  },
+  {
+    "id": "e585d870-9fc1-44ce-a7de-7e5f7eb92257",
+    "intent": "Fix",
+    "item": "Add missing section: Out of Scope section",
+    "category": "format",
+    "ai_suggestion": "**What to add:** Create an \"Out of Scope\" section that explicitly lists features, functionalities, or requirements that will NOT be included in this release/version.\n\n**Where to place:** Immediately after the \"Scope\" or \"Requirements\" section, before \"Technical Specifications.\"\n\n**Template:**\n```\n## Out of Scope\n- Feature X (planned for v2.0)\n- Integration with System Y\n- Mobile responsive design\n- Advanced analytics dashboard\n```\n\nThis prevents scope creep and sets clear expectations with stakeholders about what's excluded.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T14:59:48.359641"
+  },
+  {
+    "id": "dd6933da-edb4-4c1f-9c9c-9fb2498ccc6b",
+    "intent": "Fix",
+    "item": "Add missing section: MVP Scope section",
+    "category": "format",
+    "ai_suggestion": "",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T14:59:48.359576"
+  },
+  {
+    "id": "09d4787f-b1a4-45f2-a40a-227b7a9482ed",
+    "intent": "Fix",
+    "item": "Add missing section: User Stories section",
+    "category": "format",
+    "ai_suggestion": "",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T14:59:48.359622"
+  },
+  {
+    "id": "762da295-1ba1-4703-a153-595b8008f6f0",
+    "intent": "Consider",
+    "item": "**Define paste validation rules**: Specify what makes a target compatible (folder can accept any item, space root accepts folders/links, etc.)",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Analysis: Paste Validation Rules\n\n### What needs to be added:\nDefine comprehensive paste validation rules that specify target compatibility for different item types and contexts.\n\n### Where to add in spec:\nAdd a new section **\"Paste Validation Rules\"** after the current criteria, with these subsections:\n\n#### Target Compatibility Matrix:\n```\n- **Folders**: Can accept any pasteable item (folders, links, files)\n- **Space Root**: Only accepts folders and links (no files at root level)\n- **Links**: Cannot accept paste operations (not containers)\n- **Pins Grid**: Accepts folders and links only\n```\n\n#### Validation Logic:\n```\n- Check target container type compatibility\n- Validate item type against target rules  \n- Prevent duplicate names in same container\n- Block circular references (folder into its own subtree)\n- Respect space-level permissions/constraints\n```\n\n### Overlap with related specs:\n- **Add dependency**: SPEC-014 (Enhanced Drag Drop) - paste validation should use similar logic to drop validation\n- **Reference**: SPEC-016 (Multi-selection) - validation must handle batch paste operations\n- **Consistency**: Use same container type terminology as other specs\n\n### Example validation function signature:\n```typescript\nvalidatePasteTarget(\n  items: PasteableItem[],\n  target: ContainerTarget,\n  context: 'sidebar' | 'space-card' | 'pins-grid'\n): ValidationResult\n```\n\nThis ensures paste operations respect the same structural rules as drag-drop while handling the unique aspects of clipboard-based transfers.",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T15:12:47.195913"
+  },
+  {
+    "id": "3fa02aba-7aa4-4398-a546-4db462bc9b0f",
+    "intent": "Consider",
+    "item": "**Clarify multi-item positioning**: Define behavior when pasting multiple items with position modifiers",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Analysis: Multi-Item Positioning Behavior\n\n### What needs to be added/changed:\n\n**Add a \"Multi-Item Positioning Rules\" section** that defines:\n\n1. **Sequential positioning**: When pasting multiple items with position modifiers (e.g., \"after item X\"), define the stacking order\n2. **Conflict resolution**: Behavior when position targets become invalid due to multiple insertions\n3. **Batch operation handling**: Whether positions are calculated once at paste-start or dynamically updated\n\n### Where in the spec:\n\nAdd this section after the main positioning logic and before any implementation details.\n\n### Overlap handling:\n\nThis directly relates to **Spec 016 (multi-selection-state-management)**. Consider:\n- **Add dependency**: Reference Spec 016 for multi-selection state\n- **Consistent terminology**: Use the same \"batch operations\" language from Spec 016\n- **Avoid duplication**: Focus on positioning-specific behavior, not selection management\n\n### Suggested content template:\n\n```markdown\n## Multi-Item Positioning Rules\n\n**Dependencies**: Spec 016 (multi-selection state management)\n\n### Sequential Insertion\n- Items paste in selection order with positions calculated at paste-start\n- Subsequent items adjust positions relative to previously inserted items\n- Example: Pasting 3 items \"after ItemA\" results in: ItemA \u2192 Item1 \u2192 Item2 \u2192 Item3\n\n### Position Conflict Resolution\n- If target position becomes invalid during batch paste, fall back to [default behavior]\n- Maintain relative order of pasted items regardless of position conflicts\n\n### State Integration\n- Leverage Spec 016's multi-selection state for batch position operations\n- Track position targets per selected item before paste execution\n```\n\n**Recommendation**: Consider merging this positioning logic into Spec 016 as a \"Batch Positioning\" subsection to keep related multi-item behaviors centralized.",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T15:13:18.060930"
+  },
+  {
+    "id": "0bfa8018-f1d3-4941-915d-0f938f9c2320",
+    "intent": "Consider",
+    "item": "**Add IPC error handling**: Specify fallback behavior when system clipboard operations fail",
+    "category": "suggestion",
+    "ai_suggestion": "## Fix for IPC Error Handling Gap\n\n### What needs to be added:\nAdd a comprehensive error handling section that specifies fallback behaviors for clipboard operations when system IPC fails.\n\n### Where to add it:\nCreate a new section called **\"Error Handling & Fallbacks\"** after the main functionality sections but before implementation details.\n\n### Content to add:\n\n```markdown\n## Error Handling & Fallbacks\n\n### IPC Failure Scenarios\n- **System clipboard unavailable**: Fall back to internal app clipboard\n- **Permission denied**: Show user notification with manual copy option\n- **Timeout errors**: Retry once, then graceful degradation\n- **Format conversion failures**: Strip to plain text as fallback\n\n### Fallback Behaviors\n1. **Primary**: Use Electron's clipboard API\n2. **Secondary**: Internal memory-based clipboard store\n3. **Tertiary**: Show copy-to-manual dialog with text selection\n\n### Error States\n- Display non-blocking toast notifications for clipboard errors\n- Maintain operation history even when system clipboard fails\n- Provide manual recovery options in UI\n\n### Integration Points\n- **Dependency**: SPEC-001 (Electron foundation) for IPC error handling patterns\n- **State Management**: Use existing error state patterns from related specs\n```\n\n### Overlap handling:\nThis doesn't duplicate existing specs but should reference SPEC-001's Electron foundation for consistent error handling patterns across the app.\n\n### Key additions:\n- Specific fallback hierarchy\n- User experience considerations\n- Integration with existing foundation\n- Clear error state management",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T15:14:53.712095"
+  }
+]

@@ -1,0 +1,536 @@
+# Phase 7: Space Cards Features
+
+**Priority:** P1 - High  
+**Dependencies:** Phase 1-6  
+**Total Estimated Effort:** 15 hours
+
+This phase implements all features for Space Cards in the Spaces Screen.
+
+---
+
+## US-026: Inline Creation in Space Cards
+
+**Priority:** P1 - High  
+**Dependencies:** US-001, US-002  
+**Estimated Effort:** 4 hours  
+**User Value:** Users can create items directly in space cards
+
+### User Story
+
+> As a user, I want to create folders and links inline within space cards on the Spaces screen, just like in the sidebar.
+
+### Acceptance Criteria
+
+- [ ] Space card header has "+" buttons for folder and link
+- [ ] Click triggers inline input at card's tree root
+- [ ] Folder hover shows add subfolder/link buttons
+- [ ] Same keyboard handling (Enter, Escape) as sidebar
+- [ ] Uses separate state from sidebar (cardInlineInput)
+
+### Flutter Source Reference
+
+| Feature | Flutter File | Lines |
+|---------|--------------|-------|
+| Card Header Actions | `space_card_hifi_v2.dart` | 150-180 |
+| CardInlineInputState | `space_card_hifi_v2.dart` | 42-58 |
+| Card Inline Input Row | `space_card_hifi_v2.dart` | 620-720 |
+
+**Full Flutter Path:**
+- `@/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/spaces/presentation/widgets/space_card_hifi_v2.dart`
+
+### Flutter Code Reference
+
+```dart
+// CardInlineInputState (space_card_hifi_v2.dart:42-58)
+class CardInlineInputState {
+  final String spaceId;
+  final String? parentId;
+  final InlineInputType type;
+
+  const CardInlineInputState({
+    required this.spaceId,
+    required this.type,
+    this.parentId,
+  });
+}
+
+final cardInlineInputProvider = StateProvider<CardInlineInputState?>((ref) => null);
+
+// Card header buttons (space_card_hifi_v2.dart:150-180)
+Row(
+  children: [
+    IconButton(
+      icon: Icon(LucideIcons.folderPlus),
+      onPressed: () {
+        ref.read(cardInlineInputProvider.notifier).state = CardInlineInputState(
+          spaceId: widget.space.id,
+          type: InlineInputType.folder,
+          parentId: null,
+        );
+      },
+    ),
+    IconButton(
+      icon: Icon(LucideIcons.link),
+      onPressed: () {
+        ref.read(cardInlineInputProvider.notifier).state = CardInlineInputState(
+          spaceId: widget.space.id,
+          type: InlineInputType.link,
+          parentId: null,
+        );
+      },
+    ),
+  ],
+)
+```
+
+### Electron Implementation
+
+**Files to Update:**
+```
+packages/react-ui/src/components/spaces/SpaceCard.tsx
+packages/react-ui/src/stores/inlineInputStore.ts
+```
+
+### Implementation Steps
+
+1. **Verify inlineInputStore Has Card State** (from SPEC-012)
+   - `cardInput: InlineInputState | null`
+   - `setCardInput`, `clearCardInput`
+
+2. **Update SpaceCard Header**
+   ```typescript
+   // In SpaceCard
+   const { setCardInput } = useInlineInputStore();
+   
+   const handleAddFolder = () => {
+     setCardInput({
+       spaceId: space.id,
+       parentId: null,
+       type: 'folder',
+     });
+   };
+   
+   const handleAddLink = () => {
+     setCardInput({
+       spaceId: space.id,
+       parentId: null,
+       type: 'link',
+     });
+   };
+   
+   // In header
+   <button onClick={handleAddFolder}>
+     <FolderPlus size={16} />
+   </button>
+   <button onClick={handleAddLink}>
+     <Link size={16} />
+   </button>
+   ```
+
+3. **Render Inline Input in Card's Tree**
+   ```typescript
+   const { cardInput, clearCardInput } = useInlineInputStore();
+   
+   // In card tree
+   {cardInput?.spaceId === space.id && cardInput?.parentId === null && (
+     <InlineInput
+       type={cardInput.type}
+       spaceId={space.id}
+       parentId={null}
+       onSubmit={handleInlineSubmit}
+       onCancel={clearCardInput}
+     />
+   )}
+   ```
+
+### Manual Testing Checklist
+
+- [ ] Click folder+ in card header → inline input appears
+- [ ] Click link+ in card header → inline input with auto-paste
+- [ ] Create folder in card → appears in card tree
+- [ ] Hover folder in card → shows action buttons
+- [ ] Subfolder creation works in cards
+
+---
+
+## US-027: Inline Rename in Space Cards
+
+**Priority:** P1 - High  
+**Dependencies:** US-003  
+**Estimated Effort:** 2 hours  
+**User Value:** Users can rename items in space cards
+
+### User Story
+
+> As a user, I want to rename items in space cards inline, just like in the sidebar.
+
+### Acceptance Criteria
+
+- [ ] Context menu "Rename" in card → inline rename input
+- [ ] Uses separate state from sidebar (cardRenameItemId)
+- [ ] Same behavior as sidebar rename
+
+### Flutter Source Reference
+
+| Feature | Flutter File | Lines |
+|---------|--------------|-------|
+| Card Rename Provider | `space_card_hifi_v2.dart` | 38-39 |
+| Card Rename Trigger | `space_card_hifi_v2.dart` | 280-285 |
+
+**Full Flutter Path:**
+- `@/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/spaces/presentation/widgets/space_card_hifi_v2.dart`
+
+### Electron Implementation
+
+**Files to Update:**
+```
+packages/react-ui/src/components/spaces/SpaceCard.tsx
+packages/react-ui/src/stores/inlineInputStore.ts
+```
+
+### Implementation Steps
+
+1. **Use Card Rename State**
+   ```typescript
+   const { cardRenameItemId, setCardRenameItemId } = useInlineInputStore();
+   
+   // In context menu handler
+   case 'rename':
+     setCardRenameItemId(item.id);
+     break;
+   
+   // In card tree item
+   const isRenaming = cardRenameItemId === item.id;
+   
+   if (isRenaming) {
+     return (
+       <InlineRenameInput
+         item={item}
+         spaceId={spaceId}
+         onComplete={() => setCardRenameItemId(null)}
+       />
+     );
+   }
+   ```
+
+### Manual Testing Checklist
+
+- [ ] Right-click item in card → Rename → inline input
+- [ ] Enter saves, Escape cancels
+- [ ] Rename persists
+
+---
+
+## US-028: Context Menus in Space Cards
+
+**Priority:** P1 - High  
+**Dependencies:** US-005, US-006  
+**Estimated Effort:** 3 hours  
+**User Value:** Full context menu support in space cards
+
+### User Story
+
+> As a user, I want the same context menu options in space cards as in the sidebar.
+
+### Acceptance Criteria
+
+- [ ] Right-click item in card → full context menu
+- [ ] All actions work (create, rename, copy, paste, delete)
+- [ ] Paste uses card's clipboard check
+
+### Flutter Source Reference
+
+| Feature | Flutter File | Lines |
+|---------|--------------|-------|
+| Card Context Menu | `space_card_hifi_v2.dart` | 240-342 |
+| Card Paste Handler | `space_card_hifi_v2.dart` | 470-565 |
+
+**Full Flutter Path:**
+- `@/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/spaces/presentation/widgets/space_card_hifi_v2.dart`
+
+### Electron Implementation
+
+**Files to Update:**
+```
+packages/react-ui/src/components/spaces/SpaceCard.tsx
+```
+
+### Implementation Steps
+
+1. **Reuse Context Menu Logic from Sidebar**
+   - Same `getContextMenuItems` function
+   - Same action handlers
+   - Different inline input state (card vs sidebar)
+
+2. **Wire Up Context Menu in Card**
+   ```typescript
+   const handleItemContextMenu = (item: SpaceItem, e: React.MouseEvent) => {
+     e.preventDefault();
+     setContextMenu({
+       items: getContextMenuItems(item),
+       position: { x: e.clientX, y: e.clientY },
+       onAction: (actionId) => handleCardContextAction(actionId, item),
+     });
+   };
+   
+   const handleCardContextAction = (actionId: string, item: SpaceItem) => {
+     switch (actionId) {
+       case 'new_folder':
+         setCardInput({ spaceId: space.id, parentId: item.id, type: 'folder' });
+         break;
+       case 'rename':
+         setCardRenameItemId(item.id);
+         break;
+       // ... same as sidebar but using card state
+     }
+   };
+   ```
+
+### Manual Testing Checklist
+
+- [ ] Right-click in card → menu appears
+- [ ] All menu items work
+- [ ] Actions use card state (not sidebar)
+
+---
+
+## US-029: Drag Within Space Card
+
+**Priority:** P1 - High  
+**Dependencies:** US-011, US-013  
+**Estimated Effort:** 3 hours  
+**User Value:** Users can reorder items within a space card
+
+### User Story
+
+> As a user, I want to drag and drop items within a space card to reorder them.
+
+### Acceptance Criteria
+
+- [ ] Items in card tree are draggable
+- [ ] Drop indicators show in card
+- [ ] Same hit zone logic as sidebar (20%/60%/20% for folders)
+- [ ] Reorder persists
+
+### Flutter Source Reference
+
+| Feature | Flutter File | Lines |
+|---------|--------------|-------|
+| Card Tree with Drag | `space_card_hifi_v2.dart` | 400-450 |
+| Uses Same DraggableTreeItem | `draggable_tree_item.dart` | Full file |
+
+**Full Flutter Paths:**
+- `@/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/spaces/presentation/widgets/space_card_hifi_v2.dart`
+- `@/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/spaces/presentation/widgets/drag_drop/draggable_tree_item.dart`
+
+### Electron Implementation
+
+**Files to Update:**
+```
+packages/react-ui/src/components/spaces/SpaceCard.tsx
+```
+
+### Implementation Steps
+
+1. **Reuse Drag Components in Card**
+   ```typescript
+   // SpaceCard tree uses same components
+   <DraggableTreeItem
+     item={item}
+     spaceId={space.id}
+     parentId={parentId}
+     index={index}
+     accentColor={space.accentColor}
+     source="spaceCard"  // Different source
+   >
+     <DroppableTreeItem
+       item={item}
+       spaceId={space.id}
+       onDrop={handleDrop}
+     >
+       {/* Card tree item content */}
+     </DroppableTreeItem>
+   </DraggableTreeItem>
+   ```
+
+2. **Update DragData Source**
+   - Set `source: 'spaceCard'` in card drag operations
+   - Helps distinguish origin for cross-card drops
+
+### Manual Testing Checklist
+
+- [ ] Drag item in card → preview appears
+- [ ] Drop indicators show
+- [ ] Reorder works
+- [ ] Same hit zones as sidebar
+
+---
+
+## US-030: Drag Across Space Cards
+
+**Priority:** P1 - High  
+**Dependencies:** US-029  
+**Estimated Effort:** 3 hours  
+**User Value:** Users can move items between spaces via cards
+
+### User Story
+
+> As a user, I want to drag items from one space card to another to move them between spaces.
+
+### Acceptance Criteria
+
+- [ ] Drag from card A → drop in card B works
+- [ ] Item moves to target space
+- [ ] Can drop at specific position in target card
+- [ ] Source card updates to show item removed
+
+### Flutter Source Reference
+
+| Feature | Flutter File | Lines |
+|---------|--------------|-------|
+| DroppableSpaceCard | `droppable_space_card.dart` | 1-74 |
+| Cross-card Move | `space_card_hifi_v2.dart` | 380-395 |
+
+**Full Flutter Paths:**
+- `@/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/spaces/presentation/widgets/drag_drop/droppable_space_card.dart`
+- `@/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/spaces/presentation/widgets/space_card_hifi_v2.dart`
+
+### Flutter Code Reference
+
+```dart
+// DroppableSpaceCard (droppable_space_card.dart:1-74)
+class DroppableSpaceCard extends StatefulWidget {
+  final Space space;
+  final Widget child;
+  final void Function(DragData data) onAcceptItem;
+}
+
+class _DroppableSpaceCardState extends State<DroppableSpaceCard> {
+  bool _isHovering = false;
+
+  Widget build(BuildContext context) {
+    return DragTarget<DragData>(
+      onWillAcceptWithDetails: (details) {
+        // Accept if from different space
+        return details.data.spaceId != widget.space.id;
+      },
+      onAcceptWithDetails: (details) {
+        widget.onAcceptItem(details.data);
+      },
+      builder: (context, candidateData, rejectedData) {
+        return AnimatedContainer(
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: _isHovering ? widget.space.accentColor : Colors.transparent,
+              width: 2,
+            ),
+          ),
+          child: widget.child,
+        );
+      },
+    );
+  }
+}
+```
+
+### Electron Implementation
+
+**Files to Create:**
+```
+packages/react-ui/src/components/drag-drop/DroppableSpaceCard.tsx
+```
+
+**Files to Update:**
+```
+packages/react-ui/src/components/spaces/SpaceCard.tsx
+packages/react-ui/src/components/spaces/SpacesScreen.tsx
+```
+
+### Implementation Steps
+
+1. **Create DroppableSpaceCard Wrapper**
+   ```typescript
+   interface DroppableSpaceCardProps {
+     space: Space;
+     onAcceptItem: (data: DragData) => void;
+     children: React.ReactNode;
+   }
+   
+   export function DroppableSpaceCard({ space, onAcceptItem, children }: DroppableSpaceCardProps) {
+     const { dragData } = useDragDropUiStore();
+     const [isHovering, setIsHovering] = useState(false);
+     
+     const canAccept = dragData && dragData.spaceId !== space.id;
+     
+     const handleDragOver = (e: React.DragEvent) => {
+       if (!canAccept) return;
+       e.preventDefault();
+       setIsHovering(true);
+     };
+     
+     const handleDragLeave = () => {
+       setIsHovering(false);
+     };
+     
+     const handleDrop = (e: React.DragEvent) => {
+       e.preventDefault();
+       setIsHovering(false);
+       
+       const data = JSON.parse(e.dataTransfer.getData('application/json')) as DragData;
+       onAcceptItem(data);
+     };
+     
+     return (
+       <div
+         className={cn(styles.spaceCard, isHovering && styles.dropTarget)}
+         style={{
+           borderColor: isHovering ? space.accentColor : 'transparent',
+         }}
+         onDragOver={handleDragOver}
+         onDragLeave={handleDragLeave}
+         onDrop={handleDrop}
+       >
+         {children}
+       </div>
+     );
+   }
+   ```
+
+2. **Handle Cross-Card Move**
+   ```typescript
+   const handleAcceptItem = async (data: DragData) => {
+     // Move items to this space's root
+     for (const item of data.items) {
+       await window.itemsApi.move(item.id, {
+         newSpaceId: space.id,
+         newParentId: null,
+       });
+     }
+     
+     // Invalidate both spaces
+     invalidate(`space-items:${data.spaceId}`);
+     invalidate(`space-items:${space.id}`);
+   };
+   ```
+
+3. **Wrap SpaceCard in SpacesScreen**
+   ```typescript
+   // In SpacesScreen
+   {spaces.map(space => (
+     <DroppableSpaceCard
+       key={space.id}
+       space={space}
+       onAcceptItem={(data) => handleCrossCardMove(data, space.id)}
+     >
+       <SpaceCard space={space} />
+     </DroppableSpaceCard>
+   ))}
+   ```
+
+### Manual Testing Checklist
+
+- [ ] Drag from card A → hover card B → border highlights
+- [ ] Drop → item moves to card B
+- [ ] Card A updates (item removed)
+- [ ] Card B updates (item added)
+- [ ] Cannot drop to same card (no highlight)

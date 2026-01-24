@@ -110,3 +110,11 @@ export interface AuthState {
     isAuthenticated: boolean;
     error: string | null;
 }
+
+export type InlineInputType = 'folder' | 'link';
+
+export interface InlineInputState {
+    spaceId: string;
+    parentId: string | null;
+    type: InlineInputType;
+}

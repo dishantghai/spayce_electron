@@ -1,0 +1,14 @@
+{
+    "id": "014",
+    "name": "enhanced-drag-drop-state-management",
+    "status": "pending",
+    "priority": "critical",
+    "dependencies": [
+        "007",
+        "010"
+    ],
+    "estimated_days": 0.5,
+    "created_at": "2026-01-24T09:23:00.000000",
+    "updated_at": "2026-01-24T09:23:00.000000",
+    "completed_at": null
+}

@@ -1,0 +1,17 @@
+{
+    "id": "016",
+    "name": "clipboard-state-management",
+    "status": "pending",
+    "priority": "critical",
+    "dependencies": [
+        "007",
+        "010",
+        "012",
+        "013",
+        "014"
+    ],
+    "estimated_days": 0.5,
+    "created_at": "2026-01-24T09:23:00.000000",
+    "updated_at": "2026-01-24T15:42:00.000000",
+    "completed_at": null
+}

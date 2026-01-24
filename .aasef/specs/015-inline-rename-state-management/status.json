@@ -1,0 +1,13 @@
+{
+    "id": "015",
+    "name": "inline-rename-state-management",
+    "status": "pending",
+    "priority": "critical",
+    "dependencies": [
+        "012"
+    ],
+    "estimated_days": 0.125,
+    "created_at": "2026-01-24T09:23:00.000000",
+    "updated_at": "2026-01-24T15:42:00.000000",
+    "completed_at": null
+}
