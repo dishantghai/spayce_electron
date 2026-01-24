@@ -1,13 +1,65 @@
 {
-    "id": "015",
-    "name": "inline-rename-state-management",
-    "status": "pending",
-    "priority": "critical",
-    "dependencies": [
-        "012"
-    ],
-    "estimated_days": 0.125,
-    "created_at": "2026-01-24T09:23:00.000000",
-    "updated_at": "2026-01-24T15:42:00.000000",
-    "completed_at": null
+  "id": "015",
+  "name": "inline-rename-state-management",
+  "status": "in_progress",
+  "priority": "critical",
+  "dependencies": [
+    "012"
+  ],
+  "estimated_days": 0.125,
+  "created_at": "2026-01-24T09:23:00.000000",
+  "updated_at": "2026-01-24T15:42:00.000000",
+  "completed_at": null,
+  "plan_generated": "2026-01-24T22:01:29.532780",
+  "open_questions_resolved": [
+    {
+      "question": "How should rename state clearing coordinate with SPEC-002 (Sidebar Navigation) for space transitions - should it hook into existing navigation events or create new coordination points?",
+      "decision": "Review SPEC-002's navigation event system and hook into existing space change events rather than creating duplicate coordination logic.",
+      "category": "CRITICAL"
+    },
+    {
+      "question": "What should happen if SPEC-012's InlineInputStore doesn't already include the required rename state properties (sidebarRenameItemId, cardRenameItemId)?",
+      "decision": "Verify SPEC-012 implementation first. If missing, either update SPEC-012 or modify this spec to include the required state additions.",
+      "category": "CRITICAL"
+    },
+    {
+      "question": "What specific focus management should occur when an item is deleted during rename - which item should receive focus as the \"appropriate fallback\"?",
+      "decision": "Define fallback priority: next sibling \u2192 previous sibling \u2192 parent \u2192 first item in list.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "Should the 5-minute inactivity timeout for rename state clearing be configurable or hardcoded?",
+      "decision": "Deferred to implementation phase",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "How should validation debouncing (300ms) interact with the performance requirement of completing validation within 100ms?",
+      "decision": "300ms debounce for triggering validation, but once triggered, validation must complete within 100ms.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "How should concurrent rename attempts be detected and what specific conflict resolution options should be presented to users?",
+      "decision": "Deferred to implementation phase",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "Should validation caching be per-session or persistent across application restarts?",
+      "decision": "Deferred to implementation phase",
+      "category": "DEFERRED"
+    }
+  ],
+  "implementation_started": "2026-01-24T23:00:55.168837",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-24T23:00:55.170856",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  }
 }

@@ -1,0 +1,122 @@
+[
+  {
+    "id": "f26b6b2d-d1e4-4be9-87bf-8fea607342b7",
+    "intent": "Fixed",
+    "item": "Missing required section: Out of Scope section",
+    "category": "gap",
+    "ai_suggestion": "## Fix: Add Out of Scope Section\n\n**What needs to be added:**\nAdd a dedicated \"Out of Scope\" section to clearly define what this feature specification does NOT include.\n\n**Where to add it:**\nPlace it after the main feature description but before the technical requirements, typically following this structure:\n- Overview/Description\n- **Out of Scope** \u2190 Add here\n- Requirements\n- Acceptance Criteria\n\n**Template for Out of Scope section:**\n\n```markdown\n## Out of Scope\n\nThis specification does not include:\n\n- [List specific features/functionality that are explicitly NOT part of this spec]\n- [Reference related specs that handle excluded functionality]\n- [Clarify boundaries with overlapping features]\n\n### Handled by Other Specifications:\n- Feature X - See Spec [number] ([title])\n- Feature Y - See Spec [number] ([title])\n```\n\n**Given your related specs, consider excluding:**\n- General state management patterns \u2192 Reference Spec 012 (inline input state) or 016 (clipboard state)\n- Keyboard navigation concerns \u2192 Reference Spec 006 \n- Basic project setup/tooling \u2192 Reference Spec 001\n- Sidebar-specific functionality \u2192 Reference Spec 002\n\n**Action:** Review your current spec's scope and explicitly list what's NOT included to prevent scope creep and clarify boundaries with the 5 related specifications you have.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T20:36:41.057530"
+  },
+  {
+    "id": "5ef7945f-2da9-45d5-bb50-0f3e0bb7ff7a",
+    "intent": "Fixed",
+    "item": "**Missing implementation details**: Spec claims \"No new files needed\" but doesn't specify where the rename state methods should be implemented within the existing InlineInputStore",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Missing Implementation Details\n\n### What needs to be added/changed:\nAdd a specific implementation section that details where the rename state methods should be placed within the existing InlineInputStore.\n\n### Where in the spec it should go:\nAdd an \"Implementation Details\" section after the current state structure but before acceptance criteria.\n\n### Suggested addition:\n\n```markdown\n## Implementation Details\n\n### InlineInputStore Extension\nExtend the existing InlineInputStore (from Spec 001's state management foundation) with the following methods:\n\n**Location**: `src/stores/InlineInputStore.js` (or equivalent state management file)\n\n**New methods to add**:\n- `setRenameState(itemId, itemType, currentName, context)`\n- `clearRenameState(context)`\n- `getRenameState(context)`\n- `isRenaming(itemId, context)`\n\n**Integration points**:\n- Hook into existing sidebar state from Spec 002 (sidebar-navigation)\n- Coordinate with Spec 006 (keyboard-navigation) focus management\n- Maintain separation between sidebar and spaces contexts as established in current spec\n```\n\n### Dependencies to add:\n```markdown\n## Dependencies\n- Spec 001: Uses established state management patterns\n- Spec 002: Integrates with sidebar TreeView state\n- Spec 006: Coordinates with focus context management\n```\n\nThis clarifies exactly where to implement the functionality while maintaining consistency with your existing architecture and avoiding duplication with related specs.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T20:37:23.684484"
+  },
+  {
+    "id": "d5984a2e-17af-4478-acc1-ba4e97d1f3c2",
+    "intent": "Fixed",
+    "item": "**Unclear integration verification**: \"Integration with SPEC-012 verified\" acceptance criteria is vague - needs specific verification steps",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Unclear Integration Verification\n\n### What needs to be added/changed:\nReplace the vague \"Integration with SPEC-012 verified\" with specific, testable verification steps that define exactly how the integration should work.\n\n### Where in the spec:\nIn the **Acceptance Criteria** section, replace the current integration criterion with:\n\n```\n**Integration with SPEC-012 State Management:**\n- [ ] Inline input state is properly isolated from other component states\n- [ ] State transitions trigger correctly when switching between sidebar and space card contexts\n- [ ] State cleanup occurs when inline input is cancelled or completed\n- [ ] No state conflicts occur when multiple inline inputs are active simultaneously\n- [ ] Integration maintains the separate state tracking as defined in SPEC-012\n```\n\n### Handling spec overlap:\n- **Add dependency**: List `SPEC-012` in a \"Dependencies\" section\n- **Reference consistently**: Use SPEC-012's terminology (e.g., \"inline folder/link creation inputs\", \"separate state tracking\")\n- **Avoid duplication**: Don't redefine state management details - reference SPEC-012 for implementation specifics\n\n### Additional recommendation:\nAdd a **Integration Testing** section:\n```\n**Integration Testing with SPEC-012:**\n1. Verify state isolation by creating inline inputs in both contexts simultaneously\n2. Test state persistence during context switches\n3. Validate cleanup when inputs are dismissed\n4. Confirm no memory leaks in state management\n```\n\nThis makes the integration verification concrete and testable while properly referencing the related specification.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T20:38:03.006398"
+  },
+  {
+    "id": "20c8f868-7f05-44df-a984-c17932e8bfd4",
+    "intent": "Fixed",
+    "item": "**Missing error handling**: No requirements for handling edge cases like attempting to rename non-existent items",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Missing Error Handling\n\n### What needs to be added:\nAdd comprehensive error handling requirements for rename operations, covering:\n- Non-existent items\n- Permission/access errors  \n- Invalid name formats\n- System-level failures\n\n### Where to add it:\nCreate a new **\"Error Handling\"** section after the main functional requirements, before acceptance criteria.\n\n### Suggested content:\n\n```markdown\n## Error Handling\n\n### Rename Operation Errors\n- **Non-existent item**: Display \"Item not found\" message, revert to original name\n- **Permission denied**: Show \"Cannot rename - insufficient permissions\" \n- **Invalid characters**: Highlight invalid chars, show format requirements\n- **Duplicate names**: Prompt for alternative name or auto-append suffix\n- **System errors**: Display generic \"Rename failed\" with retry option\n\n### Error Recovery\n- All failed renames must revert input to original value\n- Error messages should appear inline near the renamed item\n- Users can retry immediately or cancel operation\n- State management must handle error scenarios gracefully\n```\n\n### Dependencies to add:\n- **Spec 012** (inline-input-state-management): Reference for error state handling in inline inputs\n- **Spec 002** (sidebar-navigation): Ensure consistent error display in TreeView context\n\n### Integration note:\nThis error handling should align with the state management patterns defined in Spec 012 to ensure consistent behavior across sidebar and space card contexts.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T20:38:54.662927"
+  },
+  {
+    "id": "d8699f49-4e66-4791-8ecd-1ab391275cc3",
+    "intent": "Fixed",
+    "item": "**Incomplete lifecycle**: Missing requirements for what happens when a renamed item is deleted while in rename mode",
+    "category": "gap",
+    "ai_suggestion": "## Gap Analysis & Recommendations\n\n### What needs to be added:\n**Deletion during rename lifecycle handling** - Define behavior when a renamed item is deleted while still in rename mode.\n\n### Where to add it:\nAdd a new subsection under the rename lifecycle section:\n\n```markdown\n#### Deletion During Rename\n- **Trigger**: Item deleted while in rename mode (via keyboard shortcut, context menu, or external action)\n- **Behavior**: \n  - Immediately cancel rename operation\n  - Discard any pending changes\n  - Proceed with standard deletion flow\n  - Clear any rename-related state\n- **State cleanup**: Reset focus to appropriate fallback item\n```\n\n### Overlap considerations:\nThis integrates with **Spec 006 (keyboard navigation)** for focus management after deletion. Consider adding a dependency:\n\n```markdown\n**Dependencies**: \n- Spec 006: Focus context management for post-deletion focus handling\n```\n\n### State management integration:\nSince **Spec 012** handles inline input state management, ensure consistent state cleanup patterns between rename cancellation and deletion scenarios.\n\n### Acceptance criteria addition:\n```markdown\n- GIVEN an item is in rename mode\n- WHEN the item is deleted\n- THEN rename mode is cancelled and deletion proceeds normally\n- AND focus moves to appropriate fallback item\n```\n\nThis ensures the rename lifecycle is complete and handles the edge case of external deletion during rename operations.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T20:40:00.093593"
+  },
+  {
+    "id": "4046cd79-ca8e-4141-85d2-906dcfb633fa",
+    "intent": "Fixed",
+    "item": "**Vague auto-clearing behavior**: \"Consider auto-clearing rename when switching spaces\" should be a firm requirement with specific behavior defined",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Vague Auto-clearing Behavior\n\n### What needs to be added/changed:\nReplace the vague \"Consider auto-clearing rename when switching spaces\" with specific, testable requirements.\n\n### Where in the spec:\nAdd to the **Requirements** section and corresponding **Acceptance Criteria**.\n\n### Recommended specification:\n\n**Requirements:**\n```\n- Auto-clear rename state when user switches between spaces\n- Preserve rename state when navigating within the same space context\n- Clear rename state on explicit cancel actions (Escape key, click outside)\n```\n\n**Acceptance Criteria:**\n```\n- GIVEN user is renaming an item in Space A\n  WHEN user switches to Space B\n  THEN the rename input is cleared and item reverts to display mode\n\n- GIVEN user is renaming an item\n  WHEN user navigates within the same space (scroll, expand/collapse)\n  THEN the rename state is preserved\n\n- GIVEN user is renaming an item\n  WHEN user presses Escape or clicks outside the input\n  THEN the rename input is cleared immediately\n```\n\n### Dependencies:\nAdd dependency on **Spec 006 (keyboard-navigation)** since this involves focus context management between spaces.\n\n### Integration note:\nThis behavior should coordinate with the state management patterns established in **Spec 012 (inline-input-state-management)** to ensure consistent input clearing behavior across the application.\n\nThis makes the feature testable and removes ambiguity about when and how auto-clearing should occur.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T20:40:56.616908"
+  },
+  {
+    "id": "a1bbccc7-f7e0-4099-a482-e6eccc49b364",
+    "intent": "Resolve",
+    "item": "**Direct dependency on SPEC-012**: This spec is essentially validating that SPEC-012 includes rename functionality rather than implementing new features",
+    "category": "cross_spec",
+    "ai_suggestion": "## Fix for Direct Dependency Gap\n\n**1. What needs to be added/changed:**\nDefine the specific rename validation requirements and error handling independently of SPEC-012's implementation details.\n\n**2. Where in the spec:**\nAdd a new \"Validation Requirements\" section that specifies expected inputs, outputs, and failure modes for rename operations.\n\n**3. Example template:**\n```\n## Validation Requirements\n- Input: Original filename, new filename, validation rules\n- Output: Success/failure status with specific error codes\n- Error handling: File conflicts, invalid characters, permission issues\n```\n\nThis transforms the spec from a dependency validator into a standalone feature specification.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T20:35:42.218533"
+  },
+  {
+    "id": "c1b41569-fe8d-49ad-a028-638ddc69a3a3",
+    "intent": "Resolve",
+    "item": "**Potential redundancy**: The rename state interface is already defined in SPEC-012, making this spec more of a verification task than implementation",
+    "category": "cross_spec",
+    "ai_suggestion": "**Fix the redundancy gap:**\n\n1. **What to change**: Remove the duplicate interface definition and replace with a reference to SPEC-012, then focus on implementation-specific details (error handling, validation rules, performance requirements)\n\n2. **Where**: Replace the interface section with \"See SPEC-012 for rename state interface definition\" and add new sections for validation logic, error scenarios, and acceptance criteria\n\n3. **Template**: \n```\n## Interface Reference\n- Rename state interface: See SPEC-012\n## Implementation Requirements\n- Input validation: [specific rules]\n- Error handling: [specific scenarios]\n- Performance: [specific metrics]\n```",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T20:35:42.218617"
+  },
+  {
+    "id": "a2c35646-9a5a-48cf-ae18-f583eb0c6857",
+    "intent": "Consider",
+    "item": "**Detail auto-clearing logic**: Specify exact triggers for state clearing and how they coordinate with navigation state from other specs",
+    "category": "suggestion",
+    "ai_suggestion": "## Fix for Auto-Clearing Logic Gap\n\n### What needs to be added:\n\n**Add a new \"State Clearing Logic\" section** with:\n\n1. **Clear triggers specification:**\n   - Navigation events (route changes, space switches)\n   - User actions (ESC key, click outside, form submission)\n   - Timeout conditions (if applicable)\n   - Component unmount events\n\n2. **Coordination with navigation state:**\n   - Reference Spec 006 (keyboard navigation) for focus context changes\n   - Reference Spec 002 (sidebar navigation) for space/route transitions\n   - Define priority order when multiple clearing triggers occur\n\n### Where to add it:\nPlace after the \"State Structure\" section and before \"Implementation Details\"\n\n### Dependencies to add:\n```\nDependencies: \n- Spec 006 (keyboard-navigation): Focus context management\n- Spec 002 (sidebar-navigation): Navigation state coordination\n```\n\n### Example template:\n```markdown\n## State Clearing Logic\n\n### Clearing Triggers\n- **Navigation**: Clear on space change or route transition (coordinate with Spec 002)\n- **Focus Loss**: Clear when focus moves to different context (coordinate with Spec 006) \n- **User Actions**: ESC key, outside clicks, successful form submission\n- **Component Lifecycle**: Clear on component unmount\n\n### Trigger Priority\n1. Explicit user cancellation (ESC, outside click)\n2. Navigation events \n3. Focus context changes\n4. Component unmount\n\n### Coordination Points\n- Subscribe to navigation state from Spec 002 sidebar system\n- Listen to focus context changes from Spec 006 keyboard navigation\n- Ensure clearing doesn't conflict with pending save operations\n```\n\nThis prevents duplication while ensuring proper integration with existing navigation and focus management systems.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T20:42:25.074483"
+  },
+  {
+    "id": "8f65b38a-a691-4491-9357-66be7a4fff3f",
+    "intent": "Consider",
+    "item": "**Clarify scope**: Either merge this entirely into SPEC-012 or clearly define what new functionality this adds beyond existing rename state",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Analysis: Scope Clarification Issue\n\n**Problem**: The current spec appears to duplicate functionality already covered in SPEC-012 (inline input state management) without clearly defining unique value.\n\n## Recommended Actions:\n\n### 1. **Immediate Decision Required**\nChoose one path:\n\n**Option A: Merge into SPEC-012**\n- Add rename-specific state properties to existing inline input state management\n- Update SPEC-012's acceptance criteria to include rename scenarios\n- Archive this spec\n\n**Option B: Define Unique Scope**\n- Clearly specify what rename functionality differs from inline creation\n- Focus on rename-specific behaviors (validation, conflict handling, undo/redo)\n\n### 2. **If Keeping Separate (Option B)**\n\n**Add to spec introduction:**\n```markdown\n## Scope Distinction from SPEC-012\nThis spec handles rename operations for existing items, while SPEC-012 handles creation of new items. Key differences:\n- Pre-populated field values from existing items\n- Validation against existing names (excluding current item)\n- Conflict resolution for duplicate names\n- Integration with undo/redo system for rename operations\n```\n\n**Add dependency:**\n```markdown\n## Dependencies\n- SPEC-012: Uses shared input component and base state management patterns\n- SPEC-002: Integrates with sidebar TreeView for item updates\n```\n\n### 3. **Recommended Approach**\n**Merge into SPEC-012** - rename is essentially inline editing, which is a variant of inline input. This reduces complexity and maintains consistency.\n\n**Next Step**: Decide merge vs. separate, then update spec accordingly.",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T20:41:42.661217"
+  },
+  {
+    "id": "40828a0c-d4d2-45a3-b31b-d74818618621",
+    "intent": "Consider",
+    "item": "**Specify error state structure**: Define how error messages integrate with InlineInputStore (e.g., `renameError: string | null` properties)",
+    "category": "suggestion",
+    "ai_suggestion": "## Fix for Error State Structure Gap\n\n### What needs to be added:\n\n**Add error state properties to InlineInputStore interface:**\n\n```typescript\ninterface InlineInputStore {\n  // Existing properties...\n  \n  // Error state management\n  renameError: string | null;\n  createFolderError: string | null;\n  createLinkError: string | null;\n  \n  // Error handling methods\n  setRenameError: (error: string | null) => void;\n  setCreaetFolderError: (error: string | null) => void;\n  setCreateLinkError: (error: string | null) => void;\n  clearAllErrors: () => void;\n}\n```\n\n### Where to add it:\n\n1. **In the State Structure section** - extend the existing InlineInputStore interface\n2. **In the Error Handling section** - add error clearing logic:\n   - Clear errors when switching between contexts (sidebar \u2194 space card)\n   - Clear errors on successful operations\n   - Clear errors when canceling inline operations\n\n### Integration considerations:\n\nSince this overlaps with **Spec 002 (sidebar-navigation)** for TreeView error display, consider:\n- **Add dependency**: Spec 012 should depend on Spec 002 for consistent error UI patterns\n- **Reference error display**: Use the same error styling/positioning as other sidebar validation errors\n- **Consistent terminology**: Use \"rename\" instead of \"edit\" to match TreeView operations\n\n### Example error flow:\n```typescript\n// On validation failure\nstore.setRenameError(\"Name cannot be empty\");\n\n// On successful rename\nstore.setRenameError(null);\n\n// On context switch\nstore.clearAllErrors();\n```\n\nThis ensures error states are properly managed across both sidebar and space card contexts while maintaining consistency with existing navigation patterns.",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T20:42:02.340625"
+  },
+  {
+    "id": "e2dff763-91af-46d2-9489-fccd39b5a6b4",
+    "intent": "Consider",
+    "item": "**Add state persistence requirements**: Clarify if rename state should survive component remounts or application restarts",
+    "category": "suggestion",
+    "ai_suggestion": "## Fix for State Persistence Requirements Gap\n\n### What needs to be added:\nAdd a **State Persistence** section to clarify rename state behavior across different lifecycle events.\n\n### Where to add it:\nAfter the current state management section, before acceptance criteria.\n\n### Recommended addition:\n\n```markdown\n## State Persistence\n- **Component Remount**: Rename state is NOT persisted across component remounts\n  - User loses progress if navigating away during rename\n  - Provides clean slate on return to avoid stale state\n- **Application Restart**: Rename state is NOT persisted across app restarts\n  - Ensures consistent UX and prevents orphaned rename states\n- **Rationale**: Rename operations are quick, transient actions that benefit from clean state recovery\n```\n\n### Dependencies to add:\nReference **Spec 012 (inline-input-state-management)** for consistency:\n- Both specs should use the same persistence strategy\n- Consider adding dependency: \"Must align with state persistence decisions in Spec 012\"\n\n### Overlap handling:\nThis complements rather than duplicates Spec 012. While Spec 012 handles creation inputs, this spec handles rename operations. Both should follow consistent state persistence patterns.\n\n### Update acceptance criteria:\nAdd test case: \"Rename state is cleared after component remount and application restart\"\n\nThis approach provides clarity while maintaining consistency with related state management specifications.",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T20:43:26.579536"
+  }
+]
