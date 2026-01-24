@@ -125,7 +125,7 @@ export const useInlineInputStore = create<InlineInputStore>((set) => ({
 ## SPEC-013: Multi-Selection State Management
 
 **Priority:** P1 - High  
-**Dependencies:** SPEC-010  
+**Dependencies:** SPEC-006, SPEC-010  
 **Estimated Effort:** 3 hours
 
 ### Description
@@ -294,7 +294,7 @@ export const useSelectionStore = create<SelectionState>((set, get) => ({
 ## SPEC-014: Enhanced Drag-Drop State Management
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-010  
+**Dependencies:** SPEC-007, SPEC-010, SPEC-013  
 **Estimated Effort:** 4 hours
 
 ### Description

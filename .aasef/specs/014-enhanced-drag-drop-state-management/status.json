@@ -1,14 +1,94 @@
 {
-    "id": "014",
-    "name": "enhanced-drag-drop-state-management",
-    "status": "pending",
-    "priority": "critical",
-    "dependencies": [
-        "007",
-        "010"
-    ],
-    "estimated_days": 0.5,
-    "created_at": "2026-01-24T09:23:00.000000",
-    "updated_at": "2026-01-24T09:23:00.000000",
-    "completed_at": null
+  "id": "014",
+  "name": "enhanced-drag-drop-state-management",
+  "status": "completed",
+  "priority": "critical",
+  "dependencies": [
+    "007",
+    "010",
+    "013"
+  ],
+  "estimated_days": 0.5,
+  "created_at": "2026-01-24T09:23:00.000000",
+  "updated_at": "2026-01-24T17:46:00.000000",
+  "completed_at": "2026-01-24T20:31:37.744542",
+  "plan_generated": "2026-01-24T19:35:54.677818",
+  "open_questions_resolved": [
+    {
+      "question": "Should the validation cache persist across multiple drag sessions or be cleared between each drag operation?",
+      "decision": "Clear cache on endDrag() to prevent memory leaks, but allow cache reuse within a single drag session for performance.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "What is the exact priority order when multiple animation conflicts occur simultaneously (e.g., user is editing AND renaming AND clipboard operation is active)?",
+      "decision": "Define strict precedence: inline editing > rename operations > clipboard feedback > flash animations, with first-active-wins for same priority level.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "How should the system handle validation errors when dragging items across different spaces?",
+      "decision": "Validate that cross-space operations are out of scope for this spec, or define specific validation rules for cross-space moves.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "What happens to the drag operation if the source item is deleted or modified while dragging?",
+      "decision": "Add drag data validation on drop and cancel drag operation if source item is no longer valid.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "Should the 800ms auto-expand timer reset when hovering over different parts of the same folder, or only when moving to a different item entirely?",
+      "decision": "Reset timer only when moving to a different item to prevent accidental rapid expansions.",
+      "category": "DEFERRED"
+    },
+    {
+      "question": "How should the system handle performance constraints when the 100-item multi-selection limit is exceeded?",
+      "decision": "Deferred to implementation phase",
+      "category": "DEFERRED"
+    },
+    {
+      "question": "What specific error message should be shown for each circular reference scenario (self-reference vs descendant vs multi-item conflicts)?",
+      "decision": "Deferred to implementation phase",
+      "category": "DEFERRED"
+    }
+  ],
+  "implementation_started": "2026-01-24T19:37:27.252277",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-24T19:37:27.255084",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  },
+  "drift_resolved": [
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The core dragDropUiStore implementation is missing. The specification requires an enhanced dragDropUiStore at packages/react-ui/src/stores/dragDropUiStore.ts with full drag operation tracking, drop indicators, auto-expand functionality, and pins grid integration, but this file doesn't exist in the codebase."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification requires specific TypeScript interfaces (DragSource, DropPosition, DragData, DropIndicatorState) to be exported from packages/react-ui/src/types/index.ts, but these type definitions are not present in the codebase."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification requires circular reference validation logic with validateCircularReference function and ancestor chain building utilities, but these validation functions are not implemented in the codebase."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification requires timer management for auto-expand functionality with 800ms hover delay and proper cleanup mechanisms, but no timer management code is present for drag-drop operations."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification requires integration with SPEC-013's SelectionStore for multi-item drag operations, but no multi-selection integration code exists for drag-drop functionality."
+    }
+  ]
 }

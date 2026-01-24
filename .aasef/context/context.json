@@ -43,7 +43,7 @@
   ],
   "stories": [],
   "codebase": {
-    "structure": "# Codebase Structure\n\n## Project Type\n**Electron desktop application** - A monorepo workspace for \"Spayce\", a browser-like desktop app with spaces/tabs management, migrating from Flutter to TypeScript/React/Electron stack.\n\n## Key Directories\n- `packages/` - Monorepo packages with clean architecture layers\n  - `packages/core/` - Domain & Application layers (entities, use cases, queries)\n  - `packages/infrastructure/` - Database & services implementation (SQLite repositories)\n  - `packages/react-ui/` - Presentation layer hooks & components\n  - `packages/shared/` - Reusable React components & design system\n  - `packages/desktop/` - Electron main/renderer processes\n- `scripts/` - Build, migration, and development automation scripts\n- `IMPLEMENTATION_PLAN/` - Detailed phase-by-phase implementation specs\n- `.windsurf/workflows/` - Windsurf IDE workflow configurations\n- `resources/db/` - SQLite database files\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `vitest.config.ts` - Testing configuration for Vitest\n- `tsconfig.json` - Root TypeScript configuration\n- `SPACES_MIGRATION_PLAN.md` - Migration strategy from Flutter\n- `TESTING_GUIDE.md` - Testing procedures and standards\n- `scripts/migrate-db.ts` - Database migration automation\n- `scripts/verify-features.ts` - Feature verification scripts\n\n## Patterns Observed\n- **Clean Architecture**: Layered approach with domain/application/infrastructure/presentation separation\n- **Monorepo Structure**: pnpm workspaces with package interdependencies\n- **Test-Driven**: Comprehensive test suites in `__tests__/` directories\n- **Migration Focus**: Extensive documentation and tooling for Flutter\u2192Electron migration\n- **Spec-Driven Development**: Detailed implementation plans and architectural decisions\n- **Database-First**: SQLite as primary data store with migration scripts\n\n## Notes for AI Assistants\n- **Tech Stack**: Electron 30+, React 18+, TypeScript 5.x, Vite 5+, pnpm 8+, SQLite with better-sqlite3",
+    "structure": "# Codebase Structure\n\n## Project Type\n**Spayce** - A desktop browser application built with Electron, featuring a space-based tab organization system. This is a TypeScript monorepo implementing Clean Architecture patterns with a migration from Flutter to web technologies.\n\n## Key Directories\n- `packages/` - Monorepo packages following Clean Architecture layers\n  - `core/` - Domain and Application layers (entities, use cases, queries)\n  - `infrastructure/` - Database and services implementation (SQLite repositories)\n  - `react-ui/` - Presentation layer hooks and React components\n  - `shared/` - Reusable UI components and design system\n  - `desktop/` - Electron application (main process, renderer, preload)\n- `scripts/` - Build, migration, and development automation scripts\n- `IMPLEMENTATION_PLAN/` - Detailed project specifications and migration phases\n- `project_ops/` - Documentation and Flutter migration specs\n- `resources/db/` - SQLite database files\n- `.windsurf/workflows/` - AI workflow definitions\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `package.json` - Root package with workspace dependencies\n- `tsconfig.json` - TypeScript configuration for monorepo\n- `vitest.config.ts` - Test configuration\n- `SPACES_MIGRATION_PLAN.md` - Migration strategy from Flutter\n- `TESTING_GUIDE.md` - Testing procedures and standards\n- `NODE_VERSION_SETUP.md` - Node.js version management guide\n\n## Patterns Observed\n- **Clean Architecture**: Strict layer separation (domain \u2192 application \u2192 infrastructure \u2192 presentation)\n- **Monorepo Structure**: pnpm workspaces with clear package boundaries\n- **Test-Driven**: Comprehensive test suites in each package\n- **Migration-Focused**: Extensive documentation for Flutter-to-Electron migration\n- **Script Automation**: Heavy use of shell scripts for development workflows\n- **Phase-Based Implementation**: Structured implementation plan with 7 phases\n\n## Notes for AI Assistants",
     "components_implemented": [
       "TreeView",
       "TreeItem",
@@ -63,7 +63,7 @@
       "navigation",
       "spaces"
     ],
-    "last_synced": "2026-01-24T16:56:19.953231"
+    "last_synced": "2026-01-24T20:31:37.741582"
   },
   "decisions": [
     "Use WebContentsView (not deprecated BrowserView) for tabs",
@@ -73,7 +73,7 @@
     "Fixed and floating sidebar modes"
   ],
   "created_at": "2026-01-17T22:47:24.865263",
-  "updated_at": "2026-01-24T16:56:19.953260",
+  "updated_at": "2026-01-24T20:31:37.741625",
   "enabled_ides": [
     "windsurf",
     "antigravity"

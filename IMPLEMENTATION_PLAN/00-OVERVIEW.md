@@ -105,9 +105,9 @@ Before feature stories can proceed, these specs must be implemented:
 
 | Spec ID | Name | Priority | Est. Hours | Dependencies |
 |---------|------|----------|------------|--------------|
-| SPEC-012 | Inline Input State Management | P0 | 2 | SPEC-010 (Foundation) |
-| SPEC-013 | Multi-Selection State Management | P1 | 3 | SPEC-010 |
-| SPEC-014 | Enhanced Drag-Drop State Management | P0 | 4 | SPEC-010, SPEC-007 |
+| SPEC-012 ✅ | Inline Input State Management | P0 | 2 | SPEC-010 (Foundation) |
+| SPEC-013 | Multi-Selection State Management | P1 | 3 | SPEC-006, SPEC-010 |
+| SPEC-014 | Enhanced Drag-Drop State Management | P0 | 4 | SPEC-007, SPEC-010, **SPEC-013** |
 | SPEC-015 | Inline Rename State Management | P0 | 1 | SPEC-012 |
 | SPEC-016 | Clipboard State Management | P0 | 4 | SPEC-007, SPEC-010, SPEC-012, SPEC-013, SPEC-014 |
 
