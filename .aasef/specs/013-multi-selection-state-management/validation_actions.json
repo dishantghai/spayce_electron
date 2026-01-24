@@ -1,0 +1,172 @@
+[
+  {
+    "id": "4e0f7ec8-cf5c-4fb2-b85f-c4a517e80c21",
+    "intent": "Fixed",
+    "item": "Missing required section: Out of Scope section",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Missing \"Out of Scope\" Section\n\n### What needs to be added:\nAdd a dedicated \"Out of Scope\" section that clearly defines what this spec will NOT handle, preventing scope creep and clarifying boundaries with related specs.\n\n### Where to add it:\nPlace the \"Out of Scope\" section after the \"Overview\" section and before \"Requirements\" or \"Implementation Details\".\n\n### Template for Out of Scope section:\n\n```markdown\n## Out of Scope\n\nThis specification does NOT include:\n\n### Related Features (handled by other specs)\n- Inline input creation and management \u2192 See SPEC-012 (Inline Input State Management)\n- Inline rename functionality \u2192 See SPEC-015 (Inline Rename State Management)  \n- Clipboard operations \u2192 See SPEC-016 (Clipboard State Management)\n- Drag & drop operations \u2192 See SPEC-014 (Enhanced Drag Drop State Management)\n- Keyboard navigation \u2192 See SPEC-006 (Keyboard Navigation)\n\n### Technical Limitations\n- [List specific technical boundaries]\n- [Performance constraints if any]\n- [Platform-specific exclusions]\n\n### Future Considerations\n- [Features planned for later phases]\n- [Integration points for future specs]\n```\n\n### Why this matters:\nGiven the 5 related specs with overlapping concepts, a clear \"Out of Scope\" section will:\n1. Prevent feature duplication across specs\n2. Establish clear dependencies and boundaries\n3. Guide implementation teams on what NOT to build\n4. Reference related specs for excluded functionality\n\nThis section is critical for specs in complex projects with multiple interdependent features.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T17:04:05.141823"
+  },
+  {
+    "id": "5552bbd3-31ee-41bf-a2a0-2df4ab54a62b",
+    "intent": "Fixed",
+    "item": "**Missing integration with existing stores**: No mention of how this interacts with the dragDropUiStore from SPEC-014, which likely needs to know about selected items for multi-item drag operations",
+    "category": "gap",
+    "ai_suggestion": "## Gap Analysis & Solution\n\n**Issue**: Missing integration with `dragDropUiStore` from SPEC-014 for multi-item drag operations.\n\n## Required Changes\n\n### 1. Add Dependency Reference\n**Where**: In the spec's dependencies/prerequisites section\n```\n**Dependencies**: SPEC-014 (Enhanced Drag Drop State Management) - requires dragDropUiStore for multi-item selection awareness\n```\n\n### 2. Update Store Integration Section\n**Where**: In the SelectionStore implementation details\n```typescript\n// Integration with dragDropUiStore\ninterface SelectionStoreIntegration {\n  // Subscribe to drag operations to maintain selection during drag\n  onDragStart: () => void;\n  \n  // Provide selected items to drag operations\n  getSelectedItemsForDrag: () => SpaceItem[];\n  \n  // Clear selection after successful drag completion\n  onDragComplete: () => void;\n}\n```\n\n### 3. Add Cross-Store Communication\n**Where**: In the store's methods section\n```\n**Multi-item Drag Support**:\n- Expose `selectedItems` to dragDropUiStore for drag payload\n- Maintain selection state during drag operations\n- Clear selection after successful multi-item drops\n```\n\n## Overlap Resolution\nThis doesn't duplicate SPEC-014's functionality but rather **extends** it. SPEC-014 handles drag mechanics; this spec provides the selection data needed for multi-item operations.\n\n## Integration Pattern\nFollow the established store communication pattern from other specs (012, 015, 016) where stores expose specific methods for cross-store integration rather than direct state sharing.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T17:06:53.696724"
+  },
+  {
+    "id": "59b83cd7-4974-4845-a002-c2d9fe11d7d1",
+    "intent": "Fixed",
+    "item": "**Incomplete type definitions**: The SelectionState interface is well-defined, but missing integration types for how other components will consume this state",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Incomplete Type Definitions\n\n### What needs to be added:\n\n**Integration Types Section** - Add after the SelectionState interface definition:\n\n```typescript\n// Consumer Integration Types\ninterface SelectionConsumer {\n  id: string;\n  onSelectionChange: (state: SelectionState) => void;\n  getSelectionContext?: () => SelectionContext;\n}\n\ninterface SelectionContext {\n  containerId: string;\n  containerType: 'sidebar' | 'space-card' | 'pins-grid';\n  allowedTypes: SpaceItemType[];\n}\n\n// Hook Integration\ninterface UseSelectionReturn {\n  selection: SelectionState;\n  selectItem: (item: SpaceItem) => void;\n  toggleSelection: (item: SpaceItem) => void;\n  clearSelection: () => void;\n  isSelected: (itemId: string) => boolean;\n}\n```\n\n### Where to add it:\n- Place in **Technical Implementation** section after the SelectionState interface\n- Add a new subsection called \"Integration Interfaces\"\n\n### Handle overlaps with related specs:\n\n**Add dependencies section:**\n```\nDependencies:\n- SPEC-012: Uses SelectionState for inline input context validation\n- SPEC-014: Integrates with drag operations for multi-item dragging\n- SPEC-006: Provides selection state to keyboard navigation context\n```\n\n**Reference integration points:**\n- Note that SPEC-014's drag operations will consume SelectionState for multi-item dragging\n- SPEC-006's focus management should respect current selection state\n- SPEC-012's inline inputs should clear selection when activated\n\nThis ensures components can properly integrate with the selection system while maintaining clear boundaries with related state management specs.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T17:09:42.077768"
+  },
+  {
+    "id": "47ce1934-0aeb-425f-b6d4-56efe4519f4e",
+    "intent": "Fixed",
+    "item": "**No visual feedback specification**: While mentioned in implementation notes, there's no clear requirement for how selected items should appear visually",
+    "category": "gap",
+    "ai_suggestion": "## Fix for Visual Feedback Specification Gap\n\n### What needs to be added:\n\n**Add a dedicated \"Visual States\" section** with clear requirements for selection feedback:\n\n```markdown\n## Visual States\n\n### Selection Feedback\n- **Selected items**: Apply `bg-blue-100 dark:bg-blue-900` background with `border-l-2 border-blue-500` accent\n- **Multi-selection**: Each selected item shows selection styling independently\n- **Hover states**: `bg-gray-50 dark:bg-gray-800` for unselected items on hover\n- **Focus indicators**: `ring-2 ring-blue-500` for keyboard navigation focus\n\n### State Transitions\n- Selection changes: 150ms ease-in-out transition\n- Hover effects: 100ms ease-in-out transition\n- Focus indicators: Immediate (no transition)\n```\n\n### Where to add it:\nPlace this section **after the \"Requirements\" section** and **before \"Implementation Notes\"** to establish visual requirements before technical details.\n\n### Related Specs Integration:\n- **Add dependency**: Reference SPEC-006 (keyboard navigation) for focus state coordination\n- **Consistency check**: Ensure selection styling aligns with SPEC-014's drag-drop visual indicators\n\n### Implementation Note Update:\nMove the existing visual feedback mention from implementation notes into this formal requirements section, keeping implementation notes for technical details only.\n\nThis creates clear, testable visual requirements while maintaining consistency with your existing navigation and interaction specs.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T17:11:40.146845"
+  },
+  {
+    "id": "30724968-8a0b-4a23-8a5e-52cbc1d3e5dd",
+    "intent": "Fixed",
+    "item": "**Missing keyboard shortcuts**: No mention of Ctrl+A (select all) or Escape (clear selection) which are standard UX patterns",
+    "category": "gap",
+    "ai_suggestion": "## Actionable Fix for Missing Keyboard Shortcuts\n\n### What needs to be added:\nAdd standard keyboard shortcuts for selection management:\n- **Ctrl+A**: Select all items in current context\n- **Escape**: Clear current selection\n\n### Where to add it:\nSince **Spec 006 (keyboard-navigation)** already handles focus context management, **reference it as a dependency** rather than duplicating keyboard functionality.\n\nAdd to your current spec:\n\n```markdown\n## Dependencies\n- SPEC-006: Keyboard Navigation - for focus context management and keyboard event handling\n\n## Keyboard Shortcuts\n| Shortcut | Action | Context |\n|----------|--------|---------|\n| Ctrl+A | Select all items | Current focus context (sidebar/spaces) |\n| Escape | Clear selection | Any selection state |\n\n*Note: Keyboard event handling integrated with SPEC-006's focus context system*\n```\n\n### Integration approach:\n- **Don't duplicate** keyboard infrastructure from Spec 006\n- **Extend** the existing focus context system to handle selection shortcuts\n- **Ensure** shortcuts respect the independent navigation contexts (sidebar vs spaces)\n\n### Example implementation reference:\n```javascript\n// Integrate with existing focus context from SPEC-006\nonKeydown(event) {\n  if (event.ctrlKey && event.key === 'a') {\n    this.selectAllInCurrentContext();\n  }\n  if (event.key === 'Escape') {\n    this.clearSelection();\n  }\n}\n```\n\nThis maintains consistency with your existing keyboard navigation architecture while adding the missing standard UX patterns.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T17:12:46.900724"
+  },
+  {
+    "id": "aad2066a-f514-45ed-b077-4f731657f5c9",
+    "intent": "Fixed",
+    "item": "**Unclear space switching behavior**: R5 mentions clearing on space switch but doesn't specify when/how the spaceId gets updated",
+    "category": "gap",
+    "ai_suggestion": "## Gap Analysis & Fix\n\n**Issue**: The specification mentions clearing state on space switch but doesn't define when/how `spaceId` updates occur, creating ambiguity about state lifecycle management.\n\n## Required Changes\n\n### 1. Add Space Switching Behavior Section\n**Location**: After R5 in Requirements section\n\n```markdown\n### R6: Space Switching Integration\n- **Trigger**: spaceId updates are triggered by navigation events from the main application\n- **Timing**: State clearing occurs immediately before spaceId update\n- **Scope**: Only affects stores with context separation (sidebar vs space-specific state)\n- **Persistence**: System clipboard content persists across space switches\n```\n\n### 2. Update Implementation Section\n**Location**: Add new subsection under \"State Management Architecture\"\n\n```markdown\n#### Space Context Management\n- Listen for spaceId changes via application navigation events\n- Clear space-specific state before updating spaceId\n- Maintain sidebar state independently of space switches\n- Preserve system clipboard integration across contexts\n```\n\n## Dependencies & Integration\n\n**Add dependency**: Reference **SPEC-006 (keyboard-navigation)** for focus context management during space switches, as it likely handles the navigation events that trigger spaceId updates.\n\n**Terminology alignment**: Use \"space context\" consistently with other specs rather than mixing \"space\" and \"spaceId\" terminology.\n\nThis clarifies the state lifecycle without duplicating navigation logic from related specs.",
+    "user_note": "Applied automatically",
+    "status": "done",
+    "created": "2026-01-24T17:15:21.373902"
+  },
+  {
+    "id": "a7d13d1b-26bd-4a6c-a15e-f23d1e321406",
+    "intent": "Resolve",
+    "item": "**SPEC-014 (Drag-Drop)**: High overlap potential - drag operations need to work with selected items, but no coordination specified",
+    "category": "cross_spec",
+    "ai_suggestion": "**What needs to be added:**\nDefine drag-drop behavior for selected items - whether dragging a selected item moves all selected items, or just the dragged item, plus visual feedback requirements.\n\n**Where to add:**\nCreate a \"Selection-Drag Interaction\" section in the drag-drop specification, cross-referenced from the selection spec.\n\n**Template:**\n```\nWhen dragging a selected item:\n- If item is part of multi-selection: move all selected items together\n- Visual: show count badge (\"3 items\") during drag\n- If dragging unselected item: clear selection, drag single item\n```",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:02:30.067588"
+  },
+  {
+    "id": "40426491-5fd3-439b-b96e-7a2c99b8d0c6",
+    "intent": "Resolve",
+    "item": "**SPEC-016 (Clipboard)**: Direct dependency - clipboard operations should work on selected items, but integration not defined",
+    "category": "cross_spec",
+    "ai_suggestion": "**What needs to be added:**\nDefine clipboard operation behavior for selected items (copy/cut/paste) and specify the data format/structure passed between clipboard and selection system.\n\n**Where to add:**\nCreate a new \"Clipboard Integration\" subsection under the Selection Management section, and add clipboard event handlers to the Selection API specification.\n\n**Example template:**\n```\nSelection.copyToClipboard() \u2192 copies selected items as JSON/structured data\nSelection.cutToClipboard() \u2192 copies + marks for deletion\nSelection.pasteFromClipboard(data) \u2192 integrates clipboard data with current selection\n```",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:02:30.068177"
+  },
+  {
+    "id": "498c77af-a954-470d-9146-072be799b52c",
+    "intent": "Resolve",
+    "item": "**SPEC-006 (Keyboard Navigation)**: Potential conflict - keyboard navigation needs to respect selection state, but no coordination specified",
+    "category": "cross_spec",
+    "ai_suggestion": "**Fix for SPEC-006:**\n\n1. **Add coordination rules**: Specify that keyboard navigation must check selection state before moving focus, and update selection state when navigating with Shift+Arrow keys for multi-select scenarios.\n\n2. **Location**: Add to the Keyboard Navigation section, create a subsection called \"Selection State Coordination\" right after basic navigation controls.\n\n3. **Template**: \n```\nWhen navigating with arrow keys:\n- Single selection: Move focus and update selection to focused item\n- Multi-selection: Shift+Arrow extends selection, Arrow alone moves focus only\n- Always validate selection state before focus changes\n```",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:02:30.068196"
+  },
+  {
+    "id": "c6f800a9-761d-4515-bfd6-955185fbb1a2",
+    "intent": "Fix",
+    "item": "Add missing section: MVP Scope section",
+    "category": "format",
+    "ai_suggestion": "**What to add:** Create an \"MVP Scope\" section that clearly defines what features are included/excluded in the minimum viable product, with prioritization rationale.\n\n**Where to place:** Insert after the \"Requirements\" section and before \"Technical Specifications\" or implementation details.\n\n**Template:**\n```\n## MVP Scope\n**In Scope:** Core user authentication, basic dashboard, primary workflow X\n**Out of Scope:** Advanced reporting, integrations, mobile app\n**Success Criteria:** [Define measurable goals for MVP validation]\n```",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:02:34.156978"
+  },
+  {
+    "id": "03c1c5e5-9f54-4c29-9d27-5813f1677e96",
+    "intent": "Consider",
+    "item": "**Add error boundaries**: Include validation for spaceId and itemId parameters in all methods",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Analysis: Error Boundaries for Parameter Validation\n\n### What needs to be added/changed:\nAdd comprehensive parameter validation with error boundaries for `spaceId` and `itemId` in all methods that use these parameters.\n\n### Where in the spec it should go:\n1. **Error Handling section** - Add a dedicated subsection for parameter validation\n2. **Each method specification** - Include validation requirements\n3. **State management** - Define error state handling\n\n### Implementation suggestions:\n\n#### 1. Add Parameter Validation Section:\n```typescript\n// Parameter Validation Requirements\ninterface ValidationRules {\n  spaceId: {\n    required: boolean;\n    format: 'uuid' | 'string';\n    errorMessage: string;\n  };\n  itemId: {\n    required: boolean;\n    format: 'uuid' | 'string';  \n    errorMessage: string;\n  };\n}\n```\n\n#### 2. Method-level Error Boundaries:\nFor each method, add:\n- Input parameter validation before processing\n- Error state management for invalid parameters\n- Graceful fallback behavior\n- User-facing error messages\n\n#### 3. Cross-spec considerations:\nSince this relates to **Spec 012** (inline input state), **Spec 015** (rename state), and **Spec 016** (clipboard state):\n\n- **Reference Spec 012's** state management patterns for error handling\n- **Add dependency** on consistent error boundary patterns across all specs\n- **Use consistent terminology** for `spaceId`/`itemId` validation across related specs\n\n#### 4. Example validation pattern:\n```typescript\nvalidateParameters(spaceId?: string, itemId?: string) {\n  if (!spaceId || !isValidId(spaceId)) {\n    throw new ParameterValidationError('Invalid spaceId');\n  }\n  // Similar for itemId\n}\n```\n\nThis ensures robust parameter validation while maintaining consistency with related state management specs.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:17:12.856563"
+  },
+  {
+    "id": "3c617158-43b5-447c-95db-1c498e3a2f5b",
+    "intent": "Consider",
+    "item": "**Clarify SpaceItem source**: Reference where SpaceItem type is defined (likely in core package)",
+    "category": "suggestion",
+    "ai_suggestion": "## Fix for SpaceItem Source Gap\n\n### What needs to be added/changed:\nAdd a clear reference to where `SpaceItem` is defined, likely in a core/types package, and ensure consistency across all related specs.\n\n### Where in the spec:\nAdd to the **Dependencies** or **Types** section at the beginning of the spec:\n\n```markdown\n## Dependencies\n- Core package: `SpaceItem` type definition\n- Related specs: SPEC-012, SPEC-014, SPEC-015, SPEC-016 (all use SpaceItem)\n\n## Types Reference\n```typescript\n// SpaceItem defined in core package\nimport { SpaceItem } from '@core/types'\n```\n\n### Overlap handling:\nSince **4 related specs** (012, 014, 015, 016) all reference `SpaceItem`:\n\n1. **Create a shared type definition** in the core package\n2. **Add cross-references** between specs that use SpaceItem\n3. **Ensure consistent terminology** - all specs should use \"SpaceItem\" (not \"space item\" or \"Space Item\")\n\n### Template addition:\n```markdown\n## Cross-Spec Dependencies\n- SPEC-012: Uses SpaceItem for inline input operations\n- SPEC-014: Uses SpaceItem for drag/drop operations  \n- SPEC-015: Uses SpaceItem for rename operations\n- SPEC-016: Uses SpaceItem for clipboard operations\n\n**Note**: SpaceItem type must be consistently defined across all clipboard, drag-drop, and inline editing features.\n```\n\nThis ensures type consistency across your state management specs and provides a clear source of truth for the SpaceItem definition.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:17:40.535909"
+  },
+  {
+    "id": "b894d2b0-c596-43c7-994b-7618a653c127",
+    "intent": "Consider",
+    "item": "**Remove UI styling**: Move visual states section to component-level specs",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Resolution: Remove UI Styling from Current Spec\n\n### What needs to be changed:\n1. **Extract visual states section** - Move all UI styling, visual indicators, and appearance-related content to component-level specifications\n2. **Keep only behavioral state logic** - Retain state management, data flow, and business logic in this spec\n3. **Add component dependencies** - Reference where UI implementations will be defined\n\n### Where to implement:\n\n**In current spec:**\n- Remove sections covering visual styling, CSS classes, animations, transitions\n- Keep state definitions, store logic, event handling, and data transformations\n- Add \"Component Dependencies\" section listing UI specs that will implement visual aspects\n\n**Create separate component specs for:**\n- Visual state indicators (loading, error, success states)\n- Drag/drop visual feedback\n- Focus/hover styling\n- Animations and transitions\n\n### Handling overlaps with related specs:\n\nSince this appears to be a state management spec (similar to SPEC-012, 014, 015, 016), ensure:\n- **Reference related state specs** for consistent patterns\n- **Use same store architecture** as other specs (InlineInputStore pattern from SPEC-012)\n- **Maintain separation** between state logic (this spec) and UI rendering (component specs)\n\n### Example structure:\n```\n## Component Dependencies\n- [Component Spec Name]: Visual state indicators\n- [Component Spec Name]: Drag/drop UI feedback\n- [Component Spec Name]: Focus management styling\n\n## State Management (keep this)\n- Store definitions\n- State transitions\n- Event handlers\n- Data flow\n\n## Implementation Notes\nVisual implementation details moved to component-level specifications listed above.\n```\n\nThis maintains clean separation between behavioral logic and presentation concerns.",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:18:13.156821"
+  },
+  {
+    "id": "ec20ea85-910a-41a6-9ec0-a115d8991b6c",
+    "intent": "Consider",
+    "item": "**Add store persistence consideration**: Specify if selection state should persist during app lifecycle or always reset",
+    "category": "suggestion",
+    "ai_suggestion": "## Gap Analysis & Fix\n\n**Issue**: The spec lacks clarity on whether selection state should persist across app sessions or reset on each launch.\n\n## Required Changes\n\n### 1. Add Persistence Strategy Section\n**Location**: After the \"State Management\" section\n\n```markdown\n## Persistence Strategy\n\n### Selection State Lifecycle\n- **Session Persistence**: Selection state persists during app runtime but resets on app restart\n- **No Cross-Session Persistence**: Selection state does not survive app closure/reopening\n- **Rationale**: Maintains user context during active sessions while providing clean slate on fresh launches\n\n### Implementation\n- Store selection state in memory-only structures\n- Clear all selection state on app initialization\n- No localStorage/file system persistence for selection data\n```\n\n### 2. Update State Management Section\n**Add to existing State Management section**:\n\n```markdown\n### Lifecycle Management\n- Initialize with empty selection state on app start\n- Maintain state throughout app session\n- Clear state on app termination (automatic with memory-only storage)\n```\n\n## Relationship to Related Specs\n\n**Consistency Check**: This approach aligns with:\n- **SPEC-012**: Inline input states (likely session-only)\n- **SPEC-015**: Rename states (typically temporary)\n- **SPEC-016**: Clipboard states (session-based)\n\n**Recommendation**: Ensure all state management specs follow the same persistence pattern for consistency.\n\n## Rationale\n\nSession-only persistence provides the best UX balance:\n- Maintains workflow continuity during active use\n- Prevents stale/confusing selections on app restart\n- Reduces complexity and storage requirements",
+    "user_note": " (auto-applied)",
+    "status": "done",
+    "created": "2026-01-24T17:18:50.210363"
+  },
+  {
+    "id": "937ee0ee-a09d-40cf-a196-5d5cb7bfb82f",
+    "intent": "Fix",
+    "item": "Add missing section: User Stories section",
+    "category": "format",
+    "ai_suggestion": "",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T17:02:34.157123"
+  },
+  {
+    "id": "f275c1ba-a0d3-453e-9eb1-e0bafdbfb962",
+    "intent": "Fix",
+    "item": "Add missing section: Out of Scope section",
+    "category": "format",
+    "ai_suggestion": "",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T17:02:34.157168"
+  },
+  {
+    "id": "ccc49595-2105-4c27-be17-88509ea4b87f",
+    "intent": "Consider",
+    "item": "**Specify event integration**: Define exact interface for space navigation events (e.g., `useSpaceNavigation()` hook or event emitter pattern)",
+    "category": "suggestion",
+    "ai_suggestion": "## Fix for Event Integration Gap\n\n### What needs to be added:\nDefine a consistent event system for space navigation that integrates with existing keyboard navigation (Spec 006).\n\n### Where to add it:\nAdd a new **\"Event Integration\"** section after the current implementation details.\n\n### Overlap handling:\nThis relates to **Spec 006 (keyboard-navigation)** which handles focus context management. Instead of duplicating, reference it and extend the interface.\n\n### Suggested addition:\n\n```markdown\n## Event Integration\n\n### Navigation Event Interface\n```typescript\n// Extends focus context from SPEC-006\ninterface SpaceNavigationEvents {\n  onSpaceSelect: (spaceId: string) => void;\n  onSpaceCreate: () => void;\n  onSpaceDelete: (spaceId: string) => void;\n  onNavigationChange: (direction: 'up' | 'down' | 'left' | 'right') => void;\n}\n\n// Hook interface\nconst useSpaceNavigation = () => ({\n  navigateToSpace: (spaceId: string) => void;\n  createSpace: () => void;\n  deleteSpace: (spaceId: string) => void;\n  // Integrates with SPEC-006 focus management\n  focusContext: 'sidebar' | 'spaces';\n});\n```\n\n### Dependencies\n- **SPEC-006**: Focus context management integration\n- Events must respect focus boundaries defined in keyboard navigation spec\n\n### Implementation Pattern\nUse React Context + custom hook pattern to maintain consistency with existing state management patterns from related specs (012, 015, 016).\n\nThis ensures navigation events work seamlessly with the existing keyboard navigation system while providing clear integration points for other components.",
+    "user_note": "",
+    "status": "pending",
+    "created": "2026-01-24T17:16:50.070174"
+  }
+]
