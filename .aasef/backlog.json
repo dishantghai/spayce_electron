@@ -8,5 +8,25 @@
     "source_spec": "keyboard-navigation",
     "created_at": "2026-01-20T01:19:20.764069",
     "status": "pending"
+  },
+  {
+    "name": "remaining sp",
+    "description": "The specification includes extensive requirements for auto-clearing behavior (R5), state clearing logic with multiple triggers (navigation events, focus changes, timeout conditions, item deletion), validation requirements, and error handling that are not present in the current test implementation. The tests only cover basic state management but miss the complex lifecycle management, validation, and error recovery scenarios detailed in the spec.",
+    "suggestion": "Implement the missing auto-clearing behaviors, validation logic, error handling, and integration with SPEC-002 (navigation) and SPEC-006 (focus management) as specified in the requirements. Add tests for timeout conditions, item deletion during rename, navigation-triggered clearing, and validation scenarios.",
+    "type": "CODE_BEHIND",
+    "priority": "P2",
+    "source_spec": "inline-rename-state-management",
+    "created_at": "2026-01-25T00:05:02.033813",
+    "status": "pending"
+  },
+  {
+    "name": "The specification requires coordination with other",
+    "description": "The specification requires coordination with other specs (SPEC-002 for navigation state changes, SPEC-006 for focus context management) and includes performance requirements (16ms state updates, 100ms validation, 300ms debouncing) that are not implemented or tested in the current codebase.",
+    "suggestion": "Implement the coordination interfaces with other specifications and add performance monitoring/testing to ensure the 16ms state update and 100ms validation requirements are met. Add integration tests as specified in the \"Integration Testing with SPEC-012\" section.",
+    "type": "CODE_BEHIND",
+    "priority": "P2",
+    "source_spec": "inline-rename-state-management",
+    "created_at": "2026-01-25T00:05:02.036076",
+    "status": "pending"
   }
 ]
