@@ -1,17 +1,70 @@
 {
-    "id": "016",
-    "name": "clipboard-state-management",
-    "status": "pending",
-    "priority": "critical",
-    "dependencies": [
-        "007",
-        "010",
-        "012",
-        "013",
-        "014"
-    ],
-    "estimated_days": 0.5,
-    "created_at": "2026-01-24T09:23:00.000000",
-    "updated_at": "2026-01-24T15:42:00.000000",
-    "completed_at": null
+  "id": "016",
+  "name": "clipboard-state-management",
+  "status": "in_progress",
+  "priority": "high",
+  "dependencies": [
+    "007",
+    "010",
+    "012",
+    "013",
+    "014"
+  ],
+  "estimated_days": 0.5,
+  "created_at": "2026-01-24T09:23:00.000000",
+  "updated_at": "2026-01-25T06:35:00.000000",
+  "completed_at": null,
+  "notes": "Streamlined from 572 to ~150 lines. Removed overengineering: memory monitoring, mutex locking, size validation.",
+  "plan_generated": "2026-01-25T06:52:13.335873",
+  "open_questions_resolved": [
+    {
+      "question": "What should happen when pasting items from a different space than the current one?",
+      "decision": "the cross space pasting as it shoudl be pasting something is a independent of where its copied from and should be kept that way. Source REmains as-is paste adds new item to where its pasted.",
+      "category": "CRITICAL"
+    },
+    {
+      "question": "Should the clipboard persist across application restarts or be memory-only?",
+      "decision": "Make it memory-only for MVP, clearing on app restart for simplicity.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "How should the URL detection regex handle edge cases like localhost URLs, IP addresses, or URLs with ports?",
+      "decision": "Expand regex to include `localhost`, IP addresses, and port numbers, or use a more robust URL validation library.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "What should be the default paste position when position parameter is not provided?",
+      "decision": "Default to 'inside' for containers (folders, space root) and 'after' for non-containers.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "Should cut items be visually indicated (dimmed/grayed out) in the UI until pasted or operation is cancelled?",
+      "decision": "Add a `getCutItems()` method to the store so UI components can query and style cut items appropriately.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "What happens if a cut item is deleted or modified before the paste operation completes?",
+      "decision": "Validate cut items still exist and are unchanged before paste, clear clipboard if validation fails.",
+      "category": "IMPORTANT"
+    },
+    {
+      "question": "Should there be a maximum limit on the number of items that can be copied to prevent memory issues?",
+      "decision": "Start without limits for MVP, add reasonable limit (e.g., 100 items) if performance issues arise.",
+      "category": "DEFERRED"
+    }
+  ],
+  "implementation_started": "2026-01-25T06:57:41.297206",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-25T06:57:41.298842",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  }
 }

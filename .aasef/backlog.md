@@ -57,3 +57,20 @@ Crea...
 **Add a "Validation Integration" section** that explicitly defines which SPEC-013 validation utilities will be reused and how they'l...
 
 ---
+
+## 🟡 [MEDIUM] **Missing timeout implementation**: R1 mentions "Clear clipb...
+
+- **Type**: gap
+- **Source**: 016-clipboard-state-management
+- **Added**: 2026-01-25 05:48
+- **Full description**: **Missing timeout implementation**: R1 mentions "Clear clipboard on timeout" but no timeout duration or cleanup logic specified
+- **Notes**: AI Suggestion: ## Fix for Missing Timeout Implementation
+
+### What needs to be added:
+
+**1. Timeout Configuration**
+Add to the requirements section:
+```
+R2: Configurable timeout duration (default: 30 seconds) for cl...
+
+---
