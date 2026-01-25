@@ -166,7 +166,7 @@ function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMen
 
         items.push(
             { id: 'divider2', label: '', icon: LucideIcons.Minus, isDivider: true },
-            { id: 'remove', label: 'Remove', icon: LucideIcons.Trash2, isDestructive: true }
+            { id: 'delete', label: 'Delete', icon: LucideIcons.Trash2, isDestructive: true }
         );
     }
 
@@ -371,10 +371,20 @@ export function App(): React.ReactElement {
             }
             case 'delete':
             case 'remove': {
-                if (confirm(`Delete "${item.name}"?`)) {
+                // Only show confirmation for folders (which may have children)
+                // Links can be deleted without confirmation
+                const needsConfirmation = item.type === SpaceItemType.folder ||
+                    item.type === SpaceItemType.localFolder;
+
+                const shouldDelete = needsConfirmation
+                    ? confirm(`Delete "${item.name}"?`)
+                    : true;
+
+                if (shouldDelete) {
                     const result = await (window as any).electronAPI?.items?.delete(item.id);
                     if (result?.success) {
                         await refetch();
+                        console.log(`${item.type === SpaceItemType.link ? 'Link' : 'Folder'} deleted:`, item.name);
                     }
                 }
                 break;
