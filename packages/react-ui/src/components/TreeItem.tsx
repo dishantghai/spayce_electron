@@ -1,9 +1,11 @@
 import React, { useCallback, useState } from 'react';
 import { FolderPlus, Link, MoreVertical } from 'lucide-react';
-import type { SpaceItem } from '../types';
+import type { SpaceItem, InlineInputState } from '../types';
 import { SpaceItemType } from '../types';
 import { SpayceColors } from '../theme';
 import { TreeItemIcon } from './TreeItemIcon';
+import { InlineInput } from './InlineInput';
+import { InlineRenameInput } from './InlineRenameInput';
 import styles from './TreeView.module.css';
 
 interface TreeItemProps {
@@ -13,9 +15,18 @@ interface TreeItemProps {
     activeId: string | null;
     expandedIds: Set<string>;
     accentColor: string;
+    spaceId: string;
+    inlineInput?: InlineInputState | null;
+    renameItemId?: string | null;
     onItemClick?: (item: SpaceItem) => void;
     onItemContextMenu?: (item: SpaceItem, event: React.MouseEvent) => void;
     onItemExpand?: (item: SpaceItem, expanded: boolean) => void;
+    onAddSubfolder?: (parentItem: SpaceItem) => void;
+    onAddLink?: (parentItem: SpaceItem) => void;
+    onInlineInputSubmit?: (value: string, type: 'folder' | 'link', parentId: string | null) => void;
+    onInlineInputCancel?: () => void;
+    onRenameSubmit?: (itemId: string, newName: string) => void;
+    onRenameCancel?: () => void;
 }
 
 /**
@@ -29,9 +40,18 @@ export function TreeItem({
     activeId,
     expandedIds,
     accentColor,
+    spaceId,
+    inlineInput,
+    renameItemId,
     onItemClick,
     onItemContextMenu,
     onItemExpand,
+    onAddSubfolder,
+    onAddLink,
+    onInlineInputSubmit,
+    onInlineInputCancel,
+    onRenameSubmit,
+    onRenameCancel,
 }: TreeItemProps): React.ReactElement {
     const [isHovered, setIsHovered] = useState(false);
     const isFolder = item.type === SpaceItemType.folder || item.type === SpaceItemType.localFolder;
@@ -39,6 +59,10 @@ export function TreeItem({
     const isSelected = selectedId === item.id;
     const isActive = activeId === item.id;
     const hasChildren = item.children && item.children.length > 0;
+    const isRenaming = renameItemId === item.id;
+
+    // Check if inline input should appear inside this folder
+    const showInlineInputInside = inlineInput && inlineInput.parentId === item.id;
 
     // Indentation: First level 0px, subfolders align icon with parent name
     // Parent has 8px padding + 16px icon = 24px, so subfolders need 24px base + 16px per additional level
@@ -47,21 +71,33 @@ export function TreeItem({
     // Click handler - expand/collapse folders AND notify parent for focus
     const handleClick = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
+        if (isRenaming) return; // Don't handle clicks during rename
         // Toggle expand/collapse for folders with children
         if (isFolder && hasChildren) {
             onItemExpand?.(item, !isExpanded);
         }
         // Always notify parent to update focus state
         onItemClick?.(item);
-    }, [item, isFolder, hasChildren, isExpanded, onItemClick, onItemExpand]);
+    }, [item, isFolder, hasChildren, isExpanded, isRenaming, onItemClick, onItemExpand]);
 
     const handleContextMenu = useCallback(
         (e: React.MouseEvent) => {
             e.preventDefault();
+            if (isRenaming) return;
             onItemContextMenu?.(item, e);
         },
-        [item, onItemContextMenu]
+        [item, isRenaming, onItemContextMenu]
     );
+
+    const handleAddSubfolder = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        onAddSubfolder?.(item);
+    }, [item, onAddSubfolder]);
+
+    const handleAddLink = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation();
+        onAddLink?.(item);
+    }, [item, onAddLink]);
 
     // Get file extension for file icons
     const extension = item.type === SpaceItemType.file || item.type === SpaceItemType.localFile
@@ -102,30 +138,32 @@ export function TreeItem({
                     />
                 </span>
 
-                {/* Item name */}
-                <span className={styles.itemText}>{item.name}</span>
+                {/* Item name or rename input */}
+                {isRenaming ? (
+                    <InlineRenameInput
+                        item={item}
+                        onSave={(newName) => onRenameSubmit?.(item.id, newName)}
+                        onCancel={() => onRenameCancel?.()}
+                    />
+                ) : (
+                    <span className={styles.itemText}>{item.name}</span>
+                )}
 
                 {/* Context icons on hover - for both folders and links */}
-                {isHovered && (
+                {isHovered && !isRenaming && (
                     <div className={styles.contextIcons}>
                         {isFolder && (
                             <>
                                 <button
                                     className={styles.contextIcon}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        // TODO: Implement add subfolder
-                                    }}
+                                    onClick={handleAddSubfolder}
                                     title="Add Subfolder"
                                 >
                                     <FolderPlus size={14} />
                                 </button>
                                 <button
                                     className={styles.contextIcon}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        // TODO: Implement add link
-                                    }}
+                                    onClick={handleAddLink}
                                     title="Add Link"
                                 >
                                     <Link size={14} />
@@ -147,16 +185,28 @@ export function TreeItem({
             </div>
 
             {/* Children (recursive) with vertical line */}
-            {isFolder && hasChildren && (
+            {isFolder && (hasChildren || showInlineInputInside) && (
                 <div
-                    className={`${styles.children} ${!isExpanded ? styles.childrenCollapsed : ''}`}
+                    className={`${styles.children} ${!isExpanded && !showInlineInputInside ? styles.childrenCollapsed : ''}`}
                     style={{
                         '--folder-line-color': accentColor,
                         '--folder-line-left': `${depth === 0 ? 16 : indentPx + 8}px`,
                     } as React.CSSProperties}
                     role="group"
                 >
-                    {isExpanded &&
+                    {/* Inline input inside this folder */}
+                    {showInlineInputInside && (
+                        <InlineInput
+                            type={inlineInput!.type}
+                            spaceId={spaceId}
+                            parentId={item.id}
+                            level={depth + 1}
+                            accentColor={accentColor}
+                            onSubmit={(value) => onInlineInputSubmit?.(value, inlineInput!.type, item.id)}
+                            onCancel={() => onInlineInputCancel?.()}
+                        />
+                    )}
+                    {(isExpanded || showInlineInputInside) &&
                         item.children.map((child) => (
                             <TreeItem
                                 key={child.id}
@@ -166,9 +216,18 @@ export function TreeItem({
                                 activeId={activeId}
                                 expandedIds={expandedIds}
                                 accentColor={accentColor}
+                                spaceId={spaceId}
+                                inlineInput={inlineInput}
+                                renameItemId={renameItemId}
                                 onItemClick={onItemClick}
                                 onItemContextMenu={onItemContextMenu}
                                 onItemExpand={onItemExpand}
+                                onAddSubfolder={onAddSubfolder}
+                                onAddLink={onAddLink}
+                                onInlineInputSubmit={onInlineInputSubmit}
+                                onInlineInputCancel={onInlineInputCancel}
+                                onRenameSubmit={onRenameSubmit}
+                                onRenameCancel={onRenameCancel}
                             />
                         ))}
                 </div>

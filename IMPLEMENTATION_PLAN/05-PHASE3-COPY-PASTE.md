@@ -1,17 +1,17 @@
 # Phase 3: Copy/Paste Operations
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-016, Phase 2  
+**Dependencies:** 016, Phase 2  
 **Total Estimated Effort:** 12 hours
 
 This phase implements full copy/paste functionality for items.
 
 ---
 
-## US-007: Copy Single Item
+## F007: Copy Single Item
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-016  
+**Dependencies:** 016  
 **Estimated Effort:** 3 hours  
 **User Value:** Users can duplicate items via copy/paste
 
@@ -154,10 +154,10 @@ packages/desktop/src/renderer/App.tsx
 
 ---
 
-## US-008: Paste Items
+## F008: Paste Items
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-007  
+**Dependencies:** F007  
 **Estimated Effort:** 4 hours  
 **User Value:** Users can paste copied items to organize content
 
@@ -329,10 +329,10 @@ packages/react-ui/src/hooks/mutations/ (may need new hook)
 
 ---
 
-## US-009: Paste from System Clipboard
+## F009: Paste from System Clipboard
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-008  
+**Dependencies:** F008  
 **Estimated Effort:** 3 hours  
 **User Value:** Users can paste URLs directly from browser or other apps
 
@@ -512,10 +512,10 @@ packages/react-ui/src/utils/url.ts (create if not exists)
 
 ---
 
-## US-010: Keyboard Shortcuts (Copy/Paste)
+## F010: Keyboard Shortcuts (Copy/Paste)
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-007, US-008  
+**Dependencies:** F007, F008  
 **Estimated Effort:** 2 hours  
 **User Value:** Power users can use keyboard for efficiency
 

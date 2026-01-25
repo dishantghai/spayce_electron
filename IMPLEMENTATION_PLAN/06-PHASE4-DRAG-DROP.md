@@ -1,17 +1,17 @@
 # Phase 4: Drag and Drop (Within Space)
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-014, Phase 1-3  
+**Dependencies:** 014, Phase 1-3  
 **Total Estimated Effort:** 27 hours
 
 This phase implements drag-and-drop reordering within a single space.
 
 ---
 
-## US-011: Drag Tree Items
+## F011: Drag Tree Items
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-014  
+**Dependencies:** 014  
 **Estimated Effort:** 8 hours  
 **User Value:** Users can reorder items by dragging
 
@@ -275,10 +275,10 @@ packages/react-ui/src/stores/dragDropUiStore.ts
 
 ---
 
-## US-012: Drop Indicators
+## F012: Drop Indicators
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-011  
+**Dependencies:** F011  
 **Estimated Effort:** 4 hours  
 **User Value:** Users see where item will be dropped
 
@@ -375,10 +375,10 @@ packages/react-ui/src/components/drag-drop/DropIndicatorLine.module.css
 
 ---
 
-## US-013: Drop Target Hit Zones
+## F013: Drop Target Hit Zones
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-012  
+**Dependencies:** F012  
 **Estimated Effort:** 6 hours  
 **User Value:** Users can drop before, after, or inside folders
 
@@ -581,10 +581,10 @@ packages/react-ui/src/stores/dragDropUiStore.ts
 
 ---
 
-## US-014: Drop Validation
+## F014: Drop Validation
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-013  
+**Dependencies:** F013  
 **Estimated Effort:** 3 hours  
 **User Value:** Invalid drops are prevented
 
@@ -720,10 +720,10 @@ packages/react-ui/src/utils/dragDropValidation.ts
 
 ---
 
-## US-015: Auto-Expand Folders on Drag Hover
+## F015: Auto-Expand Folders on Drag Hover
 
 **Priority:** P1 - High  
-**Dependencies:** US-013  
+**Dependencies:** F013  
 **Estimated Effort:** 4 hours  
 **User Value:** Users can drop into collapsed folders without manual expand
 
@@ -866,10 +866,10 @@ packages/react-ui/src/stores/dragDropUiStore.ts
 
 ---
 
-## US-016: Flash Animation on Drop
+## F016: Flash Animation on Drop
 
 **Priority:** P2 - Medium  
-**Dependencies:** US-013  
+**Dependencies:** F013  
 **Estimated Effort:** 2 hours  
 **User Value:** Users can easily locate dropped item
 

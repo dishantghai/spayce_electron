@@ -8,6 +8,8 @@ import { BottomBar } from './BottomBar';
 import { CreateSpaceView } from './CreateSpaceView';
 import type { Space, SpaceItem } from '../types';
 import { SpaceItemType } from '../types';
+import { useInlineInputStore } from '../stores/inlineInputStore';
+import { normalizeUrl, extractDomain, getFaviconUrl } from '../utils/url';
 import styles from './Sidebar.module.css';
 
 // Helper to check if item is a folder type
@@ -35,6 +37,8 @@ export interface SidebarProps {
     onCreateSpace?: (spaceData: { name: string; iconName: string; accentColor: string }) => void;
     onAddFolder?: (spaceId: string) => void;
     onAddLink?: (spaceId: string) => void;
+    onCreateItem?: (input: { spaceId: string; parentId: string | null; name: string; path: string; type: string; faviconUrl?: string | null }) => Promise<void>;
+    onRenameItem?: (itemId: string, newName: string) => Promise<void>;
     onEditSpace?: (space: Space, spaceData: { name: string; iconName: string; accentColor: string }) => void;
     onSettingsClick?: () => void;
     onFocusChange?: (hasFocus: boolean) => void;
@@ -62,6 +66,8 @@ export function Sidebar({
     onCreateSpace,
     onAddFolder,
     onAddLink,
+    onCreateItem,
+    onRenameItem,
     onEditSpace,
     onSettingsClick,
     onFocusChange,
@@ -70,6 +76,15 @@ export function Sidebar({
     const [viewMode, setViewMode] = useState<SidebarViewMode>('normal');
     const [editingSpace, setEditingSpace] = useState<Space | null>(null);
     const activeSpace = spaces[activeSpaceIndex] || spaces[0];
+
+    // Inline input and rename state
+    const {
+        sidebarInput,
+        setSidebarInput,
+        clearSidebarInput,
+        sidebarRenameItemId,
+        setSidebarRenameItemId,
+    } = useInlineInputStore();
 
     // Initialize expandedIds from space data
     const getInitialExpandedIds = useCallback((space: Space): Set<string> => {
@@ -385,6 +400,76 @@ export function Sidebar({
         [activeSpace, onItemClick]
     );
 
+    // Inline input handlers
+    const handleAddFolderClick = useCallback((spaceId: string) => {
+        setSidebarInput({ spaceId, parentId: null, type: 'folder' });
+        onAddFolder?.(spaceId);
+    }, [setSidebarInput, onAddFolder]);
+
+    const handleAddLinkClick = useCallback((spaceId: string) => {
+        setSidebarInput({ spaceId, parentId: null, type: 'link' });
+        onAddLink?.(spaceId);
+    }, [setSidebarInput, onAddLink]);
+
+    const handleAddSubfolder = useCallback((parentItem: SpaceItem) => {
+        if (!activeSpace) return;
+        setExpandedIds(prev => new Set([...prev, parentItem.id]));
+        setSidebarInput({ spaceId: activeSpace.id, parentId: parentItem.id, type: 'folder' });
+    }, [activeSpace, setSidebarInput]);
+
+    const handleAddLinkToFolder = useCallback((parentItem: SpaceItem) => {
+        if (!activeSpace) return;
+        setExpandedIds(prev => new Set([...prev, parentItem.id]));
+        setSidebarInput({ spaceId: activeSpace.id, parentId: parentItem.id, type: 'link' });
+    }, [activeSpace, setSidebarInput]);
+
+    const handleInlineInputSubmit = useCallback(async (
+        value: string,
+        type: 'folder' | 'link',
+        parentId: string | null
+    ) => {
+        if (!activeSpace || !onCreateItem) return;
+
+        if (type === 'folder') {
+            await onCreateItem({
+                spaceId: activeSpace.id,
+                parentId,
+                name: value,
+                path: value,
+                type: 'folder',
+            });
+        } else {
+            const url = normalizeUrl(value);
+            const name = extractDomain(url);
+            const faviconUrl = getFaviconUrl(url);
+
+            await onCreateItem({
+                spaceId: activeSpace.id,
+                parentId,
+                name,
+                path: url,
+                type: 'link',
+                faviconUrl,
+            });
+        }
+        clearSidebarInput();
+    }, [activeSpace, onCreateItem, clearSidebarInput]);
+
+    const handleInlineInputCancel = useCallback(() => {
+        clearSidebarInput();
+    }, [clearSidebarInput]);
+
+    const handleRenameSubmit = useCallback(async (itemId: string, newName: string) => {
+        if (onRenameItem) {
+            await onRenameItem(itemId, newName);
+        }
+        setSidebarRenameItemId(null);
+    }, [onRenameItem, setSidebarRenameItemId]);
+
+    const handleRenameCancel = useCallback(() => {
+        setSidebarRenameItemId(null);
+    }, [setSidebarRenameItemId]);
+
     // Auto-close floating sidebar on mouse leave
     useEffect(() => {
         if (mode !== 'floating') return;
@@ -497,21 +582,30 @@ export function Sidebar({
                         <SpaceHeader
                             space={activeSpace}
                             onEditSpace={handleEditSpace}
-                            onAddFolder={onAddFolder}
-                            onAddLink={onAddLink}
+                            onAddFolder={handleAddFolderClick}
+                            onAddLink={handleAddLinkClick}
                         />
 
                         {/* Tree view */}
                         <div className={styles.treeContainer}>
                             <TreeView
                                 items={treeItems}
+                                spaceId={activeSpace.id}
                                 selectedId={focusedItemId || selectedItemId}
                                 activeId={focusedItemId}
                                 expandedIds={expandedIds}
                                 accentColor={activeSpace.accentColor}
+                                inlineInput={sidebarInput}
+                                renameItemId={sidebarRenameItemId}
                                 onItemClick={handleItemClick}
                                 onItemContextMenu={handleItemContextMenu}
                                 onExpandedChange={setExpandedIds}
+                                onAddSubfolder={handleAddSubfolder}
+                                onAddLink={handleAddLinkToFolder}
+                                onInlineInputSubmit={handleInlineInputSubmit}
+                                onInlineInputCancel={handleInlineInputCancel}
+                                onRenameSubmit={handleRenameSubmit}
+                                onRenameCancel={handleRenameCancel}
                             />
                         </div>
 

@@ -6,6 +6,12 @@ export * from './spaces';
 export { TreeView, TreeItem, TreeItemIcon } from './TreeView';
 export type { TreeViewProps } from './TreeView';
 
+// Inline input components
+export { InlineInput } from './InlineInput';
+export type { InlineInputProps } from './InlineInput';
+export { InlineRenameInput } from './InlineRenameInput';
+export type { InlineRenameInputProps } from './InlineRenameInput';
+
 // Context menu
 export { ContextMenu } from './ContextMenu';
 export type { ContextMenuProps, ContextMenuItem } from './ContextMenu';

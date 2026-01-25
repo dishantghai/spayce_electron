@@ -190,6 +190,35 @@ export function App(): React.ReactElement {
         console.log('Add link to space:', spaceId);
     };
 
+    const handleCreateItem = async (input: {
+        spaceId: string;
+        parentId: string | null;
+        name: string;
+        path: string;
+        type: string;
+        faviconUrl?: string | null;
+    }) => {
+        const result = await (window as any).electronAPI?.items?.create({
+            spaceId: input.spaceId,
+            parentId: input.parentId || undefined,
+            name: input.name,
+            path: input.path,
+            type: input.type,
+        });
+
+        if (result?.success) {
+            await refetch();
+        }
+    };
+
+    const handleRenameItem = async (itemId: string, newName: string) => {
+        const result = await (window as any).electronAPI?.items?.rename(itemId, newName);
+
+        if (result?.success) {
+            await refetch();
+        }
+    };
+
     const handleCreateSpace = async (spaceData: {
         name: string;
         iconName: string;
@@ -293,6 +322,8 @@ export function App(): React.ReactElement {
                     onCreateSpace={handleCreateSpace}
                     onAddFolder={handleAddFolder}
                     onAddLink={handleAddLink}
+                    onCreateItem={handleCreateItem}
+                    onRenameItem={handleRenameItem}
                     onEditSpace={handleUpdateSpace}
                     onSettingsClick={handleSettingsClick}
                     onFocusChange={(hasFocus: boolean) => {

@@ -8,10 +8,10 @@ This phase implements cross-space drag and pinning via drag.
 
 ---
 
-## US-021: Cross-Space Drag via Bottom Bar
+## F021: Cross-Space Drag via Bottom Bar
 
 **Priority:** P1 - High  
-**Dependencies:** US-011, US-013  
+**Dependencies:** F011, F013  
 **Estimated Effort:** 6 hours  
 **User Value:** Users can move items between spaces easily
 
@@ -187,10 +187,10 @@ packages/react-ui/src/components/BottomBar.tsx
 
 ---
 
-## US-022: Drag to Pins Grid
+## F022: Drag to Pins Grid
 
 **Priority:** P1 - High  
-**Dependencies:** US-011  
+**Dependencies:** F011  
 **Estimated Effort:** 6 hours  
 **User Value:** Users can pin links by dragging to the pins area
 
@@ -411,10 +411,10 @@ packages/react-ui/src/stores/dragDropUiStore.ts
 
 ---
 
-## US-023: Reorder Pins in Grid
+## F023: Reorder Pins in Grid
 
 **Priority:** P1 - High  
-**Dependencies:** US-022  
+**Dependencies:** F022  
 **Estimated Effort:** 3 hours  
 **User Value:** Users can organize their pinned links
 
@@ -492,10 +492,10 @@ packages/react-ui/src/components/PinnedLinksGrid.tsx
 
 ---
 
-## US-024: Pinned Link Context Menu
+## F024: Pinned Link Context Menu
 
 **Priority:** P1 - High  
-**Dependencies:** US-022  
+**Dependencies:** F022  
 **Estimated Effort:** 2 hours  
 **User Value:** Users can manage pins via right-click
 
@@ -577,10 +577,10 @@ packages/desktop/src/renderer/App.tsx
 
 ---
 
-## US-025: Smart Drag Preview (Square for Pins)
+## F025: Smart Drag Preview (Square for Pins)
 
 **Priority:** P2 - Medium  
-**Dependencies:** US-022  
+**Dependencies:** F022  
 **Estimated Effort:** 3 hours  
 **User Value:** Visual feedback adapts to drop target
 

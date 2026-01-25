@@ -37,6 +37,12 @@ const electronAPI = {
         getPlatform: () => ipcRenderer.invoke('app:getPlatform'),
     },
 
+    // Clipboard operations
+    clipboard: {
+        readText: () => ipcRenderer.invoke('clipboard:readText'),
+        writeText: (text: string) => ipcRenderer.invoke('clipboard:writeText', text),
+    },
+
     // Event listeners
     on: (channel: string, callback: (...args: unknown[]) => void) => {
         const subscription = (_: Electron.IpcRendererEvent, ...args: unknown[]) =>

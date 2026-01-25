@@ -1,17 +1,17 @@
 # Phase 1: Core Item Management
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-012, SPEC-015  
+**Dependencies:** 012, 015  
 **Total Estimated Effort:** 17 hours
 
 This phase implements the essential item creation and editing features.
 
 ---
 
-## US-001: Create Folder via Inline Input
+## F001: Create Folder via Inline Input
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-012  
+**Dependencies:** 012  
 **Estimated Effort:** 6 hours  
 **User Value:** Users can create folders directly in the tree without dialogs
 
@@ -143,10 +143,10 @@ packages/react-ui/src/components/index.ts
 
 ---
 
-## US-002: Create Link via Inline Input
+## F002: Create Link via Inline Input
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-001  
+**Dependencies:** F001  
 **Estimated Effort:** 4 hours  
 **User Value:** Users can add links quickly with auto-paste from clipboard
 
@@ -304,10 +304,10 @@ export function getFaviconUrl(url: string): string {
 
 ---
 
-## US-003: Inline Rename Items
+## F003: Inline Rename Items
 
 **Priority:** P0 - Critical  
-**Dependencies:** SPEC-015  
+**Dependencies:** 015  
 **Estimated Effort:** 4 hours  
 **User Value:** Users can rename items without opening dialogs
 
@@ -435,10 +435,10 @@ packages/desktop/src/renderer/App.tsx (context menu handler)
 
 ---
 
-## US-004: Folder Hover Actions
+## F004: Folder Hover Actions
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-001, US-002  
+**Dependencies:** F001, F002  
 **Estimated Effort:** 3 hours  
 **User Value:** Users can quickly add content to folders via hover buttons
 

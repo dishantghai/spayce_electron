@@ -1,0 +1,28 @@
+/* InlineRenameInput Component Styles
+ * Matches Spayce Flutter design for inline renaming
+ */
+
+.renameInput {
+    flex: 1;
+    min-width: 0;
+    height: 24px;
+    padding: 4px 8px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #E5E7EB;
+    background-color: #1A1628;
+    border: 1px solid #6D5AE6;
+    border-radius: 4px;
+    outline: none;
+    transition: border-width 150ms ease;
+}
+
+.renameInput:focus {
+    border-width: 2px;
+    border-color: #6D5AE6;
+}
+
+.renameInput:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}

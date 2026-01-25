@@ -8,10 +8,10 @@ This phase implements all features for Space Cards in the Spaces Screen.
 
 ---
 
-## US-026: Inline Creation in Space Cards
+## F026: Inline Creation in Space Cards
 
 **Priority:** P1 - High  
-**Dependencies:** US-001, US-002  
+**Dependencies:** F001, F002  
 **Estimated Effort:** 4 hours  
 **User Value:** Users can create items directly in space cards
 
@@ -153,10 +153,10 @@ packages/react-ui/src/stores/inlineInputStore.ts
 
 ---
 
-## US-027: Inline Rename in Space Cards
+## F027: Inline Rename in Space Cards
 
 **Priority:** P1 - High  
-**Dependencies:** US-003  
+**Dependencies:** F003  
 **Estimated Effort:** 2 hours  
 **User Value:** Users can rename items in space cards
 
@@ -221,10 +221,10 @@ packages/react-ui/src/stores/inlineInputStore.ts
 
 ---
 
-## US-028: Context Menus in Space Cards
+## F028: Context Menus in Space Cards
 
 **Priority:** P1 - High  
-**Dependencies:** US-005, US-006  
+**Dependencies:** F005, F006  
 **Estimated Effort:** 3 hours  
 **User Value:** Full context menu support in space cards
 
@@ -294,10 +294,10 @@ packages/react-ui/src/components/spaces/SpaceCard.tsx
 
 ---
 
-## US-029: Drag Within Space Card
+## F029: Drag Within Space Card
 
 **Priority:** P1 - High  
-**Dependencies:** US-011, US-013  
+**Dependencies:** F011, F013  
 **Estimated Effort:** 3 hours  
 **User Value:** Users can reorder items within a space card
 
@@ -366,10 +366,10 @@ packages/react-ui/src/components/spaces/SpaceCard.tsx
 
 ---
 
-## US-030: Drag Across Space Cards
+## F030: Drag Across Space Cards
 
 **Priority:** P1 - High  
-**Dependencies:** US-029  
+**Dependencies:** F029  
 **Estimated Effort:** 3 hours  
 **User Value:** Users can move items between spaces via cards
 

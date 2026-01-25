@@ -1,17 +1,17 @@
 # Phase 5: Multi-Selection
 
 **Priority:** P1 - High  
-**Dependencies:** SPEC-013, Phase 4  
+**Dependencies:** 013, Phase 4  
 **Total Estimated Effort:** 13 hours
 
 This phase implements multi-selection for batch operations.
 
 ---
 
-## US-017: Ctrl+Click Toggle Selection
+## F017: Ctrl+Click Toggle Selection
 
 **Priority:** P1 - High  
-**Dependencies:** SPEC-013  
+**Dependencies:** 013  
 **Estimated Effort:** 3 hours  
 **User Value:** Users can select multiple items individually
 
@@ -133,10 +133,10 @@ packages/react-ui/src/components/Sidebar.tsx
 
 ---
 
-## US-018: Shift+Click Range Selection
+## F018: Shift+Click Range Selection
 
 **Priority:** P1 - High  
-**Dependencies:** US-017  
+**Dependencies:** F017  
 **Estimated Effort:** 4 hours  
 **User Value:** Users can select a range of items quickly
 
@@ -326,10 +326,10 @@ packages/react-ui/src/components/TreeView.tsx
 
 ---
 
-## US-019: Multi-Selection Visual Feedback
+## F019: Multi-Selection Visual Feedback
 
 **Priority:** P1 - High  
-**Dependencies:** US-017  
+**Dependencies:** F017  
 **Estimated Effort:** 2 hours  
 **User Value:** Users can see which items are selected
 
@@ -407,10 +407,10 @@ packages/react-ui/src/components/TreeView.module.css
 
 ---
 
-## US-020: Multi-Select Drag
+## F020: Multi-Select Drag
 
 **Priority:** P1 - High  
-**Dependencies:** US-011, US-018  
+**Dependencies:** F011, F018  
 **Estimated Effort:** 4 hours  
 **User Value:** Users can move multiple items at once
 

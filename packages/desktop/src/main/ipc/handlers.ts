@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron';
+import { ipcMain, clipboard } from 'electron';
 import {
     serviceRegistry,
     SERVICE_KEYS,
@@ -232,6 +232,16 @@ export function registerIpcHandlers(): void {
 
     ipcMain.handle('app:getPlatform', () => {
         return process.platform;
+    });
+
+    // Clipboard operations
+    ipcMain.handle('clipboard:readText', () => {
+        return clipboard.readText();
+    });
+
+    ipcMain.handle('clipboard:writeText', (_, text: string) => {
+        clipboard.writeText(text);
+        return true;
     });
 
     console.log('IPC handlers registered');

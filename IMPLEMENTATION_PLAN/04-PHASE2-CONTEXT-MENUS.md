@@ -1,17 +1,17 @@
 # Phase 2: Context Menu Enhancement
 
 **Priority:** P0 - Critical  
-**Dependencies:** Phase 1 (US-001 to US-004)  
+**Dependencies:** Phase 1 (F001 to F004)  
 **Total Estimated Effort:** 6 hours
 
 This phase implements comprehensive context menus for all item types.
 
 ---
 
-## US-005: Enhanced Folder Context Menu
+## F005: Enhanced Folder Context Menu
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-001, US-002, US-003  
+**Dependencies:** F001, F002, F003  
 **Estimated Effort:** 4 hours  
 **User Value:** Users have full control over folders via context menu
 
@@ -246,10 +246,10 @@ packages/react-ui/src/components/ContextMenu.tsx (if needed)
 
 ---
 
-## US-006: Enhanced Link Context Menu
+## F006: Enhanced Link Context Menu
 
 **Priority:** P0 - Critical  
-**Dependencies:** US-003  
+**Dependencies:** F003  
 **Estimated Effort:** 2 hours  
 **User Value:** Users have full control over links via context menu
 

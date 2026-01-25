@@ -1,0 +1,22 @@
+{
+  "id": "F001",
+  "title": "Create Folder via Inline Input",
+  "type": "feature",
+  "priority": "P0",
+  "status": "in_progress",
+  "estimated_hours": 6,
+  "related_specs": [],
+  "related_epic": null,
+  "affected_files": [
+    "packages/react-ui/src/components/InlineInput.tsx",
+    "packages/react-ui/src/components/InlineInput.module.css",
+    "packages/react-ui/src/components/TreeView.tsx",
+    "packages/react-ui/src/components/TreeItem.tsx",
+    "packages/react-ui/src/components/SpaceHeader.tsx",
+    "packages/react-ui/src/components/Sidebar.tsx",
+    "packages/react-ui/src/components/spaces/SpaceCard.tsx"
+  ],
+  "created_at": "2026-01-25T03:37:00Z",
+  "updated_at": "2026-01-25T03:37:00Z",
+  "implementation_started": "2026-01-25T09:11:37.283297"
+}
