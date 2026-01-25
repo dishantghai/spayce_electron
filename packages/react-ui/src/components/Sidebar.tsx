@@ -113,6 +113,14 @@ export function Sidebar({
         setFocusedItemId(null);
     }, [activeSpaceIndex]);
 
+    // Sync focusedItemId with selectedItemId when it changes externally (e.g., from context menu)
+    // This prevents dual selection where focusedItemId overrides selectedItemId
+    useEffect(() => {
+        if (selectedItemId !== null && selectedItemId !== focusedItemId) {
+            setFocusedItemId(selectedItemId);
+        }
+    }, [selectedItemId]);
+
     // Get pinned items from active space
     const pinnedItems = activeSpace?.rootItems.filter((item) => item.isPinned) || [];
 

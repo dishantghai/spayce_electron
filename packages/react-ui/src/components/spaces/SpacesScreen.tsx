@@ -46,6 +46,14 @@ export function SpacesScreen({
     const [keyboardSelectedItemId, setKeyboardSelectedItemId] = useState<string | null>(null);
     const [expandedIds, setExpandedIds] = useState<Map<string, Set<string>>>(new Map());
 
+    // Sync keyboardSelectedItemId with selectedItemId when it changes externally (e.g., from context menu)
+    // This prevents dual selection where keyboardSelectedItemId and selectedItemId both highlight items
+    useEffect(() => {
+        if (selectedItemId !== null && selectedItemId !== keyboardSelectedItemId) {
+            setKeyboardSelectedItemId(selectedItemId);
+        }
+    }, [selectedItemId]);
+
     // Get rename state from store for card context
     const { cardRenameItemId, setCardRenameItemId } = useInlineInputStore();
 

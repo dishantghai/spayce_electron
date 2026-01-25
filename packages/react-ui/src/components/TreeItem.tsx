@@ -83,6 +83,7 @@ export function TreeItem({
     const handleContextMenu = useCallback(
         (e: React.MouseEvent, setFocus = true) => {
             e.preventDefault();
+            e.stopPropagation(); // Prevent event from bubbling to parent folder
             if (isRenaming) return;
             // Set focus on item when context menu opens (unless called from hover button)
             if (setFocus) {
