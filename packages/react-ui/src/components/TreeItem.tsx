@@ -64,9 +64,9 @@ export function TreeItem({
     // Check if inline input should appear inside this folder
     const showInlineInputInside = inlineInput && inlineInput.parentId === item.id;
 
-    // Indentation: First level 0px, subfolders align icon with parent name
-    // Parent has 8px padding + 16px icon = 24px, so subfolders need 24px base + 16px per additional level
-    const indentPx = depth === 0 ? 0 : 24 + (depth - 1) * 16;
+    // Indentation for vertical line positioning
+    // Each level adds 20px of indent
+    const indentPx = depth * 20;
 
     // Click handler - expand/collapse folders AND notify parent for focus
     const handleClick = useCallback((e: React.MouseEvent) => {
@@ -104,11 +104,18 @@ export function TreeItem({
         ? getExtension(item.name)
         : undefined;
 
-    // Calculate child highlight offset - highlight starts immediately at the vertical line
-    // The vertical line is drawn at 16px from the left edge of the .children container
-    // Child items have paddingLeft: 8px, so the highlight should start at 16px to align with the vertical line
+    // Calculate padding - child icons align with parent's text start
+    // Parent text starts at: parentPadding + 16 (icon) + 8 (margin)
+    // Root (depth 0): 8px
+    // Level 1: parent at 8px, text at 32px, so child icon at 32px
+    // Level 2: parent at 32px, text at 56px, so child icon at 56px
+    // Formula: depth 0 = 8px, depth > 0 = 8 + (depth * 24)
+    const itemPaddingLeft = depth === 0 ? 8 : 8 + (depth * 24);
     const isChild = depth > 0;
-    const childHighlightOffset = isChild ? 16 : 0; // Start at vertical line position
+
+    // Child highlight offset: set to 0 since itemPaddingLeft already positions items correctly
+    // The highlight will start at the item's padding position
+    const childHighlightOffset = 0;
 
     const rowClasses = [
         styles.treeItem,
@@ -124,7 +131,7 @@ export function TreeItem({
             <div
                 className={rowClasses}
                 style={{
-                    paddingLeft: isChild ? '18px' : `${indentPx + 8}px`,
+                    paddingLeft: `${itemPaddingLeft}px`,
                     '--tree-accent-color': accentColor,
                     '--child-highlight-offset': `${childHighlightOffset}px`,
                 } as React.CSSProperties}
@@ -198,7 +205,9 @@ export function TreeItem({
                     className={`${styles.children} ${!isExpanded && !showInlineInputInside ? styles.childrenCollapsed : ''}`}
                     style={{
                         '--folder-line-color': accentColor,
-                        '--folder-line-left': `${depth === 0 ? 16 : indentPx + 8}px`,
+                        // Vertical line centered with folder icon (icon is 16px wide)
+                        // Center is at paddingLeft + 8px
+                        '--folder-line-left': `${itemPaddingLeft + 8}px`,
                     } as React.CSSProperties}
                     role="group"
                 >

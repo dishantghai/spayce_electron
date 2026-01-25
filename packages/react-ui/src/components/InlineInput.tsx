@@ -109,8 +109,9 @@ export function InlineInput({
     }, [value, handleSubmit, handleCancel]);
 
     // Calculate indentation: match TreeItem indentation logic
-    // First level (0) = 0px, subfolders align icon with parent name
-    const indentPx = level === 0 ? 8 : 24 + (level - 1) * 16 + 8;
+    // Uses same formula as TreeItem: 8 + (depth * 24)
+    // level 0: 8px, level 1: 32px, level 2: 56px, etc.
+    const indentPx = 8 + (level * 24);
 
     const isFolder = type === 'folder';
     const placeholder = isFolder ? 'Folder name' : 'Paste link';

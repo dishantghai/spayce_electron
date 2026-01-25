@@ -216,6 +216,157 @@ describe('TreeItem', () => {
         spaceId: 'space-1',
     };
 
+    describe('item padding alignment', () => {
+        it('applies correct padding for depth 0 (root)', () => {
+            const { container } = render(
+                <TreeItem {...defaultProps} depth={0} />
+            );
+
+            const treeItem = container.querySelector('[role="treeitem"]') as HTMLElement;
+            expect(treeItem.style.paddingLeft).toBe('8px');
+        });
+
+        it('applies correct padding for depth 1 (first child)', () => {
+            const childItem = createMockLink('child-1', 'Child Item');
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={childItem}
+                    depth={1}
+                />
+            );
+
+            const treeItem = container.querySelector('[role="treeitem"]') as HTMLElement;
+            // depth 1: 8 + (1 * 24) = 32px
+            expect(treeItem.style.paddingLeft).toBe('32px');
+        });
+
+        it('applies correct padding for depth 2 (nested child)', () => {
+            const childItem = createMockLink('child-2', 'Nested Child');
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={childItem}
+                    depth={2}
+                />
+            );
+
+            const treeItem = container.querySelector('[role="treeitem"]') as HTMLElement;
+            // depth 2: 8 + (2 * 24) = 56px
+            expect(treeItem.style.paddingLeft).toBe('56px');
+        });
+
+        it('applies correct padding for depth 3 (deeply nested)', () => {
+            const childItem = createMockLink('child-3', 'Deeply Nested');
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={childItem}
+                    depth={3}
+                />
+            );
+
+            const treeItem = container.querySelector('[role="treeitem"]') as HTMLElement;
+            // depth 3: 8 + (3 * 24) = 80px
+            expect(treeItem.style.paddingLeft).toBe('80px');
+        });
+
+        it('child icon aligns with parent text start position', () => {
+            // Parent at depth 0: padding 8px, icon 16px, margin 8px = text starts at 32px
+            // Child at depth 1: padding should be 32px to align icon with parent text
+            const childItem = createMockLink('child-1', 'Child');
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={childItem}
+                    depth={1}
+                />
+            );
+
+            const treeItem = container.querySelector('[role="treeitem"]') as HTMLElement;
+            const childPadding = parseInt(treeItem.style.paddingLeft);
+
+            // Parent text starts at 8 + 16 + 8 = 32px
+            // Child icon should be at 32px
+            expect(childPadding).toBe(32);
+        });
+    });
+
+    describe('vertical line positioning', () => {
+        it('positions vertical line centered with folder icon at depth 0', () => {
+            const childLink = createMockLink('child-1', 'Child');
+            const folder = createMockFolder('folder-1', 'Root Folder', [childLink]);
+            const expandedIds = new Set(['folder-1']);
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={folder}
+                    depth={0}
+                    expandedIds={expandedIds}
+                />
+            );
+
+            const childrenContainer = container.querySelector('[role="group"]') as HTMLElement;
+            expect(childrenContainer).toBeTruthy();
+
+            const verticalLineLeft = childrenContainer.style.getPropertyValue('--folder-line-left');
+
+            // Depth 0: padding 8px + 8px (half of 16px icon) = 16px
+            expect(verticalLineLeft).toBe('16px');
+        });
+
+        it('positions vertical line centered with folder icon at depth 1', () => {
+            const childLink = createMockLink('child-1', 'Child');
+            const folder = createMockFolder('folder-1', 'Nested Folder', [childLink]);
+            const expandedIds = new Set(['folder-1']);
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={folder}
+                    depth={1}
+                    expandedIds={expandedIds}
+                />
+            );
+
+            const childrenContainer = container.querySelector('[role="group"]') as HTMLElement;
+            expect(childrenContainer).toBeTruthy();
+
+            const verticalLineLeft = childrenContainer.style.getPropertyValue('--folder-line-left');
+
+            // Depth 1: padding 32px + 8px (half of 16px icon) = 40px
+            expect(verticalLineLeft).toBe('40px');
+        });
+
+        it('positions vertical line centered with folder icon at depth 2', () => {
+            const childLink = createMockLink('child-1', 'Child');
+            const folder = createMockFolder('folder-2', 'Deeply Nested', [childLink]);
+            const expandedIds = new Set(['folder-2']);
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={folder}
+                    depth={2}
+                    expandedIds={expandedIds}
+                />
+            );
+
+            const childrenContainer = container.querySelector('[role="group"]') as HTMLElement;
+            expect(childrenContainer).toBeTruthy();
+
+            const verticalLineLeft = childrenContainer.style.getPropertyValue('--folder-line-left');
+
+            // Depth 2: padding 56px + 8px (half of 16px icon) = 64px
+            expect(verticalLineLeft).toBe('64px');
+        });
+    });
+
     describe('child item highlight offset', () => {
         it('applies treeItemChild class for depth > 0', () => {
             const childItem = createMockLink('child-1', 'Child Item');
@@ -255,6 +406,23 @@ describe('TreeItem', () => {
             const treeItem = container.querySelector('[role="treeitem"]') as HTMLElement;
             const style = treeItem?.style;
             expect(style?.getPropertyValue('--child-highlight-offset')).toBeTruthy();
+        });
+
+        it('sets --child-highlight-offset to 0 for proper alignment', () => {
+            const childItem = createMockLink('child-1', 'Child Item');
+
+            const { container } = render(
+                <TreeItem
+                    {...defaultProps}
+                    item={childItem}
+                    depth={1}
+                />
+            );
+
+            const treeItem = container.querySelector('[role="treeitem"]') as HTMLElement;
+            const highlightOffset = treeItem?.style.getPropertyValue('--child-highlight-offset');
+            // Should be 0px to avoid adding extra margin on top of paddingLeft
+            expect(highlightOffset).toBe('0px');
         });
     });
 
