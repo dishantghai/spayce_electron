@@ -77,39 +77,43 @@ function SpacesError({ error, onRetry }: { error: Error; onRetry: () => void }):
 function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMenuItem[] {
     const items: ContextMenuItem[] = [];
 
-    if (item.type === SpaceItemType.folder) {
+    if (item.type === SpaceItemType.folder || item.type === SpaceItemType.localFolder) {
         items.push(
-            { id: 'add-folder', label: 'New Nested Folder', icon: LucideIcons.FolderPlus },
-            { id: 'add-link', label: 'Add Link', icon: LucideIcons.Link },
-            { id: 'divider-1', label: '', icon: LucideIcons.Minus, isDivider: true },
+            { id: 'new_folder', label: 'New Nested Folder', icon: LucideIcons.FolderPlus },
+            { id: 'add_link', label: 'Add Link', icon: LucideIcons.Link },
+            { id: 'divider1', label: '', icon: LucideIcons.Minus, isDivider: true },
+            { id: 'import_folder', label: 'Import Local Folder', icon: LucideIcons.FolderInput, isDisabled: true },
+            { id: 'import_file', label: 'Import Local File', icon: LucideIcons.FileInput, isDisabled: true },
+            { id: 'divider2', label: '', icon: LucideIcons.Minus, isDivider: true },
             { id: 'rename', label: 'Rename', icon: LucideIcons.Pencil },
-            { id: 'copy', label: 'Copy Folder', icon: LucideIcons.Copy }
+            { id: 'copy_folder', label: 'Copy Folder', icon: LucideIcons.Copy },
+            { id: 'copy_links', label: 'Copy All Links', icon: LucideIcons.Link2 }
         );
         if (hasClipboard) {
             items.push({ id: 'paste', label: 'Paste', icon: LucideIcons.Clipboard });
         }
         items.push(
-            { id: 'divider-2', label: '', icon: LucideIcons.Minus, isDivider: true },
+            { id: 'divider3', label: '', icon: LucideIcons.Minus, isDivider: true },
+            { id: 'open_workspace', label: 'Open in Workspace', icon: LucideIcons.PanelLeft, isDisabled: true },
             { id: 'delete', label: 'Delete', icon: LucideIcons.Trash2, isDestructive: true }
         );
     } else if (item.type === SpaceItemType.link) {
         items.push(
-            { id: 'open-new-tab', label: 'Open in New Tab', icon: LucideIcons.ExternalLink },
-            { id: 'copy-url', label: 'Copy URL', icon: LucideIcons.Copy },
-            { id: 'divider-1', label: '', icon: LucideIcons.Minus, isDivider: true },
             { id: 'rename', label: 'Rename', icon: LucideIcons.Pencil },
-            { id: 'divider-2', label: '', icon: LucideIcons.Minus, isDivider: true },
-            { id: 'delete', label: 'Delete', icon: LucideIcons.Trash2, isDestructive: true }
+            { id: 'copy_link', label: 'Copy Link', icon: LucideIcons.Copy },
+            { id: 'divider1', label: '', icon: LucideIcons.Minus, isDivider: true }
         );
-    } else if (item.type === SpaceItemType.localFolder) {
+
+        // Pin/Unpin based on current state
+        if (item.isPinned) {
+            items.push({ id: 'unpin', label: 'Unpin', icon: LucideIcons.PinOff });
+        } else {
+            items.push({ id: 'pin', label: 'Pin to Top', icon: LucideIcons.Pin });
+        }
+
         items.push(
-            { id: 'open-workspace', label: 'Open in Workspace', icon: LucideIcons.FolderOpen },
-            { id: 'refresh', label: 'Refresh', icon: LucideIcons.RefreshCw },
-            { id: 'divider-1', label: '', icon: LucideIcons.Minus, isDivider: true },
-            { id: 'import-file', label: 'Import Local File', icon: LucideIcons.FileInput },
-            { id: 'import-folder', label: 'Import Local Folder', icon: LucideIcons.FolderInput },
-            { id: 'divider-2', label: '', icon: LucideIcons.Minus, isDivider: true },
-            { id: 'remove', label: 'Remove', icon: LucideIcons.FolderMinus, isDestructive: true }
+            { id: 'divider2', label: '', icon: LucideIcons.Minus, isDivider: true },
+            { id: 'remove', label: 'Remove', icon: LucideIcons.Trash2, isDestructive: true }
         );
     }
 
@@ -199,9 +203,8 @@ export function App(): React.ReactElement {
         const { item, spaceId } = contextMenu;
 
         switch (actionId) {
-            case 'add-folder': {
+            case 'new_folder': {
                 // Trigger inline input for subfolder
-                // For now, create directly via IPC
                 const folderName = prompt('Enter folder name:');
                 if (folderName) {
                     await handleCreateItem({
@@ -214,7 +217,7 @@ export function App(): React.ReactElement {
                 }
                 break;
             }
-            case 'add-link': {
+            case 'add_link': {
                 // Trigger inline input for link
                 const linkUrl = prompt('Enter link URL:');
                 if (linkUrl) {
@@ -239,7 +242,58 @@ export function App(): React.ReactElement {
                 }
                 break;
             }
-            case 'delete': {
+            case 'copy_folder': {
+                // Copy folder structure to clipboard
+                try {
+                    await navigator.clipboard.writeText(JSON.stringify(item));
+                    console.log('Folder copied to clipboard');
+                } catch (err) {
+                    console.error('Failed to copy folder:', err);
+                }
+                break;
+            }
+            case 'copy_links': {
+                // Copy all links in folder to clipboard
+                const links = item.children
+                    .filter(child => child.type === SpaceItemType.link)
+                    .map(child => child.path)
+                    .join('\n');
+                try {
+                    await navigator.clipboard.writeText(links);
+                    console.log('Links copied to clipboard');
+                } catch (err) {
+                    console.error('Failed to copy links:', err);
+                }
+                break;
+            }
+            case 'copy_link': {
+                // Copy link URL to clipboard
+                try {
+                    await navigator.clipboard.writeText(item.path);
+                    console.log('Link copied to clipboard');
+                } catch (err) {
+                    console.error('Failed to copy link:', err);
+                }
+                break;
+            }
+            case 'pin': {
+                // Pin item to top
+                const result = await (window as any).electronAPI?.items?.pin(item.id);
+                if (result?.success) {
+                    await refetch();
+                }
+                break;
+            }
+            case 'unpin': {
+                // Unpin item
+                const result = await (window as any).electronAPI?.items?.unpin(item.id);
+                if (result?.success) {
+                    await refetch();
+                }
+                break;
+            }
+            case 'delete':
+            case 'remove': {
                 if (confirm(`Delete "${item.name}"?`)) {
                     const result = await (window as any).electronAPI?.items?.delete(item.id);
                     if (result?.success) {

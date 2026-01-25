@@ -81,11 +81,13 @@ export function TreeItem({
     }, [item, isFolder, isExpanded, isRenaming, onItemClick, onItemExpand]);
 
     const handleContextMenu = useCallback(
-        (e: React.MouseEvent) => {
+        (e: React.MouseEvent, setFocus = true) => {
             e.preventDefault();
             if (isRenaming) return;
-            // Set focus on item when context menu opens
-            onItemClick?.(item);
+            // Set focus on item when context menu opens (unless called from hover button)
+            if (setFocus) {
+                onItemClick?.(item);
+            }
             onItemContextMenu?.(item, e);
         },
         [item, isRenaming, onItemClick, onItemContextMenu]
@@ -191,7 +193,7 @@ export function TreeItem({
                             className={styles.contextIcon}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                handleContextMenu(e as any);
+                                handleContextMenu(e as any, false);
                             }}
                             title="More options"
                         >
