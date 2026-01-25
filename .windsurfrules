@@ -6,15 +6,6 @@
 This project uses **AASEF** (AI-Assisted Scalable Engineering Framework) for spec-driven development.
 **You MUST follow AASEF workflow. Do NOT bypass these processes.**
 
-
-## Active Task
-
-**Implementing**: 016 (ID: 016)
-
-**Spec**: `.aasef/specs/016-clipboard-state-management/spec.md`
-
-Focus on implementing the code. Do NOT create extra documentation files.
-
 ## CRITICAL: AASEF Workflow Enforcement
 
 ### 🚨 MANDATORY: Follow AASEF Process
@@ -709,65 +700,94 @@ Example:
 
 ## Project Context
 
-# Spayce AI Context File
+## Product Context
+**Name**: Spayce
+**Description**: AI-powered integrated application unifying browsing, learning, notes, local files, coding, and AI assistance
+**Target Users**: Knowledge workers, developers, students, researchers
+**Scale**: mvp
 
-## Product Overview
-**Spayce** is an AI-powered desktop application that unifies browsing, learning, notes, local files, coding, and AI assistance. Built with Electron + React + TypeScript for knowledge workers, developers, students, and researchers.
-
-## Tech Stack (AUTHORITATIVE)
-- **Desktop**: Electron 30+ (WebContentsView for tabs)
-- **UI**: React 18+ + TypeScript 5.x + Vite 5+
-- **State**: Zustand 4+ for global state, React useState for local
-- **Styling**: CSS Modules with design tokens (NOT Tailwind)
-- **Database**: SQLite (better-sqlite3) in main process
+## Tech Stack
+- **Desktop**: Electron 30+
+- **Ui**: React 18+
+- **Language**: TypeScript 5.x
+- **Build**: Vite 5+
+- **State**: Zustand 4+
+- **Styling**: CSS Modules
+- **Database**: SQLite (better-sqlite3)
 - **Icons**: Lucide React
 - **Testing**: Vitest + React Testing Library
 
-## Architecture Patterns (MUST FOLLOW)
+## Architecture
+**Type**: desktop-monorepo
 
-### Clean Architecture Layers
-```
-packages/core/          # Domain entities, repositories, use cases
-packages/infrastructure/ # SQLite repos, services, DI container  
-packages/react-ui/      # Data hooks, error boundaries, UI stores
-packages/shared/        # Reusable components, theme tokens
-packages/desktop/       # Electron main/renderer/preload
-```
+## Key Decisions
+- Use WebContentsView (not deprecated BrowserView) for tabs
+- SQLite over SurrealDB for simpler embedded database
+- CSS Modules over Tailwind for exact design control
+- Focus management with independent sidebar/spacesScreen contexts
+- Fixed and floating sidebar modes
 
-### Key Conventions
-- **Components**: `Component.tsx` + `Component.module.css` + barrel exports
-- **State**: Zustand stores in `packages/shared/src/stores/`, React context for data flow
-- **Data Layer**: SQLite via IPC bridge, repositories implement domain interfaces
-- **Styling**: CSS Modules with theme tokens from `@spayce/shared/theme`
-- **Domain Entities**: Immutable (readonly properties), Date types not strings
-- **Error Handling**: Result<T, Error> pattern, domain-specific error classes
 
-### Critical Anti-Patterns
-- ❌ BrowserView (deprecated) → Use WebContentsView
-- ❌ Hardcoded colors/spacing → Use theme tokens
-- ❌ Direct database access from UI → Use repository interfaces
-- ❌ Mutable domain entities → All properties readonly
-- ❌ Business logic in React components → Keep in @spayce/core
+## Key Directories
+- `packages/core/` - Domain and application layers (business logic, use cases, queries)
+- `packages/infrastructure/` - Database and service implementations (SQLite repositories)
+- `packages/react-ui/` - Presentation layer hooks and React components
+- `packages/shared/` - Reusable UI components and design system
+- `packages/desktop/` - Electron application (main process, renderer, preload)
+- `scripts/` - Development and migration utilities
+- `IMPLEMENTATION_PLAN/` - Detailed implementation specifications and phases
+- `project_ops/` - Project documentation and migration specs
+- `.aasef/` - AASEF framework context and specs
+- `resources/db/` - SQLite database files
 
-## Design System
-Import from `@spayce/shared/theme`:
-- **Colors**: SpayceColors (primary: #6D5AE6, backgroundDark: #0F0B1A)
-- **Spacing**: SpayceSpacing (xs:4px, sm:8px, md:16px, lg:24px, xl:32px)
-- **Radius**: SpayceRadius (button:8px, card:12px, sidebar:16px)
-- **Typography**: Inter for UI, JetBrains Mono for code
+## Key Files
+- `pnpm-workspace.yaml` - Monorepo workspace configuration
+- `vitest.config.ts` - Test configuration using Vitest
+- `tsconfig.json` - TypeScript configuration
+- `SPACES_MIGRATION_PLAN.md` - Migration documentation
+- `TESTING_GUIDE.md` - Testing procedures and guidelines
+- `scripts/migrate-db.ts` - Database migration script
+- `resources/db/spaces.sqlite` - SQLite database file
 
-## Current Implementation Focus
-**Spec 016: Clipboard State Management** - Building internal clipboard with copy/cut/paste operations, system clipboard integration for URLs, multi-selection support, and paste validation logic.
+## Patterns Observed
+- **Clean Architecture**: Strict layered approach with domain/application/infrastructure/presentation separation
+- **Monorepo Structure**: pnpm workspaces with distinct package responsibilities
+- **Test-Driven**: Comprehensive test suites in each package with Vitest
+- **Migration-Focused**: Multiple migration scripts and documentation suggesting active development/refactoring
+- **Phase-Based Implementation**: Structured implementation plan with numbered phases
+- **TypeScript-First**: Full TypeScript adoption across all packages
 
-Key files:
-- `packages/react-ui/src/stores/clipboardStore.ts` (create)
-- `packages/desktop/src/main/ipc/handlers/clipboardHandlers.ts` (create)
+## Important Architecture Decisions
 
-## Code Quality Standards
-- Follow domain-driven design with clear layer boundaries
-- Use TypeScript strict mode, prefer interfaces over types
-- Test all business logic, use React Testing Library for components
-- CSS Modules with design system tokens, no arbitrary values
-- Async operations return Result<T, Error> for UI consumption
+> These are authoritative architecture patterns. All implementations MUST follow these.
+> Full details in `.aasef/context/tech_decisions.md`
 
-When implementing features, always start with domain layer (entities, repositories), then infrastructure (SQLite repos), then application layer (use cases), finally presentation layer (React hooks/components).
+> **CRITICAL**: This section is ALWAYS included in IDE context during implementation.
+> All specs, stories, and code changes MUST conform to these architectural patterns.
+
+### Patterns & Conventions
+
+- **State Management**: Zustand stores in `packages/shared/src/stores/`. Global state flows down via React context, local state via useState.
+- **Component Structure**: Each component has `Component.tsx` + `Component.module.css`. Export via barrel files.
+- **Data Layer**: SQLite via better-sqlite3 in main process. Renderer accesses via IPC bridge.
+- **Focus Management**: Independent focus contexts - sidebar vs spaces screen. Never mix focus domains.
+- **Clean Architecture**: Follow layered architecture with `@spayce/core` domain layer. Domain entities are immutable (readonly). Repository interfaces define contracts. Use domain events for loose coupling.
+
+### Design Decisions
+
+- **WebContentsView for Tabs**: Use Electron 30+ WebContentsView, NOT deprecated BrowserView
+- **CSS Modules**: Use CSS Modules with CSS custom properties for design tokens, NOT Tailwind
+- **Theme Tokens**: All colors/spacing/radius from `packages/shared/src/theme/`. Never hardcode values.
+
+### Anti-Patterns to Avoid
+
+- ❌ **Direct DOM manipulation**: Use React state, never `document.querySelector`
+- ❌ **Hardcoded colors/spacing**: Always use theme tokens from `theme/` directory
+- ❌ **Cross-process state**: Don't share Zustand stores between main/renderer
+- ❌ **Deprecated APIs**: No BrowserView, no remote module, no nodeIntegration in renderers
+- ❌ **Mutable domain entities**: Never use mutable properties in domain entities. All entity properties must be `readonly`
+- ❌ **String dates in domain**: Use `Date` type for all date/time fields, never strings
+- ❌ **Direct database access from UI**: Always use repository interfaces, never access database directly from React components
+- ❌ **Business logic in UI**: Keep domain logic in `@spayce/core`, UI only handles presentation and user interaction
+
+---
