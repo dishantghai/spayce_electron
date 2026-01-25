@@ -1,25 +1,14 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
+import * as LucideIcons from 'lucide-react';
 import {
-    Folder,
-    FolderOpen,
     FolderInput,
     FolderPlus,
     Link,
     FileText,
-    FileCode,
-    FileCog,
-    FileImage,
-    FileVideo,
-    FileAudio,
-    FileArchive,
-    File,
-    MoreVertical,
     Upload,
-    X,
-    Globe,
 } from 'lucide-react';
 import type { Space, SpaceItem } from '../../types';
-import { SpaceItemType } from '../../types';
+import { TreeView } from '../TreeView';
 import styles from './SpaceCard.module.css';
 
 export interface SpaceCardProps {
@@ -54,18 +43,33 @@ export function SpaceCard({
     const [internalExpandedIds, setInternalExpandedIds] = useState<Set<string>>(() => new Set());
     const expandedIds = controlledExpandedIds ?? internalExpandedIds;
 
-    const handleExpandChange = useCallback((itemId: string, expanded: boolean) => {
-        const newSet = new Set(expandedIds);
-        if (expanded) {
-            newSet.add(itemId);
-        } else {
-            newSet.delete(itemId);
-        }
+    // Adapter callback for TreeView's onItemClick (adds spaceId)
+    const handleItemClick = useCallback((item: SpaceItem) => {
+        onItemClick?.(item, space.id);
+    }, [space.id, onItemClick]);
+
+    // Adapter callback for TreeView's onItemContextMenu (adds spaceId)
+    const handleItemContextMenu = useCallback((item: SpaceItem, event: React.MouseEvent) => {
+        onItemContextMenu?.(item, space.id, event);
+    }, [space.id, onItemContextMenu]);
+
+    // Adapter callback for TreeView's onAddSubfolder (adds spaceId)
+    const handleAddSubfolder = useCallback((parentItem: SpaceItem) => {
+        onAddFolder?.(space.id, parentItem.id);
+    }, [space.id, onAddFolder]);
+
+    // Adapter callback for TreeView's onAddLink (adds spaceId)
+    const handleAddLink = useCallback((parentItem: SpaceItem) => {
+        onAddLink?.(space.id, parentItem.id);
+    }, [space.id, onAddLink]);
+
+    // Handle expanded state changes
+    const handleExpandedChange = useCallback((newExpandedIds: Set<string>) => {
         if (!controlledExpandedIds) {
-            setInternalExpandedIds(newSet);
+            setInternalExpandedIds(newExpandedIds);
         }
-        onExpandedChange?.(newSet);
-    }, [expandedIds, controlledExpandedIds, onExpandedChange]);
+        onExpandedChange?.(newExpandedIds);
+    }, [controlledExpandedIds, onExpandedChange]);
 
     const cardClasses = [
         styles.spaceCard,
@@ -81,29 +85,24 @@ export function SpaceCard({
             {/* Header */}
             <CardHeader space={space} />
 
-            {/* Content - Tree View */}
+            {/* Content - Tree View (shared component with Sidebar) */}
             <div className={styles.cardContent}>
                 {space.rootItems.length === 0 ? (
                     <div className={styles.emptyState}>No items yet</div>
                 ) : (
-                    space.rootItems.map((item) => (
-                        <CardTreeItem
-                            key={item.id}
-                            item={item}
-                            level={0}
-                            spaceId={space.id}
-                            spaceIndex={spaceIndex}
-                            spaceColor={space.accentColor}
-                            selectedItemId={selectedItemId}
-                            keyboardSelectedItemId={keyboardSelectedItemId}
-                            expandedIds={expandedIds}
-                            onItemClick={onItemClick}
-                            onItemContextMenu={onItemContextMenu}
-                            onExpandChange={handleExpandChange}
-                            onAddFolder={onAddFolder}
-                            onAddLink={onAddLink}
-                        />
-                    ))
+                    <TreeView
+                        items={space.rootItems}
+                        spaceId={space.id}
+                        selectedId={selectedItemId}
+                        activeId={keyboardSelectedItemId}
+                        accentColor={space.accentColor}
+                        expandedIds={expandedIds}
+                        onItemClick={handleItemClick}
+                        onItemContextMenu={handleItemContextMenu}
+                        onExpandedChange={handleExpandedChange}
+                        onAddSubfolder={handleAddSubfolder}
+                        onAddLink={handleAddLink}
+                    />
                 )}
             </div>
 
@@ -135,285 +134,6 @@ function CardHeader({ space }: CardHeaderProps): React.ReactElement {
             <span className={styles.headerTitle}>{space.name}</span>
         </div>
     );
-}
-
-interface CardTreeItemProps {
-    item: SpaceItem;
-    level: number;
-    spaceId: string;
-    spaceIndex: number;
-    spaceColor: string;
-    selectedItemId: string | null;
-    keyboardSelectedItemId: string | null;
-    expandedIds: Set<string>;
-    parentFolderIds?: string[];
-    onItemClick?: (item: SpaceItem, spaceId: string) => void;
-    onItemContextMenu?: (item: SpaceItem, spaceId: string, event: React.MouseEvent) => void;
-    onExpandChange: (itemId: string, expanded: boolean) => void;
-    onAddFolder?: (spaceId: string, parentId?: string | null) => void;
-    onAddLink?: (spaceId: string, parentId?: string | null) => void;
-}
-
-function CardTreeItem({
-    item,
-    level,
-    spaceId,
-    spaceIndex,
-    spaceColor,
-    selectedItemId,
-    keyboardSelectedItemId,
-    expandedIds,
-    parentFolderIds = [],
-    onItemClick,
-    onItemContextMenu,
-    onExpandChange,
-    onAddFolder,
-    onAddLink,
-}: CardTreeItemProps): React.ReactElement {
-    const [isHovered, setIsHovered] = useState(false);
-
-    const isFolder = item.type === SpaceItemType.folder || item.type === SpaceItemType.localFolder;
-    const isExpanded = expandedIds.has(item.id);
-    const isSelected = !isFolder && selectedItemId === item.id;
-    const isKeyboardSelected = keyboardSelectedItemId === item.id;
-    const hasChildren = item.children && item.children.length > 0;
-
-    const indentPx = 8 + level * 16;
-
-    const handleClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (isFolder) {
-            onExpandChange(item.id, !isExpanded);
-        }
-        onItemClick?.(item, spaceId);
-    }, [item, spaceId, isFolder, isExpanded, onItemClick, onExpandChange]);
-
-    const handleContextMenu = useCallback((e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        onItemContextMenu?.(item, spaceId, e);
-    }, [item, spaceId, onItemContextMenu]);
-
-    const handleAddSubfolder = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        // Expand folder first
-        if (!isExpanded) {
-            onExpandChange(item.id, true);
-        }
-        onAddFolder?.(spaceId, item.id);
-    }, [spaceId, item.id, isExpanded, onExpandChange, onAddFolder]);
-
-    const handleAddLink = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation();
-        // Expand folder first
-        if (!isExpanded) {
-            onExpandChange(item.id, true);
-        }
-        onAddLink?.(spaceId, item.id);
-    }, [spaceId, item.id, isExpanded, onExpandChange, onAddLink]);
-
-    const rowClasses = [
-        styles.treeItem,
-        isSelected && styles.treeItemSelected,
-        isKeyboardSelected && styles.treeItemKeyboardSelected,
-    ].filter(Boolean).join(' ');
-
-    return (
-        <>
-            <div
-                className={rowClasses}
-                style={{ paddingLeft: `${indentPx}px` }}
-                onClick={handleClick}
-                onContextMenu={handleContextMenu}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-            >
-                {/* Icon */}
-                <span className={styles.itemIcon}>
-                    <TreeItemIcon
-                        type={item.type}
-                        isExpanded={isExpanded}
-                        faviconUrl={item.faviconUrl}
-                        fileName={item.name}
-                        accentColor={spaceColor}
-                    />
-                </span>
-
-                {/* Name */}
-                <span className={styles.itemName}>{item.name}</span>
-
-                {/* Hover Actions */}
-                {isHovered && (
-                    <div className={styles.hoverActions}>
-                        {isFolder && (
-                            <>
-                                <button
-                                    className={styles.hoverAction}
-                                    onClick={handleAddSubfolder}
-                                    title="Add Subfolder"
-                                >
-                                    <FolderPlus size={14} />
-                                </button>
-                                <button
-                                    className={styles.hoverAction}
-                                    onClick={handleAddLink}
-                                    title="Add Link"
-                                >
-                                    <Link size={14} />
-                                </button>
-                            </>
-                        )}
-                        <button
-                            className={styles.hoverAction}
-                            onClick={handleContextMenu}
-                            title="More options"
-                        >
-                            <MoreVertical size={14} />
-                        </button>
-                    </div>
-                )}
-            </div>
-
-            {/* Children */}
-            {isFolder && hasChildren && (
-                <div className={`${styles.children} ${!isExpanded ? styles.childrenCollapsed : ''}`}>
-                    {isExpanded && item.children.map((child) => (
-                        <CardTreeItem
-                            key={child.id}
-                            item={child}
-                            level={level + 1}
-                            spaceId={spaceId}
-                            spaceIndex={spaceIndex}
-                            spaceColor={spaceColor}
-                            selectedItemId={selectedItemId}
-                            keyboardSelectedItemId={keyboardSelectedItemId}
-                            expandedIds={expandedIds}
-                            parentFolderIds={[...parentFolderIds, item.id]}
-                            onItemClick={onItemClick}
-                            onItemContextMenu={onItemContextMenu}
-                            onExpandChange={onExpandChange}
-                            onAddFolder={onAddFolder}
-                            onAddLink={onAddLink}
-                        />
-                    ))}
-                </div>
-            )}
-        </>
-    );
-}
-
-interface TreeItemIconProps {
-    type: SpaceItemType;
-    isExpanded: boolean;
-    faviconUrl?: string | null;
-    fileName?: string;
-    accentColor: string;
-}
-
-function TreeItemIcon({
-    type,
-    isExpanded,
-    faviconUrl,
-    fileName,
-    accentColor,
-}: TreeItemIconProps): React.ReactElement {
-    // Local folder
-    if (type === SpaceItemType.localFolder) {
-        const Icon = isExpanded ? FolderOpen : FolderInput;
-        return <Icon size={16} style={{ color: isExpanded ? accentColor : '#6B7280' }} />;
-    }
-
-    // Local file
-    if (type === SpaceItemType.localFile) {
-        const Icon = getFileIcon(fileName || '');
-        return <Icon size={16} style={{ color: '#6B7280' }} />;
-    }
-
-    // Regular folder
-    if (type === SpaceItemType.folder) {
-        const Icon = isExpanded ? FolderOpen : Folder;
-        return <Icon size={16} style={{ color: isExpanded ? accentColor : '#6B7280' }} />;
-    }
-
-    // Link - show favicon
-    if (faviconUrl) {
-        return (
-            <img
-                src={faviconUrl}
-                alt=""
-                className={styles.faviconIcon}
-                onError={(e) => {
-                    // Fallback to globe icon on error
-                    (e.target as HTMLImageElement).style.display = 'none';
-                    (e.target as HTMLImageElement).nextElementSibling?.classList.remove(styles.hidden);
-                }}
-            />
-        );
-    }
-
-    return (
-        <span className={styles.faviconPlaceholder}>
-            <Globe size={14} style={{ color: accentColor }} />
-        </span>
-    );
-}
-
-function getFileIcon(fileName: string): React.ComponentType<any> {
-    const ext = fileName.split('.').pop()?.toLowerCase() || '';
-
-    switch (ext) {
-        case 'dart':
-        case 'js':
-        case 'ts':
-        case 'tsx':
-        case 'jsx':
-        case 'py':
-        case 'java':
-        case 'swift':
-        case 'kt':
-        case 'go':
-        case 'rs':
-        case 'c':
-        case 'cpp':
-        case 'h':
-            return FileCode;
-        case 'txt':
-        case 'md':
-        case 'rtf':
-            return FileText;
-        case 'json':
-        case 'yaml':
-        case 'yml':
-        case 'xml':
-        case 'toml':
-            return FileCog;
-        case 'png':
-        case 'jpg':
-        case 'jpeg':
-        case 'gif':
-        case 'svg':
-        case 'webp':
-            return FileImage;
-        case 'mp4':
-        case 'mov':
-        case 'avi':
-        case 'mkv':
-            return FileVideo;
-        case 'mp3':
-        case 'wav':
-        case 'flac':
-        case 'm4a':
-            return FileAudio;
-        case 'zip':
-        case 'tar':
-        case 'gz':
-        case 'rar':
-            return FileArchive;
-        case 'pdf':
-            return FileText;
-        default:
-            return File;
-    }
 }
 
 interface SpaceActionsBarProps {
@@ -474,8 +194,6 @@ function SpaceActionsBar({
 }
 
 // Helper to get space icon component
-import * as LucideIcons from 'lucide-react';
-
 function getSpaceIconComponent(iconName: string): React.ComponentType<{ size?: number; style?: React.CSSProperties }> {
     const iconMap: Record<string, React.ComponentType<any>> = {
         'briefcase': LucideIcons.Briefcase,

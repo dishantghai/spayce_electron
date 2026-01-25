@@ -22,21 +22,27 @@
 }
 
 .treeItem:hover {
-    background-color: #2D2645;
+    background-color: rgba(45, 38, 69, 0.5);
 }
 
 /* Selected/Focused item - unified background highlight */
 .treeItemSelected {
-    background-color: #2D2645;
+    background-color: rgba(45, 38, 69, 0.5);
 }
 
 .treeItemSelected:hover {
-    background-color: #2D2645;
+    background-color: rgba(45, 38, 69, 0.5);
 }
 
 /* Active item - same as selected, no special left border */
 .treeItemActive {
-    background-color: #2D2645;
+    background-color: rgba(45, 38, 69, 0.5);
+}
+
+/* Child tree item - highlight starts after vertical line */
+.treeItemChild {
+    margin-left: var(--child-highlight-offset, 0px);
+    width: calc(100% - var(--child-highlight-offset, 0px));
 }
 
 

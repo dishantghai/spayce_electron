@@ -72,13 +72,13 @@ export function TreeItem({
     const handleClick = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
         if (isRenaming) return; // Don't handle clicks during rename
-        // Toggle expand/collapse for folders with children
-        if (isFolder && hasChildren) {
+        // Toggle expand/collapse for all folders (including empty ones)
+        if (isFolder) {
             onItemExpand?.(item, !isExpanded);
         }
         // Always notify parent to update focus state
         onItemClick?.(item);
-    }, [item, isFolder, hasChildren, isExpanded, isRenaming, onItemClick, onItemExpand]);
+    }, [item, isFolder, isExpanded, isRenaming, onItemClick, onItemExpand]);
 
     const handleContextMenu = useCallback(
         (e: React.MouseEvent) => {
@@ -104,8 +104,15 @@ export function TreeItem({
         ? getExtension(item.name)
         : undefined;
 
+    // Calculate child highlight offset - highlight starts immediately at the vertical line
+    // The vertical line is drawn at 16px from the left edge of the .children container
+    // Child items have paddingLeft: 8px, so the highlight should start at 16px to align with the vertical line
+    const isChild = depth > 0;
+    const childHighlightOffset = isChild ? 16 : 0; // Start at vertical line position
+
     const rowClasses = [
         styles.treeItem,
+        isChild && styles.treeItemChild,
         isSelected && styles.treeItemSelected,
         isActive && styles.treeItemActive,
     ]
@@ -117,8 +124,9 @@ export function TreeItem({
             <div
                 className={rowClasses}
                 style={{
-                    paddingLeft: `${indentPx + 8}px`,
+                    paddingLeft: isChild ? '18px' : `${indentPx + 8}px`,
                     '--tree-accent-color': accentColor,
+                    '--child-highlight-offset': `${childHighlightOffset}px`,
                 } as React.CSSProperties}
                 onClick={handleClick}
                 onContextMenu={handleContextMenu}
