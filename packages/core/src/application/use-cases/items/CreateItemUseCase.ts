@@ -54,7 +54,14 @@ export class CreateItemUseCase {
             : await this.spaceItemsRepository
                 .getItemsBySpaceId(input.spaceId)
                 .then((items) => items.filter((i) => !i.parentId));
-        const nextOrder = siblings.length;
+
+        // Shift all existing siblings down by 1 to make room at position 0
+        for (const sibling of siblings) {
+            await this.spaceItemsRepository.updateItem({
+                ...sibling,
+                sortOrder: sibling.sortOrder + 1,
+            });
+        }
 
         const item = await this.spaceItemsRepository.createItem({
             id: generateId(),
@@ -64,7 +71,7 @@ export class CreateItemUseCase {
             path: input.path,
             type: input.type,
             isExpanded: false,
-            sortOrder: nextOrder,
+            sortOrder: 0, // New items at top
             faviconUrl: input.faviconUrl || null,
             description: input.description || null,
             visitCount: 0,

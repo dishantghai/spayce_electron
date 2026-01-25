@@ -173,8 +173,75 @@ export function App(): React.ReactElement {
         });
     };
 
-    const handleContextMenuItemClick = (itemId: string) => {
-        console.log('Context menu action:', itemId, contextMenu?.item.name);
+    const handleContextMenuItemClick = async (actionId: string) => {
+        if (!contextMenu) return;
+
+        const { item, spaceId } = contextMenu;
+
+        switch (actionId) {
+            case 'add-folder': {
+                // Trigger inline input for subfolder
+                // For now, create directly via IPC
+                const folderName = prompt('Enter folder name:');
+                if (folderName) {
+                    await handleCreateItem({
+                        spaceId,
+                        parentId: item.id,
+                        name: folderName,
+                        path: folderName,
+                        type: 'folder',
+                    });
+                }
+                break;
+            }
+            case 'add-link': {
+                // Trigger inline input for link
+                const linkUrl = prompt('Enter link URL:');
+                if (linkUrl) {
+                    const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
+                    const domain = new URL(url).hostname.replace('www.', '');
+                    await handleCreateItem({
+                        spaceId,
+                        parentId: item.id,
+                        name: domain,
+                        path: url,
+                        type: 'link',
+                    });
+                }
+                break;
+            }
+            case 'rename': {
+                const newName = prompt('Enter new name:', item.name);
+                if (newName && newName !== item.name) {
+                    await handleRenameItem(item.id, newName);
+                }
+                break;
+            }
+            case 'delete': {
+                if (confirm(`Delete "${item.name}"?`)) {
+                    const result = await (window as any).electronAPI?.items?.delete(item.id);
+                    if (result?.success) {
+                        await refetch();
+                    }
+                }
+                break;
+            }
+            case 'copy-url': {
+                if (item.path) {
+                    await (window as any).electronAPI?.clipboard?.writeText(item.path);
+                }
+                break;
+            }
+            case 'open-new-tab': {
+                if (item.path) {
+                    window.open(item.path, '_blank');
+                }
+                break;
+            }
+            default:
+                console.log('Unhandled context menu action:', actionId, item.name);
+        }
+
         setContextMenu(null);
     };
 
@@ -182,12 +249,36 @@ export function App(): React.ReactElement {
         setSidebarMode((prev: SidebarMode) => (prev === 'fixed' ? 'floating' : 'fixed'));
     };
 
-    const handleAddFolder = (spaceId: string) => {
-        console.log('Add folder to space:', spaceId);
+    const handleAddFolder = async (spaceId: string, parentId?: string | null) => {
+        // For SpaceCard actions, use prompt for now (inline input requires store integration)
+        const folderName = prompt('Enter folder name:');
+        if (folderName) {
+            await handleCreateItem({
+                spaceId,
+                parentId: parentId ?? null,
+                name: folderName,
+                path: folderName,
+                type: 'folder',
+            });
+        }
     };
 
-    const handleAddLink = (spaceId: string) => {
-        console.log('Add link to space:', spaceId);
+    const handleAddLink = async (spaceId: string, parentId?: string | null) => {
+        const linkUrl = prompt('Enter link URL:');
+        if (linkUrl) {
+            const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
+            let domain = linkUrl;
+            try {
+                domain = new URL(url).hostname.replace('www.', '');
+            } catch { /* use raw input */ }
+            await handleCreateItem({
+                spaceId,
+                parentId: parentId ?? null,
+                name: domain,
+                path: url,
+                type: 'link',
+            });
+        }
     };
 
     const handleCreateItem = async (input: {
