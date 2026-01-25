@@ -47,7 +47,7 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
         });
     },
 
-    pasteItems: async (targetId, position) => {
+    pasteItems: async (targetId, position = 'inside') => {
         const state = get();
 
         if (state.items.length === 0) {
@@ -58,16 +58,28 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
             throw new Error('Cannot paste to this target');
         }
 
-        // Simulate paste operation
-        // In real implementation, this would call IPC handlers to perform the actual paste
-        await new Promise(resolve => setTimeout(resolve, 0));
+        // Call IPC handler to perform actual paste for each item
+        try {
+            for (const item of state.items) {
+                await (window as any).electronAPI?.items?.pasteItem({
+                    sourceItem: item,
+                    targetId,
+                    position,
+                    action: state.action,
+                });
+            }
 
-        // Clear clipboard after successful paste
-        set({
-            items: [],
-            sourceSpaceId: null,
-            action: null,
-        });
+            // If cut operation, items are already moved by the backend
+            // Clear clipboard after successful paste
+            set({
+                items: [],
+                sourceSpaceId: null,
+                action: null,
+            });
+        } catch (error) {
+            console.error('Failed to paste items:', error);
+            throw error;
+        }
     },
 
     canPaste: (targetId) => {

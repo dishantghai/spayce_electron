@@ -5,8 +5,8 @@ import {
     ContextMenu,
     Sidebar,
     SpacesScreen,
-    useInlineInputStore,
 } from '@spayce/react-ui';
+import { useInlineInputStore, useClipboardStore } from '@spayce/react-ui/stores';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
@@ -73,29 +73,82 @@ function SpacesError({ error, onRetry }: { error: Error; onRetry: () => void }):
     );
 }
 
+// Helper to check if folder has nested links
+function hasNestedLinks(item: SpaceItem): boolean {
+    if (item.type === SpaceItemType.link) {
+        return true;
+    }
+    if (item.children && item.children.length > 0) {
+        return item.children.some(child => hasNestedLinks(child));
+    }
+    return false;
+}
+
+// Helper to recursively collect all links from folder tree
+function collectAllLinks(item: SpaceItem): SpaceItem[] {
+    const links: SpaceItem[] = [];
+
+    if (item.type === SpaceItemType.link) {
+        links.push(item);
+    }
+
+    if (item.children && item.children.length > 0) {
+        for (const child of item.children) {
+            links.push(...collectAllLinks(child));
+        }
+    }
+
+    return links;
+}
+
 // Helper to generate context menu items based on item type
 function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMenuItem[] {
     const items: ContextMenuItem[] = [];
 
     if (item.type === SpaceItemType.folder || item.type === SpaceItemType.localFolder) {
+        const isLocalFolder = item.type === SpaceItemType.localFolder;
+
+        // Group 1: Creation actions
         items.push(
-            { id: 'new_folder', label: 'New Nested Folder', icon: LucideIcons.FolderPlus },
-            { id: 'add_link', label: 'Add Link', icon: LucideIcons.Link },
+            { id: 'new_folder', label: 'New Folder', icon: LucideIcons.FolderPlus },
+            { id: 'new_link', label: 'Add Link', icon: LucideIcons.Link },
             { id: 'divider1', label: '', icon: LucideIcons.Minus, isDivider: true },
-            { id: 'import_folder', label: 'Import Local Folder', icon: LucideIcons.FolderInput, isDisabled: true },
-            { id: 'import_file', label: 'Import Local File', icon: LucideIcons.FileInput, isDisabled: true },
+        );
+
+        // Group 2: Import actions (disabled for now)
+        items.push(
+            { id: 'import_folder', label: 'Import Local Folder', icon: LucideIcons.FolderOpen, isDisabled: true },
+            { id: 'import_file', label: 'Import Local File', icon: LucideIcons.File, isDisabled: true },
             { id: 'divider2', label: '', icon: LucideIcons.Minus, isDivider: true },
+        );
+
+        // Group 3: Edit and clipboard actions
+        items.push(
             { id: 'rename', label: 'Rename', icon: LucideIcons.Pencil },
             { id: 'copy_folder', label: 'Copy Folder', icon: LucideIcons.Copy },
-            { id: 'copy_links', label: 'Copy All Links', icon: LucideIcons.Link2 }
         );
-        if (hasClipboard) {
-            items.push({ id: 'paste', label: 'Paste', icon: LucideIcons.Clipboard });
+
+        // Conditionally add "Copy All Links" if folder has nested links
+        if (hasNestedLinks(item)) {
+            items.push({ id: 'copy_links', label: 'Copy All Links', icon: LucideIcons.Link2 });
         }
+
+        // Conditionally add "Paste" if clipboard has items
+        if (hasClipboard) {
+            items.push({ id: 'paste', label: 'Paste', icon: LucideIcons.ClipboardPaste });
+        }
+
+        items.push({ id: 'divider3', label: '', icon: LucideIcons.Minus, isDivider: true });
+
+        // Group 4: Advanced actions
+        // Refresh only for local folders
+        if (isLocalFolder) {
+            items.push({ id: 'refresh', label: 'Refresh', icon: LucideIcons.RefreshCw });
+        }
+
         items.push(
-            { id: 'divider3', label: '', icon: LucideIcons.Minus, isDivider: true },
             { id: 'open_workspace', label: 'Open in Workspace', icon: LucideIcons.PanelLeft, isDisabled: true },
-            { id: 'delete', label: 'Delete', icon: LucideIcons.Trash2, isDestructive: true }
+            { id: 'delete', label: 'Delete', icon: LucideIcons.Trash2, isDestructive: true },
         );
     } else if (item.type === SpaceItemType.link) {
         items.push(
@@ -132,7 +185,9 @@ export function App(): React.ReactElement {
         reorderSpaces,
     } = useSpacesData();
 
-    const [selectedId, setSelectedId] = useState<string | null>(null);
+    // Independent selection states for sidebar and space cards
+    const [sidebarSelectedId, setSidebarSelectedId] = useState<string | null>(null);
+    const [cardSelectedId, setCardSelectedId] = useState<string | null>(null);
     // Sidebar and SpacesScreen have independent active space indices
     const [sidebarActiveSpaceIndex, setSidebarActiveSpaceIndex] = useState(0);
     const [spacesScreenActiveSpaceIndex, setSpacesScreenActiveSpaceIndex] = useState(0);
@@ -149,12 +204,17 @@ export function App(): React.ReactElement {
         position: { x: number; y: number };
         context: 'sidebar' | 'card';
     } | null>(null);
-    const [hasClipboard] = useState(false);
 
-    // Inline input store for rename functionality
+    // Clipboard store for copy/paste functionality
+    const clipboardStore = useClipboardStore();
+    const hasClipboard = clipboardStore.hasItems();
+
+    // Inline input store for rename and create functionality
     const {
         setSidebarRenameItemId,
         setCardRenameItemId,
+        setSidebarInput,
+        setCardInput,
     } = useInlineInputStore();
 
     // Handle sidebar visibility changes (Rule 3 & 4)
@@ -173,12 +233,13 @@ export function App(): React.ReactElement {
 
     const handleItemClick = (item: SpaceItem, spaceId: string) => {
         console.log('Item clicked:', item.name, 'in space:', spaceId);
-        setSelectedId(item.id);
+        setSidebarSelectedId(item.id);
         setFocusContext('sidebar');
     };
 
     // Sidebar context menu handler
     const handleSidebarContextMenu = (item: SpaceItem, spaceId: string, event: React.MouseEvent) => {
+        setSidebarSelectedId(item.id); // Focus the item when context menu opens
         setContextMenu({
             item,
             spaceId,
@@ -189,6 +250,7 @@ export function App(): React.ReactElement {
 
     // SpaceCard context menu handler
     const handleCardContextMenu = (item: SpaceItem, spaceId: string, event: React.MouseEvent) => {
+        setCardSelectedId(item.id); // Focus the item when context menu opens
         setContextMenu({
             item,
             spaceId,
@@ -204,32 +266,21 @@ export function App(): React.ReactElement {
 
         switch (actionId) {
             case 'new_folder': {
-                // Trigger inline input for subfolder
-                const folderName = prompt('Enter folder name:');
-                if (folderName) {
-                    await handleCreateItem({
-                        spaceId,
-                        parentId: item.id,
-                        name: folderName,
-                        path: folderName,
-                        type: 'folder',
-                    });
+                // Trigger inline input for subfolder (same as hover action)
+                if (contextMenu.context === 'sidebar') {
+                    setSidebarInput({ spaceId, parentId: item.id, type: 'folder' });
+                } else {
+                    setCardInput({ spaceId, parentId: item.id, type: 'folder' });
                 }
                 break;
             }
-            case 'add_link': {
-                // Trigger inline input for link
-                const linkUrl = prompt('Enter link URL:');
-                if (linkUrl) {
-                    const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
-                    const domain = new URL(url).hostname.replace('www.', '');
-                    await handleCreateItem({
-                        spaceId,
-                        parentId: item.id,
-                        name: domain,
-                        path: url,
-                        type: 'link',
-                    });
+            case 'add_link':
+            case 'new_link': {
+                // Trigger inline input for link (same as hover action)
+                if (contextMenu.context === 'sidebar') {
+                    setSidebarInput({ spaceId, parentId: item.id, type: 'link' });
+                } else {
+                    setCardInput({ spaceId, parentId: item.id, type: 'link' });
                 }
                 break;
             }
@@ -243,26 +294,52 @@ export function App(): React.ReactElement {
                 break;
             }
             case 'copy_folder': {
-                // Copy folder structure to clipboard
-                try {
-                    await navigator.clipboard.writeText(JSON.stringify(item));
-                    console.log('Folder copied to clipboard');
-                } catch (err) {
-                    console.error('Failed to copy folder:', err);
-                }
+                // Copy folder to internal clipboard
+                clipboardStore.copyItems([item], spaceId);
+                console.log('Folder copied to clipboard');
                 break;
             }
             case 'copy_links': {
-                // Copy all links in folder to clipboard
-                const links = item.children
-                    .filter(child => child.type === SpaceItemType.link)
-                    .map(child => child.path)
-                    .join('\n');
-                try {
-                    await navigator.clipboard.writeText(links);
-                    console.log('Links copied to clipboard');
-                } catch (err) {
-                    console.error('Failed to copy links:', err);
+                // Recursively collect all links and copy to system clipboard
+                const links = collectAllLinks(item);
+
+                if (links.length > 0) {
+                    // Copy URLs to system clipboard (newline separated)
+                    const urls = links.map(link => link.path).join('\n');
+                    try {
+                        await navigator.clipboard.writeText(urls);
+                        // Also copy to internal clipboard
+                        clipboardStore.copyItems(links, spaceId);
+                        console.log(`Copied ${links.length} link(s) to clipboard`);
+                    } catch (err) {
+                        console.error('Failed to copy links:', err);
+                    }
+                }
+                break;
+            }
+            case 'paste': {
+                // Paste items from clipboard into folder
+                if (clipboardStore.hasItems()) {
+                    try {
+                        await clipboardStore.pasteItems(item.id, 'inside');
+                        await refetch(); // Refresh data
+                        console.log('Items pasted successfully');
+                    } catch (err) {
+                        console.error('Failed to paste items:', err);
+                    }
+                }
+                break;
+            }
+            case 'refresh': {
+                // For local folders, refresh the folder contents
+                if (item.type === SpaceItemType.localFolder) {
+                    try {
+                        await (window as any).electronAPI?.items?.refreshLocalFolder(item.id);
+                        await refetch();
+                        console.log('Local folder refreshed');
+                    } catch (err) {
+                        console.error('Failed to refresh local folder:', err);
+                    }
                 }
                 break;
             }
@@ -326,34 +403,20 @@ export function App(): React.ReactElement {
     };
 
     const handleAddFolder = async (spaceId: string, parentId?: string | null) => {
-        // For SpaceCard actions, use prompt for now (inline input requires store integration)
-        const folderName = prompt('Enter folder name:');
-        if (folderName) {
-            await handleCreateItem({
-                spaceId,
-                parentId: parentId ?? null,
-                name: folderName,
-                path: folderName,
-                type: 'folder',
-            });
+        // Use inline input store - determine context based on focus
+        if (focusContext === 'sidebar') {
+            setSidebarInput({ spaceId, parentId: parentId ?? null, type: 'folder' });
+        } else {
+            setCardInput({ spaceId, parentId: parentId ?? null, type: 'folder' });
         }
     };
 
     const handleAddLink = async (spaceId: string, parentId?: string | null) => {
-        const linkUrl = prompt('Enter link URL:');
-        if (linkUrl) {
-            const url = linkUrl.startsWith('http') ? linkUrl : `https://${linkUrl}`;
-            let domain = linkUrl;
-            try {
-                domain = new URL(url).hostname.replace('www.', '');
-            } catch { /* use raw input */ }
-            await handleCreateItem({
-                spaceId,
-                parentId: parentId ?? null,
-                name: domain,
-                path: url,
-                type: 'link',
-            });
+        // Use inline input store - determine context based on focus
+        if (focusContext === 'sidebar') {
+            setSidebarInput({ spaceId, parentId: parentId ?? null, type: 'link' });
+        } else {
+            setCardInput({ spaceId, parentId: parentId ?? null, type: 'link' });
         }
     };
 
@@ -474,7 +537,7 @@ export function App(): React.ReactElement {
                 <Sidebar
                     spaces={spaces}
                     activeSpaceIndex={sidebarActiveSpaceIndex}
-                    selectedItemId={selectedId}
+                    selectedItemId={sidebarSelectedId}
                     mode={sidebarMode}
                     activeTab={activeTab}
                     userName="dishant ghai"
@@ -513,11 +576,13 @@ export function App(): React.ReactElement {
                     <SpacesScreen
                         spaces={spaces}
                         activeSpaceIndex={spacesScreenActiveSpaceIndex}
-                        selectedItemId={null}
+                        selectedItemId={cardSelectedId}
                         hasFocus={focusContext === 'spacesScreen'}
                         onSpaceSelect={setSpacesScreenActiveSpaceIndex}
                         onItemClick={(item: SpaceItem, spaceId: string) => {
                             console.log('SpacesScreen item clicked:', item.name, 'in space:', spaceId);
+                            setCardSelectedId(item.id);
+                            setFocusContext('spacesScreen');
                         }}
                         onItemContextMenu={handleCardContextMenu}
                         onAddSpace={() => {

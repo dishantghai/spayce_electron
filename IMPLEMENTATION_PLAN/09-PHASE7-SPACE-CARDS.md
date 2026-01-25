@@ -143,12 +143,164 @@ packages/react-ui/src/stores/inlineInputStore.ts
    )}
    ```
 
+4. **Add Folder Hover Actions in Card Tree Items**
+   
+   **Flutter Reference:**
+   
+   | Feature | Flutter File | Lines |
+   |---------|--------------|-------|
+   | Card Folder Hover Actions | `space_card_hifi_v2.dart` | 340-370 |
+   
+   **Flutter Code:**
+   ```dart
+   // Card folder hover actions (space_card_hifi_v2.dart:340-370)
+   // Similar to sidebar but uses cardInlineInputProvider
+   if (_isHovered && !isRenaming && isFolder)
+     Row(
+       children: [
+         IconButton(
+           icon: Icon(LucideIcons.folderPlus, size: 14),
+           onPressed: () {
+             ref.read(cardInlineInputProvider.notifier).state = 
+               CardInlineInputState(
+                 spaceId: widget.spaceId,
+                 parentId: widget.item.id,
+                 type: InlineInputType.folder,
+               );
+           },
+         ),
+         IconButton(
+           icon: Icon(LucideIcons.link, size: 14),
+           onPressed: () {
+             ref.read(cardInlineInputProvider.notifier).state = 
+               CardInlineInputState(
+                 spaceId: widget.spaceId,
+                 parentId: widget.item.id,
+                 type: InlineInputType.link,
+               );
+           },
+         ),
+       ],
+     )
+   ```
+   
+   **Electron Implementation:**
+   
+   Update `SpaceCard.tsx` to include hover actions for folder items:
+   
+   ```typescript
+   // In SpaceCardTreeItem component
+   const [isHovered, setIsHovered] = useState(false);
+   const { cardRenameItemId, setCardInput } = useInlineInputStore();
+   
+   const isFolder = item.type === 'folder' || item.type === 'localFolder';
+   const isRenaming = cardRenameItemId === item.id;
+   
+   const handleAddSubfolder = (e: React.MouseEvent) => {
+     e.stopPropagation();
+     setCardInput({
+       spaceId: spaceId,
+       parentId: item.id,
+       type: 'folder',
+     });
+   };
+   
+   const handleAddLink = (e: React.MouseEvent) => {
+     e.stopPropagation();
+     setCardInput({
+       spaceId: spaceId,
+       parentId: item.id,
+       type: 'link',
+     });
+   };
+   
+   return (
+     <div 
+       className={styles.treeItem}
+       onMouseEnter={() => setIsHovered(true)}
+       onMouseLeave={() => setIsHovered(false)}
+     >
+       {/* Item content */}
+       <div className={styles.itemContent}>
+         {/* Icon, name, etc. */}
+       </div>
+       
+       {/* Hover actions - only for folders, not during rename */}
+       {isHovered && !isRenaming && isFolder && (
+         <div className={styles.hoverActions}>
+           <button
+             className={styles.actionButton}
+             onClick={handleAddSubfolder}
+             title="Add subfolder"
+           >
+             <FolderPlus size={14} />
+           </button>
+           <button
+             className={styles.actionButton}
+             onClick={handleAddLink}
+             title="Add link"
+           >
+             <Link size={14} />
+           </button>
+           <button
+             className={styles.actionButton}
+             onClick={(e) => {
+               e.stopPropagation();
+               onContextMenu(item, e);
+             }}
+             title="More options"
+           >
+             <MoreVertical size={14} />
+           </button>
+         </div>
+       )}
+     </div>
+   );
+   ```
+   
+   **CSS (in SpaceCard.module.css):**
+   ```css
+   .hoverActions {
+     display: flex;
+     gap: 2px;
+     opacity: 0;
+     transition: opacity 150ms ease;
+   }
+   
+   .treeItem:hover .hoverActions {
+     opacity: 1;
+   }
+   
+   .actionButton {
+     padding: 4px;
+     background: transparent;
+     border: none;
+     border-radius: 4px;
+     color: var(--text-secondary);
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+   }
+   
+   .actionButton:hover {
+     background: var(--hover-bg);
+     color: var(--text-primary);
+   }
+   ```
+
 ### Manual Testing Checklist
 
 - [ ] Click folder+ in card header → inline input appears
 - [ ] Click link+ in card header → inline input with auto-paste
 - [ ] Create folder in card → appears in card tree
-- [ ] Hover folder in card → shows action buttons
+- [ ] Hover folder in card → shows 3 action buttons (folder+, link, more)
+- [ ] Hover link in card → shows 1 action button (more)
+- [ ] Click folder+ hover icon → inline folder input inside that folder
+- [ ] Click link hover icon → inline link input inside that folder
+- [ ] Click more icon → context menu opens
+- [ ] Hover actions fade in/out smoothly (150ms)
+- [ ] No hover icons during rename mode
 - [ ] Subfolder creation works in cards
 
 ---

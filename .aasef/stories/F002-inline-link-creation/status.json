@@ -1,21 +1,22 @@
 {
-    "id": "F002",
-    "title": "Create Link via Inline Input",
-    "type": "feature",
-    "priority": "P0",
-    "status": "pending",
-    "estimated_hours": 4,
-    "dependencies": [
-        "F001"
-    ],
-    "related_specs": [],
-    "related_epic": null,
-    "affected_files": [
-        "packages/react-ui/src/components/InlineInput.tsx",
-        "packages/react-ui/src/utils/url.ts",
-        "packages/desktop/src/main/ipc/handlers.ts",
-        "packages/desktop/src/preload/index.ts"
-    ],
-    "created_at": "2026-01-25T03:37:00Z",
-    "updated_at": "2026-01-25T03:37:00Z"
+  "id": "F002",
+  "title": "Create Link via Inline Input",
+  "type": "feature",
+  "priority": "P0",
+  "status": "completed",
+  "estimated_hours": 4,
+  "dependencies": [
+    "F001"
+  ],
+  "related_specs": [],
+  "related_epic": null,
+  "affected_files": [
+    "packages/react-ui/src/components/InlineInput.tsx",
+    "packages/react-ui/src/utils/url.ts",
+    "packages/desktop/src/main/ipc/handlers.ts",
+    "packages/desktop/src/preload/index.ts"
+  ],
+  "created_at": "2026-01-25T03:37:00Z",
+  "updated_at": "2026-01-25T03:37:00Z",
+  "completed": "2026-01-25T20:51:34.714660"
 }

@@ -77,6 +77,38 @@ export function registerIpcHandlers(): void {
         return facade.deleteItem(itemId);
     });
 
+    // Paste item handler - duplicates item recursively
+    ipcMain.handle('items:pasteItem', async (_, { sourceItem, targetId, position, action }) => {
+        try {
+            const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+            // Duplicate the item at target location
+            const newItem = await facade.duplicateItem(sourceItem, targetId, position);
+
+            // If it was a cut operation, delete the original
+            if (action === 'cut') {
+                await facade.deleteItem(sourceItem.id);
+            }
+
+            return { success: true, item: newItem };
+        } catch (error) {
+            console.error('Failed to paste item:', error);
+            return { success: false, error: error instanceof Error ? error.message : 'Failed to paste item' };
+        }
+    });
+
+    // Refresh local folder handler
+    ipcMain.handle('items:refreshLocalFolder', async (_, itemId: string) => {
+        try {
+            const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
+            // Refresh local folder contents - this would re-scan the folder
+            await facade.refreshLocalFolder(itemId);
+            return { success: true };
+        } catch (error) {
+            console.error('Failed to refresh local folder:', error);
+            return { success: false, error: error instanceof Error ? error.message : 'Failed to refresh folder' };
+        }
+    });
+
     ipcMain.handle('items:move', async (_, itemId: string, targetSpaceId: string, targetParentId?: string, toPosition?: number) => {
         const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
         return facade.moveItem({
