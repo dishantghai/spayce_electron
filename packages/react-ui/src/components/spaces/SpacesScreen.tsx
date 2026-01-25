@@ -3,6 +3,7 @@ import { Plus, Folder, FolderOpen } from 'lucide-react';
 import type { Space, SpaceItem } from '../../types';
 import { SpaceCard } from './SpaceCard';
 import { SpacesBottomBar } from './SpacesBottomBar';
+import { useInlineInputStore } from '../../stores/inlineInputStore';
 import styles from './SpacesScreen.module.css';
 
 export interface SpacesScreenProps {
@@ -20,6 +21,7 @@ export interface SpacesScreenProps {
     onAddLink?: (spaceId: string, parentId?: string | null) => void;
     onReorderSpaces?: (oldIndex: number, newIndex: number) => void;
     onFocusChange?: (hasFocus: boolean) => void;
+    onRenameItem?: (itemId: string, newName: string) => Promise<void>;
 }
 
 export function SpacesScreen({
@@ -37,11 +39,15 @@ export function SpacesScreen({
     onAddLink,
     onReorderSpaces,
     onFocusChange,
+    onRenameItem,
 }: SpacesScreenProps): React.ReactElement {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [keyboardSelectedItemId, setKeyboardSelectedItemId] = useState<string | null>(null);
     const [expandedIds, setExpandedIds] = useState<Map<string, Set<string>>>(new Map());
+
+    // Get rename state from store for card context
+    const { cardRenameItemId, setCardRenameItemId } = useInlineInputStore();
 
     // Get expanded IDs for a specific space
     const getExpandedIds = useCallback((spaceId: string): Set<string> => {
@@ -426,12 +432,20 @@ export function SpacesScreen({
                             selectedItemId={selectedItemId}
                             keyboardSelectedItemId={keyboardSelectedItemId}
                             expandedIds={getExpandedIds(space.id)}
+                            renameItemId={cardRenameItemId}
                             onSelect={() => handleCardSelect(index)}
                             onItemClick={handleItemClick}
                             onItemContextMenu={onItemContextMenu}
                             onExpandedChange={(ids) => handleExpandedChange(space.id, ids)}
                             onAddFolder={onAddFolder}
                             onAddLink={onAddLink}
+                            onRenameSubmit={async (itemId: string, newName: string) => {
+                                if (onRenameItem) {
+                                    await onRenameItem(itemId, newName);
+                                }
+                                setCardRenameItemId(null);
+                            }}
+                            onRenameCancel={() => setCardRenameItemId(null)}
                         />
                     </div>
                 ))}

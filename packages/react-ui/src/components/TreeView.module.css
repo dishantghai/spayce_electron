@@ -83,8 +83,8 @@
     top: 0;
     bottom: 0;
     width: 1px;
-    background-color: var(--folder-line-color, #6B7280);
-    opacity: 0.3;
+    background-color: var(--folder-line-color, #374151);
+    opacity: 0.5;
 }
 
 .childrenCollapsed {

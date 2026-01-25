@@ -84,9 +84,11 @@ export function TreeItem({
         (e: React.MouseEvent) => {
             e.preventDefault();
             if (isRenaming) return;
+            // Set focus on item when context menu opens
+            onItemClick?.(item);
             onItemContextMenu?.(item, e);
         },
-        [item, isRenaming, onItemContextMenu]
+        [item, isRenaming, onItemClick, onItemContextMenu]
     );
 
     const handleAddSubfolder = useCallback((e: React.MouseEvent) => {
@@ -204,7 +206,6 @@ export function TreeItem({
                 <div
                     className={`${styles.children} ${!isExpanded && !showInlineInputInside ? styles.childrenCollapsed : ''}`}
                     style={{
-                        '--folder-line-color': accentColor,
                         // Vertical line centered with folder icon (icon is 16px wide)
                         // Center is at paddingLeft + 8px
                         '--folder-line-left': `${itemPaddingLeft + 8}px`,

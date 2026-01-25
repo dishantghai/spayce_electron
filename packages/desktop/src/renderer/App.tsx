@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
     SpayceColors,
     SpaceItemType,
     ContextMenu,
     Sidebar,
     SpacesScreen,
+    useInlineInputStore,
 } from '@spayce/react-ui';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
@@ -142,8 +143,15 @@ export function App(): React.ReactElement {
         item: SpaceItem;
         spaceId: string;
         position: { x: number; y: number };
+        context: 'sidebar' | 'card';
     } | null>(null);
     const [hasClipboard] = useState(false);
+
+    // Inline input store for rename functionality
+    const {
+        setSidebarRenameItemId,
+        setCardRenameItemId,
+    } = useInlineInputStore();
 
     // Handle sidebar visibility changes (Rule 3 & 4)
     const handleSidebarVisibilityChange = (visible: boolean) => {
@@ -165,11 +173,23 @@ export function App(): React.ReactElement {
         setFocusContext('sidebar');
     };
 
-    const handleContextMenu = (item: SpaceItem, spaceId: string, event: React.MouseEvent) => {
+    // Sidebar context menu handler
+    const handleSidebarContextMenu = (item: SpaceItem, spaceId: string, event: React.MouseEvent) => {
         setContextMenu({
             item,
             spaceId,
             position: { x: event.clientX, y: event.clientY },
+            context: 'sidebar',
+        });
+    };
+
+    // SpaceCard context menu handler
+    const handleCardContextMenu = (item: SpaceItem, spaceId: string, event: React.MouseEvent) => {
+        setContextMenu({
+            item,
+            spaceId,
+            position: { x: event.clientX, y: event.clientY },
+            context: 'card',
         });
     };
 
@@ -211,9 +231,11 @@ export function App(): React.ReactElement {
                 break;
             }
             case 'rename': {
-                const newName = prompt('Enter new name:', item.name);
-                if (newName && newName !== item.name) {
-                    await handleRenameItem(item.id, newName);
+                // Use inline rename instead of prompt dialog
+                if (contextMenu.context === 'sidebar') {
+                    setSidebarRenameItemId(item.id);
+                } else {
+                    setCardRenameItemId(item.id);
                 }
                 break;
             }
@@ -409,7 +431,7 @@ export function App(): React.ReactElement {
                     onModeToggle={handleModeToggle}
                     onVisibilityChange={handleSidebarVisibilityChange}
                     onItemClick={handleItemClick}
-                    onItemContextMenu={handleContextMenu}
+                    onItemContextMenu={handleSidebarContextMenu}
                     onCreateSpace={handleCreateSpace}
                     onAddFolder={handleAddFolder}
                     onAddLink={handleAddLink}
@@ -443,12 +465,13 @@ export function App(): React.ReactElement {
                         onItemClick={(item: SpaceItem, spaceId: string) => {
                             console.log('SpacesScreen item clicked:', item.name, 'in space:', spaceId);
                         }}
-                        onItemContextMenu={handleContextMenu}
+                        onItemContextMenu={handleCardContextMenu}
                         onAddSpace={() => {
                             console.log('Add space clicked from SpacesScreen');
                         }}
                         onAddFolder={handleAddFolder}
                         onAddLink={handleAddLink}
+                        onRenameItem={handleRenameItem}
                         onReorderSpaces={handleReorderSpaces}
                         onFocusChange={(hasFocus: boolean) => {
                             if (hasFocus) setFocusContext('spacesScreen');

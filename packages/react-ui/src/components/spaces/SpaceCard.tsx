@@ -18,12 +18,15 @@ export interface SpaceCardProps {
     selectedItemId?: string | null;
     keyboardSelectedItemId?: string | null;
     expandedIds?: Set<string>;
+    renameItemId?: string | null;
     onSelect?: () => void;
     onItemClick?: (item: SpaceItem, spaceId: string) => void;
     onItemContextMenu?: (item: SpaceItem, spaceId: string, event: React.MouseEvent) => void;
     onExpandedChange?: (expandedIds: Set<string>) => void;
     onAddFolder?: (spaceId: string, parentId?: string | null) => void;
     onAddLink?: (spaceId: string, parentId?: string | null) => void;
+    onRenameSubmit?: (itemId: string, newName: string) => void;
+    onRenameCancel?: () => void;
 }
 
 export function SpaceCard({
@@ -33,12 +36,15 @@ export function SpaceCard({
     selectedItemId = null,
     keyboardSelectedItemId = null,
     expandedIds: controlledExpandedIds,
+    renameItemId = null,
     onSelect,
     onItemClick,
     onItemContextMenu,
     onExpandedChange,
     onAddFolder,
     onAddLink,
+    onRenameSubmit,
+    onRenameCancel,
 }: SpaceCardProps): React.ReactElement {
     const [internalExpandedIds, setInternalExpandedIds] = useState<Set<string>>(() => new Set());
     const expandedIds = controlledExpandedIds ?? internalExpandedIds;
@@ -97,11 +103,14 @@ export function SpaceCard({
                         activeId={keyboardSelectedItemId}
                         accentColor={space.accentColor}
                         expandedIds={expandedIds}
+                        renameItemId={renameItemId}
                         onItemClick={handleItemClick}
                         onItemContextMenu={handleItemContextMenu}
                         onExpandedChange={handleExpandedChange}
                         onAddSubfolder={handleAddSubfolder}
                         onAddLink={handleAddLink}
+                        onRenameSubmit={onRenameSubmit}
+                        onRenameCancel={onRenameCancel}
                     />
                 )}
             </div>

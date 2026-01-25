@@ -199,7 +199,36 @@ describe('TreeView', () => {
                 />
             );
 
-            fireEvent.contextMenu(screen.getByText('Test Link'));
+            const treeItem = screen.getByRole('treeitem');
+            fireEvent.contextMenu(treeItem);
+
+            expect(onItemContextMenu).toHaveBeenCalledWith(
+                expect.objectContaining({ id: 'link-1' }),
+                expect.any(Object)
+            );
+        });
+
+        it('calls onItemClick when context menu is opened to set focus', () => {
+            const onItemClick = vi.fn();
+            const onItemContextMenu = vi.fn();
+            const link = createMockLink('link-1', 'Test Link');
+
+            render(
+                <TreeView
+                    {...defaultProps}
+                    items={[link]}
+                    onItemClick={onItemClick}
+                    onItemContextMenu={onItemContextMenu}
+                />
+            );
+
+            const treeItem = screen.getByRole('treeitem');
+            fireEvent.contextMenu(treeItem);
+
+            // Should call onItemClick to set focus before opening context menu
+            expect(onItemClick).toHaveBeenCalledWith(
+                expect.objectContaining({ id: 'link-1' })
+            );
             expect(onItemContextMenu).toHaveBeenCalled();
         });
     });
