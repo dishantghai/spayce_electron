@@ -9,7 +9,7 @@ import { CreateSpaceView } from './CreateSpaceView';
 import type { Space, SpaceItem } from '../types';
 import { SpaceItemType } from '../types';
 import { useInlineInputStore } from '../stores/inlineInputStore';
-import { normalizeUrl, extractDomain, getFaviconUrl } from '../utils/url';
+import { normalizeUrl } from '../utils/url';
 import styles from './Sidebar.module.css';
 
 // Helper to check if item is a folder type
@@ -86,8 +86,20 @@ export function Sidebar({
         setSidebarRenameItemId,
     } = useInlineInputStore();
 
-    // Initialize expandedIds from space data
-    const getInitialExpandedIds = useCallback((space: Space): Set<string> => {
+    // Track expandedIds per space to preserve state across refetches
+    const [expandedIdsMap, setExpandedIdsMap] = useState<Map<string, Set<string>>>(new Map());
+    const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+
+    // Get expandedIds for current space, initializing from space data if needed
+    const expandedIds = React.useMemo(() => {
+        if (!activeSpace) return new Set<string>();
+
+        // If we already have expandedIds for this space, use them
+        if (expandedIdsMap.has(activeSpace.id)) {
+            return expandedIdsMap.get(activeSpace.id)!;
+        }
+
+        // Initialize from space data (isExpanded flags)
         const ids = new Set<string>();
         const collectExpanded = (items: SpaceItem[]) => {
             for (const item of items) {
@@ -99,16 +111,23 @@ export function Sidebar({
                 }
             }
         };
-        collectExpanded(space.rootItems);
+        collectExpanded(activeSpace.rootItems);
         return ids;
-    }, []);
+    }, [activeSpace, expandedIdsMap]);
 
-    const [expandedIds, setExpandedIds] = useState<Set<string>>(() =>
-        activeSpace ? getInitialExpandedIds(activeSpace) : new Set()
-    );
-    const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+    // Update expandedIds for current space
+    const setExpandedIds = useCallback((updater: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+        if (!activeSpace) return;
+        setExpandedIdsMap(prev => {
+            const newMap = new Map(prev);
+            const currentIds = prev.get(activeSpace.id) || new Set<string>();
+            const newIds = typeof updater === 'function' ? updater(currentIds) : updater;
+            newMap.set(activeSpace.id, newIds);
+            return newMap;
+        });
+    }, [activeSpace]);
 
-    // Clear focus when switching spaces (don't reset expandedIds on every render)
+    // Clear focus when switching spaces
     useEffect(() => {
         setFocusedItemId(null);
     }, [activeSpaceIndex]);
@@ -449,34 +468,14 @@ export function Sidebar({
         } else {
             const url = normalizeUrl(value);
 
-            // Fetch page metadata (title + favicon)
-            let name = url;
-            let faviconUrl = getFaviconUrl(url);
-
-            try {
-                const metadata = await (window as any).electronAPI?.metadata?.extract(url);
-                if (metadata?.success && metadata?.data) {
-                    if (metadata.data.title) {
-                        name = metadata.data.title;
-                    }
-                    // Use extracted favicon or fallback to current favicon (Google service)
-                    if (metadata.data.faviconUrl) {
-                        faviconUrl = metadata.data.faviconUrl;
-                    }
-                    // If no favicon from metadata, keep the Google favicon fallback
-                }
-            } catch (err) {
-                console.error('Failed to extract metadata:', err);
-                // Use URL as fallback name, keep Google favicon
-            }
-
+            // Create link immediately with URL as name (non-blocking)
+            // Metadata (title + favicon) will be fetched asynchronously by App.tsx
             await onCreateItem({
                 spaceId: activeSpace.id,
                 parentId,
-                name,
+                name: url,
                 path: url,
                 type: 'link',
-                faviconUrl,
             });
         }
         clearSidebarInput();
