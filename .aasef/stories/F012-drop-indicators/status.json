@@ -1,0 +1,23 @@
+{
+  "id": "F012",
+  "title": "Drop Indicators",
+  "type": "feature",
+  "priority": "P0",
+  "status": "completed",
+  "estimated_hours": 4,
+  "related_specs": [],
+  "related_epic": null,
+  "dependencies": [
+    "F011"
+  ],
+  "affected_files": [
+    "packages/react-ui/src/components/drag-drop/DropIndicatorLine.tsx",
+    "packages/react-ui/src/components/drag-drop/DropIndicatorLine.module.css",
+    "packages/react-ui/src/components/TreeView.tsx",
+    "packages/react-ui/src/components/TreeItem.tsx",
+    "packages/react-ui/src/stores/dragDropUiStore.ts"
+  ],
+  "created_at": "2026-01-27T00:15:00Z",
+  "updated_at": "2026-01-27T00:15:00Z",
+  "completed": "2026-01-27T01:03:48.353243"
+}

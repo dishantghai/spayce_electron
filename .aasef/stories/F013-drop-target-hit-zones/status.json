@@ -1,0 +1,23 @@
+{
+  "id": "F013",
+  "title": "Drop Target Hit Zones",
+  "type": "feature",
+  "priority": "P0",
+  "status": "completed",
+  "estimated_hours": 6,
+  "related_specs": [],
+  "related_epic": null,
+  "dependencies": [
+    "F011",
+    "F012"
+  ],
+  "affected_files": [
+    "packages/react-ui/src/components/drag-drop/DroppableTreeItem.tsx",
+    "packages/react-ui/src/components/TreeItem.tsx",
+    "packages/react-ui/src/components/TreeView.tsx",
+    "packages/react-ui/src/stores/dragDropUiStore.ts"
+  ],
+  "created_at": "2026-01-27T00:15:00Z",
+  "updated_at": "2026-01-27T00:15:00Z",
+  "completed": "2026-01-27T01:03:56.282387"
+}

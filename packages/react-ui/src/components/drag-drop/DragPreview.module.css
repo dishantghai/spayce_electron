@@ -1,0 +1,88 @@
+.rectanglePreview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 280px;
+    min-width: 150px;
+    padding: 8px 12px;
+    background-color: rgba(26, 22, 40, 0.95);
+    /* surfaceDark with opacity */
+    border-radius: 8px;
+    border: 1.5px solid;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+}
+
+.icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #E5E7EB;
+    /* textPrimary */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.squarePreview {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 2px solid;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+.squareFavicon {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+}
+
+.multiPreviewContainer {
+    position: relative;
+    width: 280px;
+    height: 60px;
+}
+
+.stackedCard {
+    position: absolute;
+    width: 260px;
+    height: 36px;
+    background-color: rgba(26, 22, 40, 0.5);
+    /* surfaceDark */
+    border-radius: 8px;
+    border: 1px solid;
+    pointer-events: none;
+}
+
+.mainPreview {
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.countBadge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+}

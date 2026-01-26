@@ -3,6 +3,7 @@ import type { SpaceItem, InlineInputState } from '../types';
 import { SpayceColors } from '../theme';
 import { TreeItem } from './TreeItem';
 import { InlineInput } from './InlineInput';
+import type { DragSource } from '../stores/dragDropUiStore';
 import styles from './TreeView.module.css';
 
 export interface TreeViewProps {
@@ -42,6 +43,8 @@ export interface TreeViewProps {
     onRenameSubmit?: (itemId: string, newName: string) => void;
     /** Called when rename is cancelled */
     onRenameCancel?: () => void;
+    /** Context for drag-drop operations - 'sidebar' or 'spaceCard' */
+    dragDropContext?: DragSource;
 }
 
 /**
@@ -77,6 +80,7 @@ export function TreeView({
     onInlineInputCancel,
     onRenameSubmit,
     onRenameCancel,
+    dragDropContext = 'sidebar',
 }: TreeViewProps): React.ReactElement {
     // Internal expanded state (uncontrolled mode)
     const [internalExpandedIds, setInternalExpandedIds] = useState<Set<string>>(
@@ -155,6 +159,7 @@ export function TreeView({
                     spaceId={spaceId}
                     inlineInput={inlineInput}
                     renameItemId={renameItemId}
+                    dragDropContext={dragDropContext}
                     onItemClick={onItemClick}
                     onItemContextMenu={onItemContextMenu}
                     onItemExpand={handleItemExpand}

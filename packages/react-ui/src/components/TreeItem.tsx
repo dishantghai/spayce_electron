@@ -6,6 +6,8 @@ import { SpayceColors } from '../theme';
 import { TreeItemIcon } from './TreeItemIcon';
 import { InlineInput } from './InlineInput';
 import { InlineRenameInput } from './InlineRenameInput';
+import { DraggableTreeItem, DroppableTreeItem, FlashItem } from './drag-drop';
+import type { DragSource } from '../stores/dragDropUiStore';
 import styles from './TreeView.module.css';
 
 interface TreeItemProps {
@@ -18,6 +20,8 @@ interface TreeItemProps {
     spaceId: string;
     inlineInput?: InlineInputState | null;
     renameItemId?: string | null;
+    /** Context for drag-drop operations - 'sidebar' or 'spaceCard' */
+    dragDropContext?: DragSource;
     onItemClick?: (item: SpaceItem) => void;
     onItemContextMenu?: (item: SpaceItem, event: React.MouseEvent) => void;
     onItemExpand?: (item: SpaceItem, expanded: boolean) => void;
@@ -43,6 +47,7 @@ export function TreeItem({
     spaceId,
     inlineInput,
     renameItemId,
+    dragDropContext = 'sidebar',
     onItemClick,
     onItemContextMenu,
     onItemExpand,
@@ -131,80 +136,108 @@ export function TreeItem({
         .filter(Boolean)
         .join(' ');
 
+    // Placeholder values for drag-drop (will be properly passed from TreeView)
+    const ancestorIds: string[] = [];
+
     return (
         <>
-            <div
-                className={rowClasses}
-                style={{
-                    paddingLeft: `${itemPaddingLeft}px`,
-                    '--tree-accent-color': accentColor,
-                    '--child-highlight-offset': `${childHighlightOffset}px`,
-                } as React.CSSProperties}
-                onClick={handleClick}
-                onContextMenu={handleContextMenu}
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-                role="treeitem"
-                aria-expanded={isFolder ? isExpanded : undefined}
-                aria-selected={isSelected}
-            >
-                {/* Item icon */}
-                <span className={styles.itemIcon}>
-                    <TreeItemIcon
-                        type={item.type}
-                        isExpanded={isExpanded}
-                        extension={extension}
-                        accentColor={accentColor}
-                        faviconUrl={item.faviconUrl}
-                        itemUrl={item.type === 'link' ? item.path : undefined}
-                    />
-                </span>
-
-                {/* Item name or rename input */}
-                {isRenaming ? (
-                    <InlineRenameInput
+            <FlashItem itemId={item.id} accentColor={accentColor}>
+                <DroppableTreeItem
+                    item={item}
+                    spaceId={spaceId}
+                    parentId={null}
+                    index={0}
+                    level={depth}
+                    accentColor={accentColor}
+                    ancestorIds={ancestorIds}
+                    dropContext={dragDropContext}
+                >
+                    <DraggableTreeItem
                         item={item}
-                        onSave={(newName) => onRenameSubmit?.(item.id, newName)}
-                        onCancel={() => onRenameCancel?.()}
-                    />
-                ) : (
-                    <span className={styles.itemText}>{item.name}</span>
-                )}
-
-                {/* Context icons on hover - for both folders and links */}
-                {isHovered && !isRenaming && (
-                    <div className={styles.contextIcons}>
-                        {isFolder && (
-                            <>
-                                <button
-                                    className={styles.contextIcon}
-                                    onClick={handleAddSubfolder}
-                                    title="Add Subfolder"
-                                >
-                                    <FolderPlus size={14} />
-                                </button>
-                                <button
-                                    className={styles.contextIcon}
-                                    onClick={handleAddLink}
-                                    title="Add Link"
-                                >
-                                    <Link size={14} />
-                                </button>
-                            </>
-                        )}
-                        <button
-                            className={styles.contextIcon}
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleContextMenu(e as any, false);
-                            }}
-                            title="More options"
+                        spaceId={spaceId}
+                        parentId={null}
+                        index={0}
+                        level={depth}
+                        accentColor={accentColor}
+                        ancestorIds={ancestorIds}
+                        selectedItems={[]}
+                        dragSource={dragDropContext}
+                    >
+                        <div
+                            className={rowClasses}
+                            style={{
+                                paddingLeft: `${itemPaddingLeft}px`,
+                                '--tree-accent-color': accentColor,
+                                '--child-highlight-offset': `${childHighlightOffset}px`,
+                            } as React.CSSProperties}
+                            onClick={handleClick}
+                            onContextMenu={handleContextMenu}
+                            onMouseEnter={() => setIsHovered(true)}
+                            onMouseLeave={() => setIsHovered(false)}
+                            role="treeitem"
+                            aria-expanded={isFolder ? isExpanded : undefined}
+                            aria-selected={isSelected}
                         >
-                            <MoreVertical size={14} />
-                        </button>
-                    </div>
-                )}
-            </div>
+                            {/* Item icon */}
+                            <span className={styles.itemIcon}>
+                                <TreeItemIcon
+                                    type={item.type}
+                                    isExpanded={isExpanded}
+                                    extension={extension}
+                                    accentColor={accentColor}
+                                    faviconUrl={item.faviconUrl}
+                                    itemUrl={item.type === 'link' ? item.path : undefined}
+                                />
+                            </span>
+
+                            {/* Item name or rename input */}
+                            {isRenaming ? (
+                                <InlineRenameInput
+                                    item={item}
+                                    onSave={(newName) => onRenameSubmit?.(item.id, newName)}
+                                    onCancel={() => onRenameCancel?.()}
+                                />
+                            ) : (
+                                <span className={styles.itemText}>{item.name}</span>
+                            )}
+
+                            {/* Context icons on hover - for both folders and links */}
+                            {isHovered && !isRenaming && (
+                                <div className={styles.contextIcons}>
+                                    {isFolder && (
+                                        <>
+                                            <button
+                                                className={styles.contextIcon}
+                                                onClick={handleAddSubfolder}
+                                                title="Add Subfolder"
+                                            >
+                                                <FolderPlus size={14} />
+                                            </button>
+                                            <button
+                                                className={styles.contextIcon}
+                                                onClick={handleAddLink}
+                                                title="Add Link"
+                                            >
+                                                <Link size={14} />
+                                            </button>
+                                        </>
+                                    )}
+                                    <button
+                                        className={styles.contextIcon}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleContextMenu(e as any, false);
+                                        }}
+                                        title="More options"
+                                    >
+                                        <MoreVertical size={14} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </DraggableTreeItem>
+                </DroppableTreeItem>
+            </FlashItem>
 
             {/* Children (recursive) with vertical line */}
             {isFolder && (hasChildren || showInlineInputInside) && (
@@ -242,6 +275,7 @@ export function TreeItem({
                                 spaceId={spaceId}
                                 inlineInput={inlineInput}
                                 renameItemId={renameItemId}
+                                dragDropContext={dragDropContext}
                                 onItemClick={onItemClick}
                                 onItemContextMenu={onItemContextMenu}
                                 onItemExpand={onItemExpand}

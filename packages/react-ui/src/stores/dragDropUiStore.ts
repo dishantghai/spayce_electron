@@ -52,11 +52,14 @@ interface DragDropUiState {
 
     startDrag: (data: DragData) => void;
     setDropIndicator: (indicator: DropIndicatorState | null) => void;
+    clearDropIndicator: () => void;
     endDrag: () => void;
     setDragExpandedFolder: (id: string | null) => void;
+    clearDragExpandedFolder: () => void;
     setFlashItem: (id: string | null) => void;
     setOverPinsGrid: (isOver: boolean, dropIndex?: number | null) => void;
     validateCircularReference: (draggedItemId: string, targetFolderId: string | null, ancestorIds: string[]) => ValidationResult;
+    validateDrop: (dragData: DragData, targetId: string, targetAncestorIds: string[]) => boolean;
     setValidationError: (error: DragDropValidationError | null) => void;
     clearValidationError: () => void;
 }
@@ -112,6 +115,8 @@ export const useDragDropUiStore = create<DragDropUiState>((set, get) => ({
         set({ dropIndicator: indicator });
     },
 
+    clearDropIndicator: () => set({ dropIndicator: null }),
+
     endDrag: () => set({
         isDragging: false,
         dragData: null,
@@ -121,6 +126,8 @@ export const useDragDropUiStore = create<DragDropUiState>((set, get) => ({
     }),
 
     setDragExpandedFolder: (id) => set({ dragExpandedFolderId: id }),
+
+    clearDragExpandedFolder: () => set({ dragExpandedFolderId: null }),
 
     setFlashItem: (id) => set({ flashItemId: id }),
 
@@ -144,4 +151,17 @@ export const useDragDropUiStore = create<DragDropUiState>((set, get) => ({
     setValidationError: (error) => set({ validationError: error }),
 
     clearValidationError: () => set({ validationError: null }),
+
+    validateDrop: (dragData, targetId, targetAncestorIds) => {
+        // Cannot drop on self
+        if (dragData.item.id === targetId) return false;
+
+        // Cannot drop on any of the dragged items
+        if (dragData.items.some(item => item.id === targetId)) return false;
+
+        // Cannot drop folder into its own descendants (circular reference)
+        if (targetAncestorIds.includes(dragData.item.id)) return false;
+
+        return true;
+    },
 }));

@@ -1,0 +1,18 @@
+@keyframes dropFlash {
+    0% {
+        background-color: transparent;
+    }
+
+    30% {
+        background-color: var(--flash-color, rgba(109, 90, 230, 0.3));
+    }
+
+    100% {
+        background-color: transparent;
+    }
+}
+
+.flash {
+    animation: dropFlash 700ms ease-out;
+    border-radius: 8px;
+}

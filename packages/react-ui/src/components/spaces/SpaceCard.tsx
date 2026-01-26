@@ -104,6 +104,7 @@ export function SpaceCard({
                         accentColor={space.accentColor}
                         expandedIds={expandedIds}
                         renameItemId={renameItemId}
+                        dragDropContext="spaceCard"
                         onItemClick={handleItemClick}
                         onItemContextMenu={handleItemContextMenu}
                         onExpandedChange={handleExpandedChange}

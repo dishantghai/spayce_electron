@@ -1,0 +1,35 @@
+.container {
+    height: 0;
+    opacity: 0;
+    overflow: hidden;
+    padding-left: var(--indicator-indent, 0);
+    padding-right: 8px;
+    pointer-events: none;
+}
+
+.container.visible {
+    height: 8px;
+    opacity: 1;
+}
+
+.content {
+    display: flex;
+    align-items: center;
+    height: 8px;
+    padding: 3px 0;
+}
+
+.terminal {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--indicator-color, #6D5AE6);
+    flex-shrink: 0;
+}
+
+.line {
+    flex: 1;
+    height: 2px;
+    background-color: var(--indicator-color, #6D5AE6);
+    border-radius: 1px;
+}
