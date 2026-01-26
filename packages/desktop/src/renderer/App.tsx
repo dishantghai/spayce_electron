@@ -513,20 +513,29 @@ export function App(): React.ReactElement {
                 (window as any).electronAPI?.metadata?.extract(input.path)
                     .then(async (metadata: any) => {
                         if (metadata?.success && metadata?.data) {
+                            let needsRefetch = false;
+
                             // Update title if extracted
                             if (metadata.data.title && metadata.data.title !== input.name) {
                                 await (window as any).electronAPI?.items?.rename(itemId, metadata.data.title);
+                                needsRefetch = true;
                             }
                             // Update favicon if we got base64 data
                             if (metadata.data.faviconData) {
-                                await (window as any).electronAPI?.items?.update(itemId, {
+                                await (window as any).electronAPI?.items?.updateMetadata(itemId, {
                                     faviconUrl: metadata.data.faviconData,
                                 });
+                                needsRefetch = true;
                             }
-                            await refetch();
+
+                            // Only refetch if we actually updated something
+                            if (needsRefetch) {
+                                await refetch();
+                            }
                         }
                     })
-                    .catch(() => {
+                    .catch((err: unknown) => {
+                        console.error('Failed to fetch metadata for link:', err);
                         // Silently fail - item already created with URL as name
                     });
             }
