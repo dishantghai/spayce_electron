@@ -506,6 +506,30 @@ export function App(): React.ReactElement {
 
         if (result?.success) {
             await refetch();
+
+            // For links, fetch metadata asynchronously and update title + favicon
+            if (input.type === 'link' && result.data?.id) {
+                const itemId = result.data.id;
+                (window as any).electronAPI?.metadata?.extract(input.path)
+                    .then(async (metadata: any) => {
+                        if (metadata?.success && metadata?.data) {
+                            // Update title if extracted
+                            if (metadata.data.title && metadata.data.title !== input.name) {
+                                await (window as any).electronAPI?.items?.rename(itemId, metadata.data.title);
+                            }
+                            // Update favicon if we got base64 data
+                            if (metadata.data.faviconData) {
+                                await (window as any).electronAPI?.items?.update(itemId, {
+                                    faviconUrl: metadata.data.faviconData,
+                                });
+                            }
+                            await refetch();
+                        }
+                    })
+                    .catch(() => {
+                        // Silently fail - item already created with URL as name
+                    });
+            }
         }
     };
 
