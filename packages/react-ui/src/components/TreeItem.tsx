@@ -155,7 +155,8 @@ export function TreeItem({
                         isExpanded={isExpanded}
                         extension={extension}
                         accentColor={accentColor}
-                        faviconUrl={item.type === 'link' ? item.faviconUrl : item.faviconUrl}
+                        faviconUrl={item.faviconUrl}
+                        itemUrl={item.type === 'link' ? item.path : undefined}
                     />
                 </span>
 

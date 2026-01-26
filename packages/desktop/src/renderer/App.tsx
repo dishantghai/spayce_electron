@@ -7,7 +7,7 @@ import {
     SpacesScreen,
 } from '@spayce/react-ui';
 import { useInlineInputStore, useClipboardStore } from '@spayce/react-ui/stores';
-import { collectLinksRecursive, hasLinksRecursive, extractUrlsFromText, extractDomain, getGoogleFaviconUrl } from '@spayce/react-ui/utils';
+import { collectLinksRecursive, hasLinksRecursive, extractUrlsFromText } from '@spayce/react-ui/utils';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
@@ -353,48 +353,18 @@ export function App(): React.ReactElement {
                                     type: SpaceItemType.link,
                                 });
 
-                                // Fetch metadata asynchronously in background
+                                // Fetch title asynchronously in background
+                                // Favicon is loaded lazily by useFavicon hook on display
                                 if (result.success && result.data) {
                                     const itemId = result.data.id;
 
                                     window.electronAPI.metadata.extract(url).then(async (metadata) => {
-                                        if (metadata?.success && metadata?.data) {
-                                            // Update title if available
-                                            if (metadata.data.title) {
-                                                await window.electronAPI.items.rename(itemId, metadata.data.title);
-                                            }
-
-                                            // Update favicon - use extracted favicon or fallback to Google
-                                            const faviconUrl = metadata.data.faviconUrl || getGoogleFaviconUrl(url);
-
-                                            if (faviconUrl) {
-                                                await window.electronAPI.items.updateMetadata(itemId, {
-                                                    faviconUrl,
-                                                });
-                                            }
-
-                                            await refetch();
-                                        } else {
-                                            // Metadata fetch failed - use Google favicon service as fallback
-                                            const googleFaviconUrl = getGoogleFaviconUrl(url);
-
-                                            if (googleFaviconUrl) {
-                                                await window.electronAPI.items.updateMetadata(itemId, {
-                                                    faviconUrl: googleFaviconUrl,
-                                                });
-                                                await refetch();
-                                            }
-                                        }
-                                    }).catch(async () => {
-                                        // Network error - use Google favicon service as fallback
-                                        const googleFaviconUrl = getGoogleFaviconUrl(url);
-
-                                        if (googleFaviconUrl) {
-                                            await window.electronAPI.items.updateMetadata(itemId, {
-                                                faviconUrl: googleFaviconUrl,
-                                            });
+                                        if (metadata?.success && metadata?.data?.title) {
+                                            await window.electronAPI.items.rename(itemId, metadata.data.title);
                                             await refetch();
                                         }
+                                    }).catch(() => {
+                                        // Title fetch failed - keep URL as name
                                     });
                                 }
                             }

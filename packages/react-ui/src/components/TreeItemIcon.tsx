@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { SpaceItemType } from '../types';
 import { SpayceColors } from '../theme';
+import { useFavicon } from '../hooks/useFavicon';
 
 interface TreeItemIconProps {
     type: SpaceItemType;
@@ -20,8 +21,12 @@ interface TreeItemIconProps {
     size?: number;
     /** Accent color from space theme - used for open folders */
     accentColor?: string;
-    /** Favicon URL for link items */
+    /** Favicon URL stored in DB for link items */
     faviconUrl?: string | null;
+    /** URL of the link item (for lazy favicon loading) */
+    itemUrl?: string;
+    /** Callback when favicon is resolved (for async DB update) */
+    onFaviconResolved?: (faviconUrl: string) => void;
 }
 
 // Icon colors from design tokens
@@ -43,6 +48,8 @@ export function TreeItemIcon({
     size = 16,
     accentColor,
     faviconUrl,
+    itemUrl,
+    onFaviconResolved,
 }: TreeItemIconProps): React.ReactElement {
     const iconProps = { size, strokeWidth: 2 };
 
@@ -62,7 +69,14 @@ export function TreeItemIcon({
             );
 
         case SpaceItemType.link:
-            return <LinkIconWithFavicon faviconUrl={faviconUrl} size={size} />;
+            return (
+                <LinkIconWithFavicon
+                    storedFaviconUrl={faviconUrl}
+                    itemUrl={itemUrl}
+                    size={size}
+                    onFaviconResolved={onFaviconResolved}
+                />
+            );
 
         case SpaceItemType.file:
         case SpaceItemType.localFile:
@@ -73,15 +87,34 @@ export function TreeItemIcon({
     }
 }
 
-/**
- * Link icon with favicon fallback chain:
- * 1. Try provided faviconUrl
- * 2. On error, use Link icon (no more attempts)
- */
-function LinkIconWithFavicon({ faviconUrl, size }: { faviconUrl?: string | null; size: number }): React.ReactElement {
-    const [showIcon, setShowIcon] = React.useState(!faviconUrl);
+interface LinkIconProps {
+    storedFaviconUrl?: string | null;
+    itemUrl?: string;
+    size: number;
+    onFaviconResolved?: (url: string) => void;
+}
 
-    if (!faviconUrl || showIcon) {
+/**
+ * Link icon with lazy favicon loading and caching:
+ * 1. Check memory cache
+ * 2. Use stored favicon from DB
+ * 3. Fall back to Google favicon service
+ */
+function LinkIconWithFavicon({
+    storedFaviconUrl,
+    itemUrl,
+    size,
+    onFaviconResolved,
+}: LinkIconProps): React.ReactElement {
+    const [showFallback, setShowFallback] = React.useState(false);
+
+    const { faviconUrl, isLoading } = useFavicon(
+        itemUrl || '',
+        storedFaviconUrl || null,
+        onFaviconResolved
+    );
+
+    if (isLoading || !faviconUrl || showFallback) {
         return <Link size={size} strokeWidth={2} color={ICON_COLORS.link} />;
     }
 
@@ -96,7 +129,7 @@ function LinkIconWithFavicon({ faviconUrl, size }: { faviconUrl?: string | null;
                 borderRadius: '2px',
             }}
             onError={() => {
-                setShowIcon(true);
+                setShowFallback(true);
             }}
         />
     );

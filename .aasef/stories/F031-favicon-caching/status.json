@@ -1,0 +1,16 @@
+{
+    "id": "F031",
+    "status": "in_progress",
+    "priority": "P2",
+    "related_specs": [
+        "016"
+    ],
+    "affected_files": [
+        "packages/react-ui/src/services/FaviconCache.ts",
+        "packages/react-ui/src/hooks/useFavicon.ts",
+        "packages/react-ui/src/components/TreeItemIcon.tsx",
+        "packages/desktop/src/renderer/App.tsx"
+    ],
+    "created_at": "2026-01-26",
+    "updated_at": "2026-01-26"
+}
