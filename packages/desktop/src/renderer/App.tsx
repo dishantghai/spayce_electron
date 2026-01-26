@@ -11,6 +11,7 @@ import { collectLinksRecursive, hasLinksRecursive } from '@spayce/react-ui/utils
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
+import { itemsApi } from './ipc/spacesApi';
 
 // Loading skeleton for spaces
 function SpacesLoadingSkeleton(): React.ReactElement {
@@ -74,7 +75,34 @@ function SpacesError({ error, onRetry }: { error: Error; onRetry: () => void }):
     );
 }
 
+// Helper to recursively paste items
+async function pasteItemRecursively(
+    spaceId: string,
+    parentId: string | null,
+    sourceItem: SpaceItem
+): Promise<void> {
+    // Create new item with new ID
+    const result = await itemsApi.create({
+        spaceId,
+        parentId: parentId || undefined,
+        name: sourceItem.name,
+        path: sourceItem.path,
+        type: sourceItem.type,
+    });
 
+    if (!result.success || !result.data) {
+        return;
+    }
+
+    const newItemId = result.data.id;
+
+    // Recursively paste children
+    if (sourceItem.children && sourceItem.children.length > 0) {
+        for (const child of sourceItem.children) {
+            await pasteItemRecursively(spaceId, newItemId, child);
+        }
+    }
+}
 
 // Helper to generate context menu items based on item type
 function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMenuItem[] {
@@ -271,7 +299,6 @@ export function App(): React.ReactElement {
             case 'copy_folder': {
                 // Copy folder to internal clipboard
                 clipboardStore.copyItems([item], spaceId);
-                console.log('Folder copied to clipboard');
                 break;
             }
             case 'copy_links': {
@@ -296,9 +323,18 @@ export function App(): React.ReactElement {
                 // Paste items from clipboard into folder
                 if (clipboardStore.hasItems()) {
                     try {
-                        await clipboardStore.pasteItems(item.id, 'inside');
+                        // Get clipboard items
+                        const clipboardItems = clipboardStore.getItems();
+
+                        // Paste each item recursively
+                        for (const sourceItem of clipboardItems) {
+                            await pasteItemRecursively(spaceId, item.id, sourceItem);
+                        }
+
+                        // Clear clipboard after successful paste
+                        clipboardStore.clear();
+
                         await refetch(); // Refresh data
-                        console.log('Items pasted successfully');
                     } catch (err) {
                         console.error('Failed to paste items:', err);
                     }

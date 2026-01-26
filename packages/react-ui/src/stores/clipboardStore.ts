@@ -10,6 +10,7 @@ interface ClipboardState {
     sourceSpaceId: string | null;
     action: ClipboardAction | null;
 
+    getItems: () => SpaceItem[];
     copyItems: (items: SpaceItem[], spaceId: string) => void;
     cutItems: (items: SpaceItem[], spaceId: string) => void;
     pasteItems: (targetId: string, position?: PastePosition) => Promise<void>;
@@ -31,12 +32,26 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
     sourceSpaceId: null,
     action: null,
 
+    getItems: () => get().items,
+
     copyItems: (items, spaceId) => {
         set({
             items: [...items],
             sourceSpaceId: spaceId,
             action: 'copy',
         });
+
+        // Copy URLs to system clipboard (for external paste)
+        const urls = items
+            .filter(item => item.type === SpaceItemType.link)
+            .map(item => item.path)
+            .join('\n');
+
+        if (urls) {
+            (window as any).electronAPI?.clipboard?.writeText(urls).catch((err: Error) => {
+                console.warn('Failed to write to system clipboard:', err);
+            });
+        }
     },
 
     cutItems: (items, spaceId) => {
