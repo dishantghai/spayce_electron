@@ -68,3 +68,14 @@ export function getGoogleFaviconUrl(url: string): string {
         return '';
     }
 }
+
+/**
+ * Extracts URLs from text (supports newline-separated URLs)
+ */
+export function extractUrlsFromText(text: string): string[] {
+    return text
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line && isLikelyUrl(line))
+        .map(normalizeUrl);
+}

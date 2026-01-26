@@ -22,6 +22,8 @@ const electronAPI = {
         move: (itemId: string, targetSpaceId: string, targetParentId?: string, toPosition?: number) =>
             ipcRenderer.invoke('items:move', itemId, targetSpaceId, targetParentId, toPosition),
         rename: (itemId: string, newName: string) => ipcRenderer.invoke('items:rename', itemId, newName),
+        updateMetadata: (itemId: string, metadata: { faviconUrl?: string | null; description?: string | null; isExpanded?: boolean }) =>
+            ipcRenderer.invoke('items:updateMetadata', itemId, metadata),
     },
 
     // Search operations
@@ -41,6 +43,12 @@ const electronAPI = {
     clipboard: {
         readText: () => ipcRenderer.invoke('clipboard:readText'),
         writeText: (text: string) => ipcRenderer.invoke('clipboard:writeText', text),
+    },
+
+    // Metadata extraction
+    metadata: {
+        extract: (url: string) => ipcRenderer.invoke('metadata:extract', url),
+        extractFavicon: (url: string) => ipcRenderer.invoke('metadata:extractFavicon', url),
     },
 
     // Event listeners

@@ -7,7 +7,7 @@ import {
     SpacesScreen,
 } from '@spayce/react-ui';
 import { useInlineInputStore, useClipboardStore } from '@spayce/react-ui/stores';
-import { collectLinksRecursive, hasLinksRecursive } from '@spayce/react-ui/utils';
+import { collectLinksRecursive, hasLinksRecursive, extractUrlsFromText, extractDomain, getGoogleFaviconUrl } from '@spayce/react-ui/utils';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
@@ -136,10 +136,8 @@ function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMen
             items.push({ id: 'copy_links', label: 'Copy All Links', icon: LucideIcons.Link2 });
         }
 
-        // Conditionally add "Paste" if clipboard has items
-        if (hasClipboard) {
-            items.push({ id: 'paste', label: 'Paste', icon: LucideIcons.ClipboardPaste });
-        }
+        // Always show "Paste" - handler will check internal clipboard first, then system clipboard
+        items.push({ id: 'paste', label: 'Paste', icon: LucideIcons.ClipboardPaste });
 
         items.push({ id: 'divider3', label: '', icon: LucideIcons.Minus, isDivider: true });
 
@@ -338,6 +336,74 @@ export function App(): React.ReactElement {
                     } catch (err) {
                         console.error('Failed to paste items:', err);
                     }
+                } else {
+                    // If internal clipboard empty, check system clipboard for URLs
+                    try {
+                        const text = await window.electronAPI.clipboard.readText();
+                        const urls = extractUrlsFromText(text);
+
+                        if (urls.length > 0) {
+                            // Create links immediately (non-blocking)
+                            for (const url of urls) {
+                                const result = await itemsApi.create({
+                                    spaceId,
+                                    parentId: item.id,
+                                    name: url,
+                                    path: url,
+                                    type: SpaceItemType.link,
+                                });
+
+                                // Fetch metadata asynchronously in background
+                                if (result.success && result.data) {
+                                    const itemId = result.data.id;
+
+                                    window.electronAPI.metadata.extract(url).then(async (metadata) => {
+                                        if (metadata?.success && metadata?.data) {
+                                            // Update title if available
+                                            if (metadata.data.title) {
+                                                await window.electronAPI.items.rename(itemId, metadata.data.title);
+                                            }
+
+                                            // Update favicon - use extracted favicon or fallback to Google
+                                            const faviconUrl = metadata.data.faviconUrl || getGoogleFaviconUrl(url);
+
+                                            if (faviconUrl) {
+                                                await window.electronAPI.items.updateMetadata(itemId, {
+                                                    faviconUrl,
+                                                });
+                                            }
+
+                                            await refetch();
+                                        } else {
+                                            // Metadata fetch failed - use Google favicon service as fallback
+                                            const googleFaviconUrl = getGoogleFaviconUrl(url);
+
+                                            if (googleFaviconUrl) {
+                                                await window.electronAPI.items.updateMetadata(itemId, {
+                                                    faviconUrl: googleFaviconUrl,
+                                                });
+                                                await refetch();
+                                            }
+                                        }
+                                    }).catch(async () => {
+                                        // Network error - use Google favicon service as fallback
+                                        const googleFaviconUrl = getGoogleFaviconUrl(url);
+
+                                        if (googleFaviconUrl) {
+                                            await window.electronAPI.items.updateMetadata(itemId, {
+                                                faviconUrl: googleFaviconUrl,
+                                            });
+                                            await refetch();
+                                        }
+                                    });
+                                }
+                            }
+
+                            await refetch(); // Refresh to show created links
+                        }
+                    } catch (err) {
+                        console.error('Failed to paste from system clipboard:', err);
+                    }
                 }
                 break;
             }
@@ -456,6 +522,7 @@ export function App(): React.ReactElement {
             name: input.name,
             path: input.path,
             type: input.type,
+            faviconUrl: input.faviconUrl,
         });
 
         if (result?.success) {

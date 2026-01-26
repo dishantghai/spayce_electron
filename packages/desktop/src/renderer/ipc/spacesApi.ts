@@ -102,6 +102,7 @@ export interface CreateItemInput {
     type: string;
     path: string;
     parentId?: string;
+    faviconUrl?: string | null;
 }
 
 export const itemsApi = {

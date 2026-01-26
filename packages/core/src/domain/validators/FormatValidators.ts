@@ -3,7 +3,7 @@ import type { ValidationResult } from './SchemaValidator';
 
 export class FormatValidators {
     static readonly URL_PATTERN =
-        /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
+        /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=,]*)$/;
     static readonly HEX_COLOR_PATTERN = /^#[0-9A-Fa-f]{6}$/;
     static readonly FILE_PATH_PATTERN = /^[^<>:"|?*]+$/;
 

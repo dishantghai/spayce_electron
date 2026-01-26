@@ -4,6 +4,7 @@ export {
     isLikelyUrl,
     getFaviconUrl,
     getGoogleFaviconUrl,
+    extractUrlsFromText,
 } from './url';
 
 export * from './spaceItems';

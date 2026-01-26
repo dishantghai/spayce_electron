@@ -29,6 +29,33 @@ export function useSpacesData(): UseSpacesDataResult {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
 
+    const transformItems = useCallback((items: any[]): SpaceItem[] => {
+        // API returns nested tree structure with children arrays
+        const transformItem = (dto: any): SpaceItem => {
+            return {
+                id: dto.id,
+                name: dto.name,
+                path: dto.path,
+                type: dto.type,
+                isExpanded: dto.isExpanded ?? false,
+                children: (dto.children || []).map(transformItem),
+                faviconUrl: dto.faviconUrl ?? null,
+                description: dto.description ?? null,
+                visitCount: dto.visitCount ?? 0,
+                lastVisited: dto.lastVisited ? new Date(dto.lastVisited) : null,
+                createdAt: new Date(dto.createdAt),
+                isPinned: dto.isPinned ?? false,
+                pinPosition: dto.pinPosition ?? null,
+                localPath: dto.localPath ?? null,
+                securityBookmark: dto.securityBookmark ?? null,
+                lastSyncedAt: dto.lastSyncedAt ? new Date(dto.lastSyncedAt) : null,
+                isWatching: dto.isWatching ?? false,
+            };
+        };
+
+        return items.map(transformItem);
+    }, []);
+
     const fetchSpaces = useCallback(async () => {
         try {
             setLoading(true);
@@ -68,7 +95,7 @@ export function useSpacesData(): UseSpacesDataResult {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [transformItems]);
 
     useEffect(() => {
         fetchSpaces();
@@ -162,27 +189,4 @@ export function useSpacesData(): UseSpacesDataResult {
         deleteSpace,
         reorderSpaces,
     };
-}
-
-// Transform domain items to UI SpaceItem type
-function transformItems(items: any[]): SpaceItem[] {
-    return items.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        path: item.path,
-        type: item.type,
-        isExpanded: item.isExpanded ?? false,
-        children: item.children ? transformItems(item.children) : [],
-        faviconUrl: item.faviconUrl ?? null,
-        description: item.description ?? null,
-        visitCount: item.visitCount ?? 0,
-        lastVisited: item.lastVisited ? new Date(item.lastVisited) : null,
-        createdAt: new Date(item.createdAt),
-        isPinned: item.isPinned ?? false,
-        pinPosition: item.pinPosition ?? null,
-        localPath: item.localPath ?? null,
-        securityBookmark: item.securityBookmark ?? null,
-        lastSyncedAt: item.lastSyncedAt ? new Date(item.lastSyncedAt) : null,
-        isWatching: item.isWatching ?? false,
-    }));
 }

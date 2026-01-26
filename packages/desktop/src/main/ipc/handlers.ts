@@ -62,6 +62,7 @@ export function registerIpcHandlers(): void {
         type: string;
         path: string;
         parentId?: string;
+        faviconUrl?: string | null;
     }) => {
         const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
         // Cast type to SpaceItemType enum
@@ -183,8 +184,10 @@ export function registerIpcHandlers(): void {
 
     ipcMain.handle('metadata:extract', async (_, url: string) => {
         try {
-            return { success: true, data: await metadataService.extractMetadata(url) };
+            const metadata = await metadataService.extractMetadata(url);
+            return { success: true, data: metadata };
         } catch (error) {
+            console.error('[IPC] metadata:extract error:', error);
             return {
                 success: false,
                 error: {

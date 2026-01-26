@@ -20,6 +20,8 @@ interface TreeItemIconProps {
     size?: number;
     /** Accent color from space theme - used for open folders */
     accentColor?: string;
+    /** Favicon URL for link items */
+    faviconUrl?: string | null;
 }
 
 // Icon colors from design tokens
@@ -40,6 +42,7 @@ export function TreeItemIcon({
     extension,
     size = 16,
     accentColor,
+    faviconUrl,
 }: TreeItemIconProps): React.ReactElement {
     const iconProps = { size, strokeWidth: 2 };
 
@@ -59,7 +62,7 @@ export function TreeItemIcon({
             );
 
         case SpaceItemType.link:
-            return <Link {...iconProps} color={ICON_COLORS.link} />;
+            return <LinkIconWithFavicon faviconUrl={faviconUrl} size={size} />;
 
         case SpaceItemType.file:
         case SpaceItemType.localFile:
@@ -68,6 +71,35 @@ export function TreeItemIcon({
         default:
             return <File {...iconProps} color={ICON_COLORS.file} />;
     }
+}
+
+/**
+ * Link icon with favicon fallback chain:
+ * 1. Try provided faviconUrl
+ * 2. On error, use Link icon (no more attempts)
+ */
+function LinkIconWithFavicon({ faviconUrl, size }: { faviconUrl?: string | null; size: number }): React.ReactElement {
+    const [showIcon, setShowIcon] = React.useState(!faviconUrl);
+
+    if (!faviconUrl || showIcon) {
+        return <Link size={size} strokeWidth={2} color={ICON_COLORS.link} />;
+    }
+
+    return (
+        <img
+            src={faviconUrl}
+            alt=""
+            style={{
+                width: size,
+                height: size,
+                objectFit: 'contain',
+                borderRadius: '2px',
+            }}
+            onError={() => {
+                setShowIcon(true);
+            }}
+        />
+    );
 }
 
 function getFileIcon(
