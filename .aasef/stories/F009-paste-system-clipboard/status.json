@@ -3,7 +3,7 @@
   "title": "Paste from System Clipboard",
   "type": "feature",
   "priority": "P0",
-  "status": "in_progress",
+  "status": "completed",
   "estimated_hours": 3,
   "related_specs": [
     "016"
@@ -29,5 +29,6 @@
       "failed": 0,
       "total": 0
     }
-  }
+  },
+  "completed": "2026-01-26T18:43:20.818220"
 }
