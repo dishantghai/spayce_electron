@@ -1,19 +1,35 @@
 {
-    "id": "F010",
-    "title": "Keyboard Shortcuts (Copy/Paste)",
-    "type": "feature",
-    "priority": "P0",
-    "status": "pending",
-    "estimated_hours": 2,
-    "related_specs": [
-        "016"
-    ],
-    "related_epic": null,
-    "affected_files": [
-        "packages/react-ui/src/components/Sidebar.tsx",
-        "packages/react-ui/src/components/spaces/SpaceCard.tsx",
-        "packages/desktop/src/renderer/App.tsx"
-    ],
-    "created_at": "2026-01-26T09:43:00Z",
-    "updated_at": "2026-01-26T09:43:00Z"
+  "id": "F010",
+  "title": "Keyboard Shortcuts (Copy/Paste)",
+  "type": "feature",
+  "priority": "P0",
+  "status": "completed",
+  "estimated_hours": 2,
+  "related_specs": [
+    "016"
+  ],
+  "related_epic": null,
+  "affected_files": [
+    "packages/react-ui/src/components/Sidebar.tsx",
+    "packages/react-ui/src/components/spaces/SpaceCard.tsx",
+    "packages/desktop/src/renderer/App.tsx"
+  ],
+  "created_at": "2026-01-26T09:43:00Z",
+  "updated_at": "2026-01-26T09:43:00Z",
+  "plan_generated": "2026-01-26T18:48:54.590237",
+  "implementation_started": "2026-01-26T18:54:16.152133",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-26T18:54:16.154142",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  },
+  "completed": "2026-01-26T19:57:51.990413"
 }

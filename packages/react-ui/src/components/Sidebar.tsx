@@ -42,6 +42,8 @@ export interface SidebarProps {
     onEditSpace?: (space: Space, spaceData: { name: string; iconName: string; accentColor: string }) => void;
     onSettingsClick?: () => void;
     onFocusChange?: (hasFocus: boolean) => void;
+    onCopySelected?: (focusedItemId: string | null) => void;
+    onPasteToSelected?: (focusedItemId: string | null) => Promise<void>;
 }
 
 /**
@@ -71,6 +73,8 @@ export function Sidebar({
     onEditSpace,
     onSettingsClick,
     onFocusChange,
+    onCopySelected,
+    onPasteToSelected,
 }: SidebarProps): React.ReactElement {
     const sidebarRef = useRef<HTMLElement>(null);
     const [viewMode, setViewMode] = useState<SidebarViewMode>('normal');
@@ -304,17 +308,29 @@ export function Sidebar({
 
     // Keyboard navigation - matching Flutter behavior
     useEffect(() => {
-        if (viewMode !== 'normal') return; // Skip keyboard nav in create/edit mode
-        if (!hasFocus) return; // Skip if sidebar doesn't have focus
+        console.log('[F010-Sidebar] useEffect triggered - viewMode:', viewMode, 'hasFocus:', hasFocus);
+
+        if (viewMode !== 'normal') {
+            console.log('[F010-Sidebar] Skipping keyboard nav - viewMode is not normal:', viewMode);
+            return;
+        }
+        if (!hasFocus) {
+            console.log('[F010-Sidebar] Skipping keyboard nav - sidebar does not have focus');
+            return;
+        }
+
+        console.log('[F010-Sidebar] Setting up keyboard listener - onCopySelected:', !!onCopySelected, 'onPasteToSelected:', !!onPasteToSelected);
 
         const handleKeyDown = (e: KeyboardEvent) => {
             // Skip if user is in an input field
             if (e.target instanceof HTMLInputElement ||
                 e.target instanceof HTMLTextAreaElement) {
+                console.log('[F010-Sidebar] Ignoring keydown - target is input/textarea');
                 return;
             }
 
             const isCtrlOrCmd = e.metaKey || e.ctrlKey;
+            console.log('[F010-Sidebar] KeyDown:', e.key, 'metaKey:', e.metaKey, 'ctrlKey:', e.ctrlKey, 'isCtrlOrCmd:', isCtrlOrCmd);
 
             switch (e.key) {
                 case 'ArrowUp':
@@ -373,6 +389,28 @@ export function Sidebar({
                     }
                     break;
 
+                case 'c':
+                    if (isCtrlOrCmd) {
+                        console.log('[F010-Sidebar] Cmd+C detected! focusedItemId:', focusedItemId);
+                        e.preventDefault();
+                        if (onCopySelected) {
+                            console.log('[F010-Sidebar] Calling onCopySelected with focusedItemId:', focusedItemId);
+                            onCopySelected(focusedItemId);
+                        }
+                    }
+                    break;
+
+                case 'v':
+                    if (isCtrlOrCmd) {
+                        console.log('[F010-Sidebar] Cmd+V detected! focusedItemId:', focusedItemId);
+                        e.preventDefault();
+                        if (onPasteToSelected) {
+                            console.log('[F010-Sidebar] Calling onPasteToSelected with focusedItemId:', focusedItemId);
+                            onPasteToSelected(focusedItemId);
+                        }
+                    }
+                    break;
+
                 case 'Escape':
                     e.preventDefault();
                     setFocusedItemId(null);
@@ -393,7 +431,7 @@ export function Sidebar({
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [viewMode, activeSpaceIndex, spaces.length, onSpaceSelect, handleAddSpace, selectPreviousItem, selectNextItem, handleRightArrow, handleLeftArrow, handleEnterKey, hasFocus]);
+    }, [viewMode, activeSpaceIndex, spaces.length, onSpaceSelect, handleAddSpace, selectPreviousItem, selectNextItem, handleRightArrow, handleLeftArrow, handleEnterKey, hasFocus, onCopySelected, onPasteToSelected]);
 
     const handleItemClick = useCallback(
         (item: SpaceItem) => {

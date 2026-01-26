@@ -35,11 +35,19 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
     getItems: () => get().items,
 
     copyItems: (items, spaceId) => {
+        console.log('[F010-ClipboardStore] copyItems called with', items.length, 'items');
+        console.log('[F010-ClipboardStore] Items:', items.map(i => ({ id: i.id, name: i.name, type: i.type })));
+        console.log('[F010-ClipboardStore] spaceId:', spaceId);
+
         set({
             items: [...items],
             sourceSpaceId: spaceId,
             action: 'copy',
         });
+
+        console.log('[F010-ClipboardStore] State updated. Verifying...');
+        const newState = get();
+        console.log('[F010-ClipboardStore] New state - items:', newState.items.length, 'action:', newState.action);
 
         // Copy URLs to system clipboard (for external paste)
         const urls = items
@@ -48,8 +56,9 @@ export const useClipboardStore = create<ClipboardState>((set, get) => ({
             .join('\n');
 
         if (urls) {
+            console.log('[F010-ClipboardStore] Writing URLs to system clipboard:', urls);
             (window as any).electronAPI?.clipboard?.writeText(urls).catch((err: Error) => {
-                console.warn('Failed to write to system clipboard:', err);
+                console.warn('[F010-ClipboardStore] Failed to write to system clipboard:', err);
             });
         }
     },

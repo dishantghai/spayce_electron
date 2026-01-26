@@ -6,7 +6,7 @@ import {
     Sidebar,
     SpacesScreen,
 } from '@spayce/react-ui';
-import { useInlineInputStore, useClipboardStore } from '@spayce/react-ui/stores';
+import { useClipboardStore, useInlineInputStore, useSelectionStore } from '@spayce/react-ui/stores';
 import { collectLinksRecursive, hasLinksRecursive, extractUrlsFromText } from '@spayce/react-ui/utils';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
@@ -75,12 +75,14 @@ function SpacesError({ error, onRetry }: { error: Error; onRetry: () => void }):
     );
 }
 
-// Helper to recursively paste items
-async function pasteItemRecursively(
+// Helper to paste items - folders are pasted with all descendants, links are pasted alone
+async function pasteItem(
     spaceId: string,
     parentId: string | null,
     sourceItem: SpaceItem
 ): Promise<void> {
+    console.log('[F010-pasteItem] Creating item:', sourceItem.name, 'type:', sourceItem.type, 'in space:', spaceId, 'parent:', parentId);
+
     // Create new item with new ID
     const result = await itemsApi.create({
         spaceId,
@@ -90,16 +92,16 @@ async function pasteItemRecursively(
         type: sourceItem.type,
     });
 
-    if (!result.success || !result.data) {
-        return;
-    }
+    console.log('[F010-pasteItem] itemsApi.create result:', result);
 
-    const newItemId = result.data.id;
-
-    // Recursively paste children
-    if (sourceItem.children && sourceItem.children.length > 0) {
+    // For folders, recursively paste all children to preserve folder structure
+    if ((sourceItem.type === 'folder' || sourceItem.type === 'localFolder') &&
+        result.success && result.data &&
+        sourceItem.children && sourceItem.children.length > 0) {
+        const newFolderId = result.data.id;
+        console.log('[F010-pasteItem] Folder created with ID:', newFolderId, '- pasting', sourceItem.children.length, 'children');
         for (const child of sourceItem.children) {
-            await pasteItemRecursively(spaceId, newItemId, child);
+            await pasteItem(spaceId, newFolderId, child);
         }
     }
 }
@@ -326,7 +328,7 @@ export function App(): React.ReactElement {
 
                         // Paste each item recursively
                         for (const sourceItem of clipboardItems) {
-                            await pasteItemRecursively(spaceId, item.id, sourceItem);
+                            await pasteItem(spaceId, item.id, sourceItem);
                         }
 
                         // Clear clipboard after successful paste
@@ -582,6 +584,199 @@ export function App(): React.ReactElement {
         await reorderSpaces(newOrder.map(s => s.id));
     };
 
+    // Helper to get items by IDs from tree
+    const getItemsByIds = useCallback((space: Space, ids: string[]): SpaceItem[] => {
+        const items: SpaceItem[] = [];
+
+        function findItems(node: SpaceItem) {
+            if (ids.includes(node.id)) {
+                items.push(node);
+            }
+            if (node.children) {
+                node.children.forEach(findItems);
+            }
+        }
+
+        space.rootItems.forEach(findItems);
+        return items;
+    }, []);
+
+    // Get currently selected item based on focus context
+    const getSelectedItem = useCallback((): SpaceItem | null => {
+        const selectedId = focusContext === 'sidebar' ? sidebarSelectedId : cardSelectedId;
+        if (!selectedId) return null;
+
+        const activeSpaceIndex = focusContext === 'sidebar' ? sidebarActiveSpaceIndex : spacesScreenActiveSpaceIndex;
+        const activeSpace = spaces[activeSpaceIndex];
+        if (!activeSpace) return null;
+
+        const items = getItemsByIds(activeSpace, [selectedId]);
+        return items[0] || null;
+    }, [focusContext, sidebarSelectedId, cardSelectedId, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, getItemsByIds]);
+
+    // Handle copy selected items (Cmd+C / Ctrl+C)
+    // Priority: multi-selection > keyboard-focused item (from Sidebar) > clicked selection
+    // Hover state is ignored - only actual selection/focus matters
+    const handleCopySelected = useCallback((keyboardFocusedId: string | null) => {
+        console.log('[F010-App] handleCopySelected called!');
+        console.log('[F010-App] keyboardFocusedId (from Sidebar):', keyboardFocusedId);
+        console.log('[F010-App] sidebarSelectedId (clicked):', sidebarSelectedId);
+
+        const activeSpaceIndex = focusContext === 'sidebar' ? sidebarActiveSpaceIndex : spacesScreenActiveSpaceIndex;
+        const activeSpace = spaces[activeSpaceIndex];
+        const activeSpaceId = activeSpace?.id;
+
+        if (!activeSpace || !activeSpaceId) {
+            console.error('[F010-App] ERROR: No active space or spaceId!');
+            return;
+        }
+
+        // Check for multi-selection first (from selectionStore)
+        const selectionState = useSelectionStore.getState();
+        const selectedIds = selectionState.getSelectedItems();
+        console.log('[F010-App] Multi-selection selectedIds:', selectedIds);
+
+        if (selectedIds.length > 0) {
+            // Multi-selection copy
+            console.log('[F010-App] Using multi-selection path');
+            const items = getItemsByIds(activeSpace, selectedIds);
+            if (items.length > 0) {
+                console.log('[F010-App] Copying', items.length, 'items:', items.map(i => i.name));
+                clipboardStore.copyItems(items, activeSpaceId);
+
+                // If single link, also copy URL to system clipboard
+                if (items.length === 1 && items[0].type === 'link') {
+                    window.electronAPI.clipboard.writeText(items[0].path);
+                }
+            }
+        } else {
+            // Single selection - use keyboard-focused item (priority over clicked selection)
+            const itemIdToCopy = keyboardFocusedId || sidebarSelectedId;
+            console.log('[F010-App] Using single selection - itemIdToCopy:', itemIdToCopy);
+
+            if (itemIdToCopy) {
+                const items = getItemsByIds(activeSpace, [itemIdToCopy]);
+                const selectedItem = items[0];
+                console.log('[F010-App] Found item to copy:', selectedItem?.name, selectedItem?.type);
+
+                if (selectedItem) {
+                    clipboardStore.copyItems([selectedItem], activeSpaceId);
+
+                    // If link, also copy URL to system clipboard
+                    if (selectedItem.type === 'link') {
+                        console.log('[F010-App] Copying link URL to system clipboard:', selectedItem.path);
+                        window.electronAPI.clipboard.writeText(selectedItem.path);
+                    }
+                } else {
+                    console.warn('[F010-App] Item not found for ID:', itemIdToCopy);
+                }
+            } else {
+                console.warn('[F010-App] No item to copy - no keyboard focus or selection');
+            }
+        }
+
+        // Verify clipboard state after copy
+        console.log('[F010-App] Clipboard items after copy:', clipboardStore.getItems().map(i => i.name));
+    }, [focusContext, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, getItemsByIds, clipboardStore, sidebarSelectedId]);
+
+    // Handle paste (Cmd+V / Ctrl+V)
+    // Supports both internal clipboard (SpaceItems) and system clipboard (URLs)
+    // Uses keyboard-focused item as paste target (if it's a folder)
+    const handlePasteToSelected = useCallback(async (keyboardFocusedId: string | null) => {
+        console.log('[F010-App] handlePasteToSelected called!');
+        console.log('[F010-App] keyboardFocusedId:', keyboardFocusedId);
+
+        const activeSpaceIndex = focusContext === 'sidebar' ? sidebarActiveSpaceIndex : spacesScreenActiveSpaceIndex;
+        const activeSpace = spaces[activeSpaceIndex];
+        const activeSpaceId = activeSpace?.id;
+
+        if (!activeSpace || !activeSpaceId) {
+            console.error('[F010-App] ERROR: No active space for paste!');
+            return;
+        }
+
+        // Get the target item - use keyboard-focused item if available, else clicked selection
+        const targetItemId = keyboardFocusedId || sidebarSelectedId;
+        let targetItem: SpaceItem | null = null;
+        if (targetItemId) {
+            const items = getItemsByIds(activeSpace, [targetItemId]);
+            targetItem = items[0] || null;
+        }
+
+        console.log('[F010-App] Paste - targetItem:', targetItem?.name, targetItem?.type);
+        console.log('[F010-App] Paste - clipboardStore.hasItems():', clipboardStore.hasItems());
+
+        // If folder selected, paste into it; otherwise paste at root
+        const targetParentId = targetItem?.type === 'folder' || targetItem?.type === 'localFolder'
+            ? targetItem.id
+            : null;
+        console.log('[F010-App] Paste - targetParentId:', targetParentId);
+
+        // First try internal clipboard (SpaceItems)
+        if (clipboardStore.hasItems()) {
+            console.log('[F010-App] Pasting from internal clipboard');
+            try {
+                const clipboardItems = clipboardStore.getItems();
+                console.log('[F010-App] Clipboard items to paste:', clipboardItems.map(i => ({ name: i.name, type: i.type })));
+
+                for (const sourceItem of clipboardItems) {
+                    console.log('[F010-App] Pasting item:', sourceItem.name);
+                    await pasteItem(activeSpaceId, targetParentId, sourceItem);
+                    console.log('[F010-App] Item pasted successfully:', sourceItem.name);
+                }
+
+                console.log('[F010-App] Clearing clipboard and refetching...');
+                clipboardStore.clear();
+                await refetch();
+                console.log('[F010-App] Paste completed successfully!');
+            } catch (err) {
+                console.error('[F010-App] Failed to paste items:', err);
+            }
+            return;
+        }
+
+        // Fallback to system clipboard (external URLs)
+        try {
+            const clipboardText = await window.electronAPI.clipboard.readText();
+            if (clipboardText) {
+                const text = clipboardText.trim();
+                // Check if it looks like a URL
+                const isUrl = text.startsWith('http://') ||
+                    text.startsWith('https://') ||
+                    (text.includes('.') && !text.includes(' ') && text.length > 3);
+
+                if (isUrl) {
+                    const url = text.startsWith('http://') || text.startsWith('https://')
+                        ? text
+                        : `https://${text}`;
+
+                    // Extract domain name for link name
+                    let name = text;
+                    try {
+                        const urlObj = new URL(url);
+                        name = urlObj.hostname;
+                    } catch {
+                        // Keep original text as name
+                    }
+
+                    // Create new link from URL
+                    await itemsApi.create({
+                        spaceId: activeSpaceId,
+                        parentId: targetParentId ?? undefined,
+                        name,
+                        path: url,
+                        type: 'link',
+                        faviconUrl: `https://www.google.com/s2/favicons?domain=${encodeURIComponent(url)}&sz=32`,
+                    });
+
+                    await refetch();
+                }
+            }
+        } catch (err) {
+            console.error('Failed to paste from system clipboard:', err);
+        }
+    }, [focusContext, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, clipboardStore, refetch, sidebarSelectedId, getItemsByIds]);
+
     // Show loading state
     if (loading) {
         return (
@@ -660,6 +855,8 @@ export function App(): React.ReactElement {
                     onFocusChange={(hasFocus: boolean) => {
                         if (hasFocus) setFocusContext('sidebar');
                     }}
+                    onCopySelected={handleCopySelected}
+                    onPasteToSelected={handlePasteToSelected}
                 />
             </div>
 
