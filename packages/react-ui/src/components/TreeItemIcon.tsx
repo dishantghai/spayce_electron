@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { SpaceItemType } from '../types';
 import { SpayceColors } from '../theme';
-import { useFavicon } from '../hooks/useFavicon';
 import { extractDomain, getGoogleFaviconUrl } from '../services/FaviconCache';
 
 interface TreeItemIconProps {
@@ -95,46 +94,35 @@ interface LinkIconProps {
     onFaviconResolved?: (url: string) => void;
 }
 
-type FaviconState = 'primary' | 'google' | 'fallback';
-
 /**
- * Link icon with lazy favicon loading and fallback chain:
- * 1. Try DuckDuckGo (primary from useFavicon)
- * 2. On error, try Google Favicon Service
- * 3. On error, show default Link icon
+ * Link icon with favicon
+ * Priority:
+ * 1. Stored base64 favicon (starts with "data:")
+ * 2. Google Favicon Service
+ * 3. Default Link icon
  */
 function LinkIconWithFavicon({
     storedFaviconUrl,
     itemUrl,
     size,
-    onFaviconResolved,
 }: LinkIconProps): React.ReactElement {
-    const [faviconState, setFaviconState] = React.useState<FaviconState>('primary');
-
-    const { faviconUrl, isLoading } = useFavicon(
-        itemUrl || '',
-        storedFaviconUrl || null,
-        onFaviconResolved
-    );
-
+    const [hasError, setHasError] = React.useState(false);
     const domain = extractDomain(itemUrl || '');
+
+    // Only use stored favicon if it's base64 data (starts with "data:")
+    // Otherwise use Google Favicon Service
+    const isBase64 = storedFaviconUrl?.startsWith('data:');
     const googleFaviconUrl = domain ? getGoogleFaviconUrl(domain) : null;
+    const faviconUrl = isBase64 ? storedFaviconUrl : googleFaviconUrl;
 
-    // Determine which URL to display based on current state
-    const displayUrl = React.useMemo(() => {
-        if (faviconState === 'primary') return faviconUrl;
-        if (faviconState === 'google') return googleFaviconUrl;
-        return null;
-    }, [faviconState, faviconUrl, googleFaviconUrl]);
-
-    if (isLoading || !displayUrl || faviconState === 'fallback') {
+    if (!faviconUrl || hasError) {
         return <Link size={size} strokeWidth={2} color={ICON_COLORS.link} />;
     }
 
     return (
         <img
-            key={`${displayUrl}-${faviconState}`}
-            src={displayUrl}
+            key={faviconUrl}
+            src={faviconUrl}
             alt=""
             style={{
                 width: size,
@@ -142,22 +130,7 @@ function LinkIconWithFavicon({
                 objectFit: 'contain',
                 borderRadius: '2px',
             }}
-            onError={() => {
-                console.log('[TreeItemIcon] Favicon load error:', {
-                    currentState: faviconState,
-                    displayUrl,
-                    googleFaviconUrl,
-                    domain
-                });
-                // Fallback chain: primary -> google -> fallback icon
-                if (faviconState === 'primary' && googleFaviconUrl) {
-                    console.log('[TreeItemIcon] Falling back to Google');
-                    setFaviconState('google');
-                } else {
-                    console.log('[TreeItemIcon] Falling back to Link icon');
-                    setFaviconState('fallback');
-                }
-            }}
+            onError={() => setHasError(true)}
         />
     );
 }

@@ -353,18 +353,27 @@ export function App(): React.ReactElement {
                                     type: SpaceItemType.link,
                                 });
 
-                                // Fetch title asynchronously in background
-                                // Favicon is loaded via DuckDuckGo service on display
+                                // Fetch metadata asynchronously in background
                                 if (result.success && result.data) {
                                     const itemId = result.data.id;
 
                                     window.electronAPI.metadata.extract(url).then(async (metadata) => {
-                                        if (metadata?.success && metadata?.data?.title) {
-                                            await window.electronAPI.items.rename(itemId, metadata.data.title);
+                                        if (metadata?.success && metadata?.data) {
+                                            // Update title if available
+                                            if (metadata.data.title) {
+                                                await window.electronAPI.items.rename(itemId, metadata.data.title);
+                                            }
+                                            // Save favicon data (base64) - bypasses CORS
+                                            const faviconToSave = metadata.data.faviconData || metadata.data.faviconUrl;
+                                            if (faviconToSave) {
+                                                await window.electronAPI.items.updateMetadata(itemId, {
+                                                    faviconUrl: faviconToSave,
+                                                });
+                                            }
                                             await refetch();
                                         }
                                     }).catch(() => {
-                                        // Title fetch failed - keep URL as name
+                                        // Metadata fetch failed - keep URL as name
                                     });
                                 }
                             }

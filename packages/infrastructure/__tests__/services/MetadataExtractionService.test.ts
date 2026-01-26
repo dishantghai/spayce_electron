@@ -327,4 +327,96 @@ describe('MetadataExtractionService', () => {
             expect(result.faviconUrl).toBe('http://example.com/favicon.ico');
         });
     });
+
+    describe('faviconData (base64 encoding)', () => {
+        it('should return null faviconData when favicon fetch fails', async () => {
+            const mockHtml = '<link rel="icon" href="/favicon.ico">';
+
+            vi.mocked(global.fetch)
+                .mockResolvedValueOnce({
+                    ok: true,
+                    text: async () => mockHtml,
+                } as Response)
+                .mockResolvedValueOnce({
+                    ok: false,
+                    status: 404,
+                } as Response);
+
+            const result = await service.extractMetadata('https://example.com');
+
+            expect(result.faviconUrl).toBe('https://example.com/favicon.ico');
+            expect(result.faviconData).toBeNull();
+        });
+
+        it('should return null faviconData when no favicon URL is found', async () => {
+            const mockHtml = '<html><head><title>No Favicon</title></head></html>';
+
+            vi.mocked(global.fetch)
+                .mockResolvedValueOnce({
+                    ok: true,
+                    text: async () => mockHtml,
+                } as Response)
+                .mockResolvedValueOnce({
+                    ok: false,
+                    status: 404,
+                } as Response);
+
+            const result = await service.extractMetadata('https://example.com');
+
+            expect(result.faviconData).toBeNull();
+        });
+
+        it('should return faviconData when favicon is fetched successfully', async () => {
+            const mockHtml = '<link rel="icon" href="/favicon.ico">';
+            const mockArrayBuffer = new ArrayBuffer(8);
+
+            vi.mocked(global.fetch)
+                .mockResolvedValueOnce({
+                    ok: true,
+                    text: async () => mockHtml,
+                } as Response)
+                .mockResolvedValueOnce({
+                    ok: true,
+                    headers: {
+                        get: (name: string) => name === 'content-type' ? 'image/x-icon' : null,
+                    },
+                    arrayBuffer: async () => mockArrayBuffer,
+                } as unknown as Response);
+
+            const result = await service.extractMetadata('https://example.com');
+
+            // Should return a data URL starting with data:image/x-icon;base64,
+            expect(result.faviconData).toMatch(/^data:image\/x-icon;base64,/);
+        });
+    });
+
+    describe('favicon extraction priority', () => {
+        it('should prefer apple-touch-icon over standard icon', async () => {
+            const mockHtml = `
+                <html>
+                    <head>
+                        <link rel="icon" href="/favicon.ico">
+                        <link rel="apple-touch-icon" href="/apple-icon.png">
+                    </head>
+                </html>
+            `;
+
+            vi.mocked(fetch).mockResolvedValueOnce({
+                ok: true,
+                text: async () => mockHtml,
+            } as Response);
+
+            const result = await service.extractMetadata('https://example.com');
+
+            expect(result.faviconUrl).toBe('https://example.com/apple-icon.png');
+        });
+
+        it('should extract shortcut icon', async () => {
+            const mockHtml = '<link rel="shortcut icon" href="/shortcut.ico">';
+
+            const result = await service.extractFavicon('https://example.com', mockHtml);
+
+            expect(result).toBe('https://example.com/shortcut.ico');
+        });
+    });
 });

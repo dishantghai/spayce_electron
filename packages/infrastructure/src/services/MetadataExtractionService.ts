@@ -2,6 +2,8 @@ export interface PageMetadata {
     title: string | null;
     description: string | null;
     faviconUrl: string | null;
+    /** Base64 encoded favicon data (data:image/...) for direct use in renderer */
+    faviconData: string | null;
 }
 
 export class MetadataExtractionService {
@@ -12,18 +14,22 @@ export class MetadataExtractionService {
             const html = await this.fetchPage(url);
             const metadata = this.parseMetaTags(html);
             const faviconUrl = await this.extractFavicon(url, html);
+            const faviconData = faviconUrl ? await this.fetchFaviconAsBase64(faviconUrl) : null;
 
             return {
                 title: metadata.title || this.extractTitle(html) || null,
                 description: metadata.description || metadata['og:description'] || null,
                 faviconUrl,
+                faviconData,
             };
         } catch (error) {
-            console.error(`Failed to extract metadata for ${url}:`, error);
+            const faviconUrl = await this.getDefaultFavicon(url);
+            const faviconData = faviconUrl ? await this.fetchFaviconAsBase64(faviconUrl) : null;
             return {
                 title: null,
                 description: null,
-                faviconUrl: await this.getDefaultFavicon(url),
+                faviconUrl,
+                faviconData,
             };
         }
     }
@@ -100,9 +106,15 @@ export class MetadataExtractionService {
     }
 
     private extractFaviconFromHtml(html: string, baseUrl: string): string | null {
-        // Look for <link rel="icon"> or similar
+        // Priority order for favicon extraction (highest quality first)
         const iconPatterns = [
-            /<link\s+[^>]*rel=["'](?:icon|shortcut icon|apple-touch-icon)["'][^>]*>/gi,
+            // 1. Apple touch icon (highest quality, usually 180x180)
+            /<link\s+[^>]*rel=["']apple-touch-icon[^"']*["'][^>]*>/gi,
+            // 2. Large icons (32x32 or larger)
+            /<link\s+[^>]*rel=["']icon["'][^>]*sizes=["'](?:32x32|48x48|64x64|96x96|128x128|192x192|256x256)[^"']*["'][^>]*>/gi,
+            // 3. Standard icon
+            /<link\s+[^>]*rel=["'](?:icon|shortcut icon)["'][^>]*>/gi,
+            // 4. Any link with favicon in href
             /<link\s+[^>]*href=["']([^"']*favicon[^"']*)["'][^>]*>/gi,
         ];
 
@@ -135,6 +147,38 @@ export class MetadataExtractionService {
         }
 
         return null;
+    }
+
+    /**
+     * Fetch favicon and convert to base64 data URL
+     * This bypasses CORS since it runs in Node.js (main process)
+     */
+    private async fetchFaviconAsBase64(faviconUrl: string): Promise<string | null> {
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(faviconUrl, {
+                signal: controller.signal,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; Spayce/1.0)',
+                },
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+                return null;
+            }
+
+            const contentType = response.headers.get('content-type') || 'image/x-icon';
+            const arrayBuffer = await response.arrayBuffer();
+            const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+            return `data:${contentType};base64,${base64}`;
+        } catch {
+            return null;
+        }
     }
 
     private resolveUrl(href: string, baseUrl: string): string {

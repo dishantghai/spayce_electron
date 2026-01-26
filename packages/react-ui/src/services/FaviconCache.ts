@@ -73,10 +73,10 @@ export function extractDomain(url: string): string {
 
 /**
  * Get Google Favicon Service URL for a domain
- * Using the s2.googleusercontent.com endpoint which is more reliable
+ * Using the www.google.com endpoint with domain_url parameter
  */
 export function getGoogleFaviconUrl(domain: string): string {
-    return `https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=32`;
+    return `https://www.google.com/s2/favicons?domain_url=https://${domain}&sz=32`;
 }
 
 /**

@@ -81,13 +81,13 @@ describe('FaviconCache', () => {
     describe('getGoogleFaviconUrl', () => {
         it('returns correct Google favicon URL format', () => {
             expect(getGoogleFaviconUrl('google.com')).toBe(
-                'https://s2.googleusercontent.com/s2/favicons?domain=google.com&sz=32'
+                'https://www.google.com/s2/favicons?domain_url=https://google.com&sz=32'
             );
         });
 
         it('handles domain with subdomain', () => {
             expect(getGoogleFaviconUrl('mail.google.com')).toBe(
-                'https://s2.googleusercontent.com/s2/favicons?domain=mail.google.com&sz=32'
+                'https://www.google.com/s2/favicons?domain_url=https://mail.google.com&sz=32'
             );
         });
     });
