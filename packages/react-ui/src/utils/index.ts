@@ -5,3 +5,5 @@ export {
     getFaviconUrl,
     getGoogleFaviconUrl,
 } from './url';
+
+export * from './spaceItems';

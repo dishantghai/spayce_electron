@@ -1,0 +1,19 @@
+{
+    "id": "F009",
+    "title": "Paste from System Clipboard",
+    "type": "feature",
+    "priority": "P0",
+    "status": "pending",
+    "estimated_hours": 3,
+    "related_specs": [
+        "016"
+    ],
+    "related_epic": null,
+    "affected_files": [
+        "packages/desktop/src/renderer/App.tsx",
+        "packages/react-ui/src/utils/url.ts",
+        "packages/desktop/src/main/electron-api.ts"
+    ],
+    "created_at": "2026-01-26T09:43:00Z",
+    "updated_at": "2026-01-26T09:43:00Z"
+}

@@ -7,6 +7,7 @@ import {
     SpacesScreen,
 } from '@spayce/react-ui';
 import { useInlineInputStore, useClipboardStore } from '@spayce/react-ui/stores';
+import { collectLinksRecursive, hasLinksRecursive } from '@spayce/react-ui/utils';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
@@ -73,33 +74,7 @@ function SpacesError({ error, onRetry }: { error: Error; onRetry: () => void }):
     );
 }
 
-// Helper to check if folder has nested links
-function hasNestedLinks(item: SpaceItem): boolean {
-    if (item.type === SpaceItemType.link) {
-        return true;
-    }
-    if (item.children && item.children.length > 0) {
-        return item.children.some(child => hasNestedLinks(child));
-    }
-    return false;
-}
 
-// Helper to recursively collect all links from folder tree
-function collectAllLinks(item: SpaceItem): SpaceItem[] {
-    const links: SpaceItem[] = [];
-
-    if (item.type === SpaceItemType.link) {
-        links.push(item);
-    }
-
-    if (item.children && item.children.length > 0) {
-        for (const child of item.children) {
-            links.push(...collectAllLinks(child));
-        }
-    }
-
-    return links;
-}
 
 // Helper to generate context menu items based on item type
 function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMenuItem[] {
@@ -128,8 +103,8 @@ function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMen
             { id: 'copy_folder', label: 'Copy Folder', icon: LucideIcons.Copy },
         );
 
-        // Conditionally add "Copy All Links" if folder has nested links
-        if (hasNestedLinks(item)) {
+        // Conditionally add "Copy All Links" if folder has links
+        if (hasLinksRecursive(item)) {
             items.push({ id: 'copy_links', label: 'Copy All Links', icon: LucideIcons.Link2 });
         }
 
@@ -301,13 +276,13 @@ export function App(): React.ReactElement {
             }
             case 'copy_links': {
                 // Recursively collect all links and copy to system clipboard
-                const links = collectAllLinks(item);
+                const links = collectLinksRecursive(item);
 
                 if (links.length > 0) {
                     // Copy URLs to system clipboard (newline separated)
-                    const urls = links.map(link => link.path).join('\n');
+                    const urls = links.map((link: SpaceItem) => link.path).join('\n');
                     try {
-                        await navigator.clipboard.writeText(urls);
+                        await window.electronAPI.clipboard.writeText(urls);
                         // Also copy to internal clipboard
                         clipboardStore.copyItems(links, spaceId);
                         console.log(`Copied ${links.length} link(s) to clipboard`);
@@ -344,9 +319,10 @@ export function App(): React.ReactElement {
                 break;
             }
             case 'copy_link': {
-                // Copy link URL to clipboard
+                // Copy link URL to system clipboard AND internal clipboard
                 try {
-                    await navigator.clipboard.writeText(item.path);
+                    await window.electronAPI.clipboard.writeText(item.path);
+                    clipboardStore.copyItems([item], spaceId);
                     console.log('Link copied to clipboard');
                 } catch (err) {
                     console.error('Failed to copy link:', err);

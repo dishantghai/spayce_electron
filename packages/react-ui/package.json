@@ -10,7 +10,8 @@
         "./hooks": "./src/hooks/index.ts",
         "./hooks/mutations": "./src/hooks/mutations/index.ts",
         "./components": "./src/components/index.ts",
-        "./stores": "./src/stores/index.ts"
+        "./stores": "./src/stores/index.ts",
+        "./utils": "./src/utils/index.ts"
     },
     "scripts": {
         "build": "tsc",
