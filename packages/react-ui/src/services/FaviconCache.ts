@@ -55,12 +55,17 @@ export function getCacheSize(): number {
 }
 
 /**
- * Extract domain from a URL
+ * Extract domain from a URL, stripping www. prefix for better favicon matching
  */
 export function extractDomain(url: string): string {
     if (!url) return '';
     try {
-        return new URL(url).hostname;
+        let hostname = new URL(url).hostname;
+        // Strip www. prefix for better favicon service matching
+        if (hostname.startsWith('www.')) {
+            hostname = hostname.slice(4);
+        }
+        return hostname;
     } catch {
         return '';
     }
@@ -68,9 +73,10 @@ export function extractDomain(url: string): string {
 
 /**
  * Get Google Favicon Service URL for a domain
+ * Using the s2.googleusercontent.com endpoint which is more reliable
  */
 export function getGoogleFaviconUrl(domain: string): string {
-    return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
+    return `https://s2.googleusercontent.com/s2/favicons?domain=${domain}&sz=32`;
 }
 
 /**

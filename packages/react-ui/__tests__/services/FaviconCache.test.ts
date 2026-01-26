@@ -57,8 +57,12 @@ describe('FaviconCache', () => {
             expect(extractDomain('https://google.com/search?q=test')).toBe('google.com');
         });
 
-        it('extracts domain from URL with subdomain', () => {
-            expect(extractDomain('https://www.github.com/user/repo')).toBe('www.github.com');
+        it('extracts domain from URL with www prefix (strips www.)', () => {
+            expect(extractDomain('https://www.github.com/user/repo')).toBe('github.com');
+        });
+
+        it('preserves non-www subdomains', () => {
+            expect(extractDomain('https://mail.google.com/inbox')).toBe('mail.google.com');
         });
 
         it('extracts domain from URL with port', () => {
@@ -77,13 +81,13 @@ describe('FaviconCache', () => {
     describe('getGoogleFaviconUrl', () => {
         it('returns correct Google favicon URL format', () => {
             expect(getGoogleFaviconUrl('google.com')).toBe(
-                'https://www.google.com/s2/favicons?domain=google.com&sz=32'
+                'https://s2.googleusercontent.com/s2/favicons?domain=google.com&sz=32'
             );
         });
 
         it('handles domain with subdomain', () => {
-            expect(getGoogleFaviconUrl('www.github.com')).toBe(
-                'https://www.google.com/s2/favicons?domain=www.github.com&sz=32'
+            expect(getGoogleFaviconUrl('mail.google.com')).toBe(
+                'https://s2.googleusercontent.com/s2/favicons?domain=mail.google.com&sz=32'
             );
         });
     });

@@ -20,50 +20,48 @@ describe('useFavicon', () => {
             expect(result.current.isLoading).toBe(false);
         });
 
-        it('uses stored favicon from DB when no cache', () => {
-            const storedFavicon = 'https://stored-in-db.ico';
+        it('ignores stored favicon and uses DuckDuckGo (CORS safety)', () => {
+            const storedFavicon = 'https://github.githubassets.com/favicons/favicon-dark.svg';
 
             const { result } = renderHook(() =>
                 useFavicon('https://github.com/repo', storedFavicon)
             );
 
-            expect(result.current.faviconUrl).toBe(storedFavicon);
+            // Always uses DuckDuckGo regardless of stored favicon
+            expect(result.current.faviconUrl).toBe('https://icons.duckduckgo.com/ip3/github.com.ico');
             expect(result.current.isLoading).toBe(false);
-            // Should also cache it
-            expect(getCachedFavicon('github.com')).toBe(storedFavicon);
         });
 
-        it('falls back to Google favicon when no cache and no stored favicon', () => {
+        it('uses DuckDuckGo favicon when no cache and no stored favicon', () => {
             const { result } = renderHook(() =>
                 useFavicon('https://example.com/page', null)
             );
 
             expect(result.current.faviconUrl).toBe(
-                'https://www.google.com/s2/favicons?domain=example.com&sz=32'
+                'https://icons.duckduckgo.com/ip3/example.com.ico'
             );
             expect(result.current.isLoading).toBe(false);
         });
 
-        it('caches the Google fallback URL', () => {
+        it('caches the DuckDuckGo URL', () => {
             renderHook(() => useFavicon('https://newsite.com/path', null));
 
             expect(getCachedFavicon('newsite.com')).toBe(
-                'https://www.google.com/s2/favicons?domain=newsite.com&sz=32'
+                'https://icons.duckduckgo.com/ip3/newsite.com.ico'
             );
         });
     });
 
     describe('callback behavior', () => {
-        it('calls onFaviconResolved when favicon is resolved from fallback', () => {
+        it('callback parameter is ignored (simplified implementation)', () => {
             const onResolved = vi.fn();
 
             renderHook(() =>
                 useFavicon('https://callback-test.com/page', null, onResolved)
             );
 
-            expect(onResolved).toHaveBeenCalledWith(
-                'https://www.google.com/s2/favicons?domain=callback-test.com&sz=32'
-            );
+            // Callback is ignored in simplified implementation
+            expect(onResolved).not.toHaveBeenCalled();
         });
 
         it('does not call onFaviconResolved when using cached favicon', () => {
@@ -77,13 +75,14 @@ describe('useFavicon', () => {
             expect(onResolved).not.toHaveBeenCalled();
         });
 
-        it('does not call onFaviconResolved when using stored favicon', () => {
+        it('callback is ignored (API compatibility only)', () => {
             const onResolved = vi.fn();
 
             renderHook(() =>
-                useFavicon('https://stored-domain.com/page', 'https://stored.ico', onResolved)
+                useFavicon('https://example.com/page', null, onResolved)
             );
 
+            // Callback is ignored in simplified implementation
             expect(onResolved).not.toHaveBeenCalled();
         });
     });
@@ -114,24 +113,26 @@ describe('useFavicon', () => {
             );
 
             expect(result.current.faviconUrl).toBe(
-                'https://www.google.com/s2/favicons?domain=first.com&sz=32'
+                'https://icons.duckduckgo.com/ip3/first.com.ico'
             );
 
             rerender({ url: 'https://second.com', stored: null });
 
             await waitFor(() => {
                 expect(result.current.faviconUrl).toBe(
-                    'https://www.google.com/s2/favicons?domain=second.com&sz=32'
+                    'https://icons.duckduckgo.com/ip3/second.com.ico'
                 );
             });
         });
 
-        it('prefers stored favicon over Google fallback', () => {
+        it('always uses DuckDuckGo regardless of stored favicon', () => {
+            const storedFavicon = 'https://example.com/custom-favicon.png';
             const { result } = renderHook(() =>
-                useFavicon('https://prefer-stored.com', 'https://custom-stored.ico')
+                useFavicon('https://example.com', storedFavicon)
             );
 
-            expect(result.current.faviconUrl).toBe('https://custom-stored.ico');
+            // Stored favicon is ignored - always use DuckDuckGo
+            expect(result.current.faviconUrl).toBe('https://icons.duckduckgo.com/ip3/example.com.ico');
         });
 
         it('prefers cache over stored favicon', () => {

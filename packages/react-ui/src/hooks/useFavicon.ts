@@ -4,6 +4,7 @@ import {
     setCachedFavicon,
     extractDomain,
     getGoogleFaviconUrl,
+    getDuckDuckGoFaviconUrl,
 } from '../services/FaviconCache';
 
 export interface UseFaviconResult {
@@ -14,28 +15,26 @@ export interface UseFaviconResult {
 /**
  * Hook for lazy-loading favicons with caching
  * 
+ * Always uses DuckDuckGo Favicon Service - most reliable for CORS.
+ * Stored favicon URLs from websites are ignored (blocked by browser CORS).
+ * 
  * Priority:
  * 1. Memory cache (instant)
- * 2. Stored favicon from DB (storedFaviconUrl)
- * 3. Google Favicon Service fallback
+ * 2. DuckDuckGo Favicon Service
+ * 
+ * TreeItemIcon handles fallback: DuckDuckGo -> Google -> Link icon
  * 
  * @param itemUrl - The URL of the link item
- * @param storedFaviconUrl - Favicon URL stored in database (if any)
- * @param onFaviconResolved - Callback when favicon is resolved from fallback (for async DB update)
+ * @param _storedFaviconUrl - Ignored (kept for API compatibility)
+ * @param _onFaviconResolved - Ignored (kept for API compatibility)
  */
 export function useFavicon(
     itemUrl: string,
-    storedFaviconUrl: string | null,
-    onFaviconResolved?: (url: string) => void
+    _storedFaviconUrl: string | null,
+    _onFaviconResolved?: (url: string) => void
 ): UseFaviconResult {
     const [faviconUrl, setFaviconUrl] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    // Memoize callback to avoid unnecessary effect triggers
-    const stableCallback = useCallback(
-        (url: string) => onFaviconResolved?.(url),
-        [onFaviconResolved]
-    );
 
     useEffect(() => {
         const domain = extractDomain(itemUrl);
@@ -55,23 +54,12 @@ export function useFavicon(
             return;
         }
 
-        // 2. Use stored favicon from DB
-        if (storedFaviconUrl) {
-            setCachedFavicon(domain, storedFaviconUrl);
-            setFaviconUrl(storedFaviconUrl);
-            setIsLoading(false);
-            return;
-        }
-
-        // 3. Fall back to Google favicon service
-        const googleUrl = getGoogleFaviconUrl(domain);
-        setCachedFavicon(domain, googleUrl);
-        setFaviconUrl(googleUrl);
+        // 2. Use DuckDuckGo - most reliable for CORS
+        const duckDuckGoUrl = getDuckDuckGoFaviconUrl(domain);
+        setCachedFavicon(domain, duckDuckGoUrl);
+        setFaviconUrl(duckDuckGoUrl);
         setIsLoading(false);
-
-        // Notify parent to update DB async
-        stableCallback(googleUrl);
-    }, [itemUrl, storedFaviconUrl, stableCallback]);
+    }, [itemUrl]);
 
     return { faviconUrl, isLoading };
 }

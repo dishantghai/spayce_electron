@@ -448,8 +448,27 @@ export function Sidebar({
             });
         } else {
             const url = normalizeUrl(value);
-            const name = extractDomain(url);
-            const faviconUrl = getFaviconUrl(url);
+
+            // Fetch page metadata (title + favicon)
+            let name = url;
+            let faviconUrl = getFaviconUrl(url);
+
+            try {
+                const metadata = await (window as any).electronAPI?.metadata?.extract(url);
+                if (metadata?.success && metadata?.data) {
+                    if (metadata.data.title) {
+                        name = metadata.data.title;
+                    }
+                    // Use extracted favicon or fallback to current favicon (Google service)
+                    if (metadata.data.faviconUrl) {
+                        faviconUrl = metadata.data.faviconUrl;
+                    }
+                    // If no favicon from metadata, keep the Google favicon fallback
+                }
+            } catch (err) {
+                console.error('Failed to extract metadata:', err);
+                // Use URL as fallback name, keep Google favicon
+            }
 
             await onCreateItem({
                 spaceId: activeSpace.id,

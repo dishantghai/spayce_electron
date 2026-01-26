@@ -354,7 +354,7 @@ export function App(): React.ReactElement {
                                 });
 
                                 // Fetch title asynchronously in background
-                                // Favicon is loaded lazily by useFavicon hook on display
+                                // Favicon is loaded via DuckDuckGo service on display
                                 if (result.success && result.data) {
                                     const itemId = result.data.id;
 
