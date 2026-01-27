@@ -1,22 +1,23 @@
 {
-    "id": "F014",
-    "title": "Drop Validation",
-    "type": "feature",
-    "priority": "P0",
-    "status": "pending",
-    "estimated_hours": 3,
-    "related_specs": [],
-    "related_epic": null,
-    "dependencies": [
-        "F011",
-        "F012",
-        "F013"
-    ],
-    "affected_files": [
-        "packages/react-ui/src/utils/dragDropValidation.ts",
-        "packages/react-ui/src/components/drag-drop/DroppableTreeItem.tsx",
-        "packages/react-ui/src/stores/dragDropUiStore.ts"
-    ],
-    "created_at": "2026-01-27T00:15:00Z",
-    "updated_at": "2026-01-27T00:15:00Z"
+  "id": "F014",
+  "title": "Drop Validation",
+  "type": "feature",
+  "priority": "P0",
+  "status": "completed",
+  "estimated_hours": 3,
+  "related_specs": [],
+  "related_epic": null,
+  "dependencies": [
+    "F011",
+    "F012",
+    "F013"
+  ],
+  "affected_files": [
+    "packages/react-ui/src/utils/dragDropValidation.ts",
+    "packages/react-ui/src/components/drag-drop/DroppableTreeItem.tsx",
+    "packages/react-ui/src/stores/dragDropUiStore.ts"
+  ],
+  "created_at": "2026-01-27T00:15:00Z",
+  "updated_at": "2026-01-27T00:15:00Z",
+  "completed": "2026-01-27T17:09:37.979042"
 }

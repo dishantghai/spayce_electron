@@ -1,22 +1,23 @@
 {
-    "id": "F015",
-    "title": "Auto-Expand Folders on Drag Hover",
-    "type": "feature",
-    "priority": "P1",
-    "status": "pending",
-    "estimated_hours": 4,
-    "related_specs": [],
-    "related_epic": null,
-    "dependencies": [
-        "F011",
-        "F012",
-        "F013"
-    ],
-    "affected_files": [
-        "packages/react-ui/src/components/drag-drop/DroppableTreeItem.tsx",
-        "packages/react-ui/src/stores/dragDropUiStore.ts",
-        "packages/react-ui/src/components/TreeView.tsx"
-    ],
-    "created_at": "2026-01-27T00:15:00Z",
-    "updated_at": "2026-01-27T00:15:00Z"
+  "id": "F015",
+  "title": "Auto-Expand Folders on Drag Hover",
+  "type": "feature",
+  "priority": "P1",
+  "status": "completed",
+  "estimated_hours": 4,
+  "related_specs": [],
+  "related_epic": null,
+  "dependencies": [
+    "F011",
+    "F012",
+    "F013"
+  ],
+  "affected_files": [
+    "packages/react-ui/src/components/drag-drop/DroppableTreeItem.tsx",
+    "packages/react-ui/src/stores/dragDropUiStore.ts",
+    "packages/react-ui/src/components/TreeView.tsx"
+  ],
+  "created_at": "2026-01-27T00:15:00Z",
+  "updated_at": "2026-01-27T00:15:00Z",
+  "completed": "2026-01-27T17:09:40.940657"
 }
