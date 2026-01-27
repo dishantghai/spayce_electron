@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Pin, PinOff } from 'lucide-react';
 import { TreeView } from './TreeView';
+import { SpayceTree } from './tree/arborist';
+import { FeatureFlags } from '../config/features';
 import { SidebarTabs, type SidebarTabId } from './SidebarTabs';
 import { PinnedLinksGrid } from './PinnedLinksGrid';
 import { SpaceHeader } from './SpaceHeader';
@@ -10,6 +12,7 @@ import type { Space, SpaceItem } from '../types';
 import { SpaceItemType } from '../types';
 import { useInlineInputStore } from '../stores/inlineInputStore';
 import { normalizeUrl } from '../utils/url';
+import type { DropPosition } from '../stores/dragDropUiStore';
 import styles from './Sidebar.module.css';
 
 // Helper to check if item is a folder type
@@ -28,6 +31,10 @@ export interface SidebarProps {
     userName?: string;
     isVisible?: boolean;
     hasFocus?: boolean;
+    /** Controlled expanded IDs map - lifted to parent to persist across remounts */
+    expandedIdsMap?: Map<string, Set<string>>;
+    /** Called when expanded IDs map changes - for controlled mode */
+    onExpandedIdsMapChange?: (map: Map<string, Set<string>>) => void;
     onSpaceSelect?: (index: number) => void;
     onTabChange?: (tab: SidebarTabId) => void;
     onModeToggle?: () => void;
@@ -44,6 +51,9 @@ export interface SidebarProps {
     onFocusChange?: (hasFocus: boolean) => void;
     onCopySelected?: (focusedItemId: string | null) => void;
     onPasteToSelected?: (focusedItemId: string | null) => Promise<void>;
+    onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
+    /** Called when an item is moved via Arborist drag-drop (new implementation) */
+    onItemMoveArborist?: (draggedItemId: string, newParentId: string | null, newIndex: number, spaceId: string) => Promise<boolean>;
 }
 
 /**
@@ -59,6 +69,8 @@ export function Sidebar({
     userName,
     isVisible = true,
     hasFocus = true,
+    expandedIdsMap: controlledExpandedIdsMap,
+    onExpandedIdsMapChange,
     onSpaceSelect,
     onTabChange,
     onModeToggle,
@@ -75,6 +87,8 @@ export function Sidebar({
     onFocusChange,
     onCopySelected,
     onPasteToSelected,
+    onItemDrop,
+    onItemMoveArborist,
 }: SidebarProps): React.ReactElement {
     const sidebarRef = useRef<HTMLElement>(null);
     const [viewMode, setViewMode] = useState<SidebarViewMode>('normal');
@@ -90,8 +104,17 @@ export function Sidebar({
         setSidebarRenameItemId,
     } = useInlineInputStore();
 
-    // Track expandedIds per space to preserve state across refetches
-    const [expandedIdsMap, setExpandedIdsMap] = useState<Map<string, Set<string>>>(new Map());
+    // Track expandedIds per space - use controlled mode if provided, otherwise internal state
+    const [internalExpandedIdsMap, setInternalExpandedIdsMap] = useState<Map<string, Set<string>>>(new Map());
+    const expandedIdsMap = controlledExpandedIdsMap ?? internalExpandedIdsMap;
+    const setExpandedIdsMap = useCallback((updater: Map<string, Set<string>> | ((prev: Map<string, Set<string>>) => Map<string, Set<string>>)) => {
+        const newMap = typeof updater === 'function' ? updater(expandedIdsMap) : updater;
+        if (controlledExpandedIdsMap) {
+            onExpandedIdsMapChange?.(newMap);
+        } else {
+            setInternalExpandedIdsMap(newMap);
+        }
+    }, [controlledExpandedIdsMap, expandedIdsMap, onExpandedIdsMapChange]);
     const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
 
     // Get expandedIds for current space, initializing from space data if needed
@@ -129,7 +152,7 @@ export function Sidebar({
             newMap.set(activeSpace.id, newIds);
             return newMap;
         });
-    }, [activeSpace]);
+    }, [activeSpace, setExpandedIdsMap]);
 
     // Clear focus when switching spaces
     useEffect(() => {
@@ -308,29 +331,21 @@ export function Sidebar({
 
     // Keyboard navigation - matching Flutter behavior
     useEffect(() => {
-        console.log('[F010-Sidebar] useEffect triggered - viewMode:', viewMode, 'hasFocus:', hasFocus);
-
         if (viewMode !== 'normal') {
-            console.log('[F010-Sidebar] Skipping keyboard nav - viewMode is not normal:', viewMode);
             return;
         }
         if (!hasFocus) {
-            console.log('[F010-Sidebar] Skipping keyboard nav - sidebar does not have focus');
             return;
         }
-
-        console.log('[F010-Sidebar] Setting up keyboard listener - onCopySelected:', !!onCopySelected, 'onPasteToSelected:', !!onPasteToSelected);
 
         const handleKeyDown = (e: KeyboardEvent) => {
             // Skip if user is in an input field
             if (e.target instanceof HTMLInputElement ||
                 e.target instanceof HTMLTextAreaElement) {
-                console.log('[F010-Sidebar] Ignoring keydown - target is input/textarea');
                 return;
             }
 
             const isCtrlOrCmd = e.metaKey || e.ctrlKey;
-            console.log('[F010-Sidebar] KeyDown:', e.key, 'metaKey:', e.metaKey, 'ctrlKey:', e.ctrlKey, 'isCtrlOrCmd:', isCtrlOrCmd);
 
             switch (e.key) {
                 case 'ArrowUp':
@@ -391,10 +406,8 @@ export function Sidebar({
 
                 case 'c':
                     if (isCtrlOrCmd) {
-                        console.log('[F010-Sidebar] Cmd+C detected! focusedItemId:', focusedItemId);
                         e.preventDefault();
                         if (onCopySelected) {
-                            console.log('[F010-Sidebar] Calling onCopySelected with focusedItemId:', focusedItemId);
                             onCopySelected(focusedItemId);
                         }
                     }
@@ -402,10 +415,8 @@ export function Sidebar({
 
                 case 'v':
                     if (isCtrlOrCmd) {
-                        console.log('[F010-Sidebar] Cmd+V detected! focusedItemId:', focusedItemId);
                         e.preventDefault();
                         if (onPasteToSelected) {
-                            console.log('[F010-Sidebar] Calling onPasteToSelected with focusedItemId:', focusedItemId);
                             onPasteToSelected(focusedItemId);
                         }
                     }
@@ -650,27 +661,53 @@ export function Sidebar({
                             onAddLink={handleAddLinkClick}
                         />
 
-                        {/* Tree view */}
+                        {/* Tree view - Feature flag toggles between legacy and Arborist */}
                         <div className={styles.treeContainer}>
-                            <TreeView
-                                items={treeItems}
-                                spaceId={activeSpace.id}
-                                selectedId={focusedItemId || selectedItemId}
-                                activeId={focusedItemId}
-                                expandedIds={expandedIds}
-                                accentColor={activeSpace.accentColor}
-                                inlineInput={sidebarInput}
-                                renameItemId={sidebarRenameItemId}
-                                onItemClick={handleItemClick}
-                                onItemContextMenu={handleItemContextMenu}
-                                onExpandedChange={setExpandedIds}
-                                onAddSubfolder={handleAddSubfolder}
-                                onAddLink={handleAddLinkToFolder}
-                                onInlineInputSubmit={handleInlineInputSubmit}
-                                onInlineInputCancel={handleInlineInputCancel}
-                                onRenameSubmit={handleRenameSubmit}
-                                onRenameCancel={handleRenameCancel}
-                            />
+                            {FeatureFlags.USE_ARBORIST_TREE ? (
+                                <SpayceTree
+                                    items={treeItems}
+                                    spaceId={activeSpace.id}
+                                    selectedId={focusedItemId || selectedItemId}
+                                    activeId={focusedItemId}
+                                    accentColor={activeSpace.accentColor}
+                                    inlineInput={sidebarInput}
+                                    renameItemId={sidebarRenameItemId}
+                                    onItemClick={handleItemClick}
+                                    onItemContextMenu={handleItemContextMenu}
+                                    onAddSubfolder={handleAddSubfolder}
+                                    onAddLink={handleAddLinkToFolder}
+                                    onInlineInputSubmit={handleInlineInputSubmit}
+                                    onInlineInputCancel={handleInlineInputCancel}
+                                    onRenameSubmit={handleRenameSubmit}
+                                    onRenameCancel={handleRenameCancel}
+                                    onItemMove={onItemMoveArborist ?
+                                        (draggedId, parentId, index) => onItemMoveArborist(draggedId, parentId, index, activeSpace.id)
+                                        : undefined
+                                    }
+                                />
+                            ) : (
+                                <TreeView
+                                    items={treeItems}
+                                    spaceId={activeSpace.id}
+                                    selectedId={focusedItemId || selectedItemId}
+                                    activeId={focusedItemId}
+                                    expandedIds={expandedIds}
+                                    accentColor={activeSpace.accentColor}
+                                    inlineInput={sidebarInput}
+                                    renameItemId={sidebarRenameItemId}
+                                    dragDropContext="sidebar"
+                                    onItemClick={handleItemClick}
+                                    onItemContextMenu={handleItemContextMenu}
+                                    onExpandedChange={setExpandedIds}
+                                    onAddSubfolder={handleAddSubfolder}
+                                    onAddLink={handleAddLinkToFolder}
+                                    onInlineInputSubmit={handleInlineInputSubmit}
+                                    onInlineInputCancel={handleInlineInputCancel}
+                                    onRenameSubmit={handleRenameSubmit}
+                                    onRenameCancel={handleRenameCancel}
+                                    onItemDrop={onItemDrop}
+                                />
+                            )}
                         </div>
 
                         {/* Bottom bar */}

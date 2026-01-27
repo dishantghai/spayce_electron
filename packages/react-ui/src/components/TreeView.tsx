@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { SpaceItem, InlineInputState } from '../types';
 import { SpayceColors } from '../theme';
 import { TreeItem } from './TreeItem';
 import { InlineInput } from './InlineInput';
-import type { DragSource } from '../stores/dragDropUiStore';
+import type { DragSource, DropPosition } from '../stores/dragDropUiStore';
+import { useDragDropUiStore } from '../stores/dragDropUiStore';
 import styles from './TreeView.module.css';
 
 export interface TreeViewProps {
@@ -45,6 +46,8 @@ export interface TreeViewProps {
     onRenameCancel?: () => void;
     /** Context for drag-drop operations - 'sidebar' or 'spaceCard' */
     dragDropContext?: DragSource;
+    /** Called when item is dropped to move it */
+    onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
 }
 
 /**
@@ -81,37 +84,133 @@ export function TreeView({
     onRenameSubmit,
     onRenameCancel,
     dragDropContext = 'sidebar',
+    onItemDrop,
 }: TreeViewProps): React.ReactElement {
     // Internal expanded state (uncontrolled mode)
     const [internalExpandedIds, setInternalExpandedIds] = useState<Set<string>>(
         () => new Set<string>()
     );
 
-    // Use controlled or uncontrolled mode
-    const expandedIds = controlledExpandedIds ?? internalExpandedIds;
+    // Get drag-expanded folder IDs from store (for auto-expand during drag)
+    const dragExpandedFolderIds = useDragDropUiStore((state) => state.dragExpandedFolderIds);
+
+    // Use controlled or uncontrolled mode, and add drag-expanded folders
+    const expandedIds = useMemo(() => {
+        const base = controlledExpandedIds ?? internalExpandedIds;
+        if (dragExpandedFolderIds.size > 0) {
+            const augmented = new Set(base);
+            dragExpandedFolderIds.forEach(id => augmented.add(id));
+            return augmented;
+        }
+        return base;
+    }, [controlledExpandedIds, internalExpandedIds, dragExpandedFolderIds]);
 
     // Check if inline input should appear at root level
     const showRootInlineInput = inlineInput && inlineInput.parentId === null;
 
     const handleItemExpand = useCallback(
         (item: SpaceItem, expanded: boolean) => {
-            const newExpandedIds = new Set(expandedIds);
+            console.log(`[TreeView handleItemExpand] ========== EXPAND/COLLAPSE ==========`);
+            console.log(`[TreeView handleItemExpand] Item: ${item.name} (${item.id})`);
+            console.log(`[TreeView handleItemExpand] Target state: ${expanded ? 'EXPAND' : 'COLLAPSE'}`);
+
+            // IMPORTANT: Use BASE expandedIds, not the augmented one with dragExpandedFolderIds
+            // Otherwise, drag-expanded folders get permanently copied into the state
+            const baseExpandedIds = controlledExpandedIds ?? internalExpandedIds;
+            console.log(`[TreeView handleItemExpand] Current baseExpandedIds:`, Array.from(baseExpandedIds));
+            console.log(`[TreeView handleItemExpand] Was in baseExpandedIds: ${baseExpandedIds.has(item.id)}`);
+
+            const newExpandedIds = new Set(baseExpandedIds);
             if (expanded) {
+                console.log(`[TreeView handleItemExpand] Adding to expandedIds`);
                 newExpandedIds.add(item.id);
             } else {
+                console.log(`[TreeView handleItemExpand] Removing from expandedIds`);
                 newExpandedIds.delete(item.id);
             }
 
+            console.log(`[TreeView handleItemExpand] New expandedIds:`, Array.from(newExpandedIds));
+
             // Update internal state if uncontrolled
             if (!controlledExpandedIds) {
+                console.log(`[TreeView handleItemExpand] Updating internal state`);
                 setInternalExpandedIds(newExpandedIds);
             }
 
             // Notify parent
+            console.log(`[TreeView handleItemExpand] Notifying parent`);
             onExpandedChange?.(newExpandedIds);
             onItemExpand?.(item, expanded);
         },
-        [expandedIds, controlledExpandedIds, onExpandedChange, onItemExpand]
+        [controlledExpandedIds, internalExpandedIds, onExpandedChange, onItemExpand]
+    );
+
+    // Ref to track folders that need to be committed after drop
+    // This survives across re-renders caused by async refetch operations
+    const pendingExpandedFoldersRef = useRef<Set<string> | null>(null);
+
+    // Effect to commit pending expanded folders after render stabilizes
+    // This runs AFTER all state updates from refetch() are applied
+    useEffect(() => {
+        if (pendingExpandedFoldersRef.current && pendingExpandedFoldersRef.current.size > 0) {
+            const foldersToCommit = pendingExpandedFoldersRef.current;
+            pendingExpandedFoldersRef.current = null; // Clear ref first to prevent loops
+
+            console.log(`[TreeView useEffect] ========== COMMITTING PENDING FOLDERS ==========`);
+            console.log(`[TreeView useEffect] Folders to commit:`, Array.from(foldersToCommit));
+
+            // Get current base expandedIds
+            const baseExpandedIds = controlledExpandedIds ?? internalExpandedIds;
+            console.log(`[TreeView useEffect] Current base expandedIds:`, Array.from(baseExpandedIds));
+
+            // Check if folders are already in the base set
+            const needsCommit = Array.from(foldersToCommit).some(id => !baseExpandedIds.has(id));
+
+            if (needsCommit) {
+                const newExpandedIds = new Set(baseExpandedIds);
+                foldersToCommit.forEach(id => newExpandedIds.add(id));
+                console.log(`[TreeView useEffect] Merged expandedIds:`, Array.from(newExpandedIds));
+
+                // Update internal state if uncontrolled
+                if (!controlledExpandedIds) {
+                    console.log(`[TreeView useEffect] Updating internal state`);
+                    setInternalExpandedIds(newExpandedIds);
+                }
+
+                // Notify parent to persist
+                console.log(`[TreeView useEffect] Notifying parent of expanded state change`);
+                onExpandedChange?.(newExpandedIds);
+            } else {
+                console.log(`[TreeView useEffect] Folders already committed, skipping`);
+            }
+        }
+    }); // Run after every render to catch when state stabilizes
+
+    // Handle drop: store folders to commit and let useEffect handle the actual commit
+    const handleDrop = useCallback(
+        (itemId: string, targetId: string, position: DropPosition, dropSpaceId: string) => {
+            console.log(`[TreeView handleDrop] ========== DROP - STORING PENDING FOLDERS ==========`);
+
+            // Get current drag-expanded folders from store BEFORE they get cleared by endDrag()
+            const currentDragExpanded = dragExpandedFolderIds;
+            console.log(`[TreeView handleDrop] Drag-expanded folders:`, Array.from(currentDragExpanded));
+
+            if (currentDragExpanded.size > 0) {
+                // Store in ref - will be committed by useEffect after renders stabilize
+                // Also include any folders that were already expanded
+                const baseExpandedIds = controlledExpandedIds ?? internalExpandedIds;
+                const allFoldersToPreserve = new Set(baseExpandedIds);
+                currentDragExpanded.forEach(id => allFoldersToPreserve.add(id));
+
+                pendingExpandedFoldersRef.current = allFoldersToPreserve;
+                console.log(`[TreeView handleDrop] Stored pending folders:`, Array.from(allFoldersToPreserve));
+            }
+
+            // Call the parent's drop handler - this will trigger async refetch
+            console.log(`[TreeView handleDrop] Calling parent onItemDrop`);
+            onItemDrop?.(itemId, targetId, position, dropSpaceId);
+        },
+        [controlledExpandedIds, internalExpandedIds, dragExpandedFolderIds, onItemDrop]
     );
 
     if (!items || items.length === 0) {
@@ -169,6 +268,7 @@ export function TreeView({
                     onInlineInputCancel={onInlineInputCancel}
                     onRenameSubmit={onRenameSubmit}
                     onRenameCancel={onRenameCancel}
+                    onItemDrop={handleDrop}
                 />
             ))}
         </div>

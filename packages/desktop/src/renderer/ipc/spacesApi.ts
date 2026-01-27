@@ -130,10 +130,10 @@ export const itemsApi = {
         return mockApi.items.delete();
     },
 
-    move: async (itemId: string, targetSpaceId: string, targetParentId?: string) => {
+    move: async (itemId: string, targetSpaceId: string, targetParentId?: string, toPosition?: number) => {
         const api = getElectronAPI();
         if (api?.items) {
-            return api.items.move(itemId, targetSpaceId, targetParentId);
+            return api.items.move(itemId, targetSpaceId, targetParentId, toPosition);
         }
         return mockApi.items.move();
     },

@@ -247,17 +247,70 @@ export class SqliteSpaceItemsRepository implements ISpaceItemsRepository {
         }
     }
 
-    async moveItem(itemId: string, newSpaceId: string, newParentId: string | null, newOrder: number): Promise<void> {
+    async moveItem(itemId: string, newSpaceId: string, newParentId: string | null, newArrayIndex: number): Promise<void> {
         try {
-            this.db
-                .prepare(
-                    `
-                UPDATE space_items
-                SET space_id = ?, parent_id = ?, sort_order = ?
-                WHERE id = ?
-            `
-                )
-                .run(newSpaceId, newParentId, newOrder, itemId);
+            // IMPORTANT: newArrayIndex is the desired 0-based array position, NOT a sort_order value
+            // We need to normalize sort_orders to ensure consistent positioning
+
+            // Get current item location
+            const currentItem = this.db
+                .prepare('SELECT space_id, parent_id, sort_order FROM space_items WHERE id = ?')
+                .get(itemId) as { space_id: string; parent_id: string | null; sort_order: number } | undefined;
+
+            if (!currentItem) {
+                throw new Error(`Item not found: ${itemId}`);
+            }
+
+            const isSameParent = currentItem.space_id === newSpaceId && currentItem.parent_id === newParentId;
+
+            // Execute in transaction - use array-index based reordering
+            const transaction = this.db.transaction(() => {
+                // Get all siblings in the target parent (excluding the item being moved)
+                const siblingsSql = newParentId === null
+                    ? `SELECT id FROM space_items WHERE space_id = ? AND parent_id IS NULL AND id != ? ORDER BY sort_order ASC`
+                    : `SELECT id FROM space_items WHERE space_id = ? AND parent_id = ? AND id != ? ORDER BY sort_order ASC`;
+                const siblingsParams = newParentId === null
+                    ? [newSpaceId, itemId]
+                    : [newSpaceId, newParentId, itemId];
+                const siblings = this.db.prepare(siblingsSql).all(...siblingsParams) as { id: string }[];
+
+                // Build the new order: insert itemId at newArrayIndex
+                const newOrderedIds: string[] = [];
+                for (let i = 0; i < siblings.length; i++) {
+                    if (i === newArrayIndex) {
+                        newOrderedIds.push(itemId);
+                    }
+                    newOrderedIds.push(siblings[i].id);
+                }
+                // If newArrayIndex is at or beyond the end, append
+                if (newArrayIndex >= siblings.length) {
+                    newOrderedIds.push(itemId);
+                }
+
+                // Update all items with normalized sort_order (0, 1, 2, 3, ...)
+                const updateStmt = this.db.prepare('UPDATE space_items SET space_id = ?, parent_id = ?, sort_order = ? WHERE id = ?');
+                newOrderedIds.forEach((id, index) => {
+                    updateStmt.run(newSpaceId, newParentId, index, id);
+                });
+
+                // If moving to a different parent, also normalize the old parent
+                if (!isSameParent) {
+                    const oldSiblingsSql = currentItem.parent_id === null
+                        ? `SELECT id FROM space_items WHERE space_id = ? AND parent_id IS NULL ORDER BY sort_order ASC`
+                        : `SELECT id FROM space_items WHERE space_id = ? AND parent_id = ? ORDER BY sort_order ASC`;
+                    const oldSiblingsParams = currentItem.parent_id === null
+                        ? [currentItem.space_id]
+                        : [currentItem.space_id, currentItem.parent_id];
+                    const oldSiblings = this.db.prepare(oldSiblingsSql).all(...oldSiblingsParams) as { id: string }[];
+
+                    // Normalize old parent's sort_orders
+                    oldSiblings.forEach((sibling, index) => {
+                        this.db.prepare('UPDATE space_items SET sort_order = ? WHERE id = ?').run(index, sibling.id);
+                    });
+                }
+            });
+
+            transaction();
         } catch (error) {
             throw new DatabaseError('moveItem', error as Error);
         }

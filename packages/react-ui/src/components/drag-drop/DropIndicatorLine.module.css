@@ -1,14 +1,17 @@
 .container {
-    height: 0;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 8px;
     opacity: 0;
-    overflow: hidden;
     padding-left: var(--indicator-indent, 0);
     padding-right: 8px;
     pointer-events: none;
+    transform: translateY(-4px);
+    z-index: 10;
 }
 
 .container.visible {
-    height: 8px;
     opacity: 1;
 }
 

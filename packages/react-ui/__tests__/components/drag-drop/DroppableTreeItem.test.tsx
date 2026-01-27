@@ -54,7 +54,7 @@ const mockAccentColor = '#6D5AE6';
 describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
     let mockSetDropIndicator: ReturnType<typeof vi.fn>;
     let mockClearDropIndicator: ReturnType<typeof vi.fn>;
-    let mockSetDragExpandedFolder: ReturnType<typeof vi.fn>;
+    let mockAddDragExpandedFolder: ReturnType<typeof vi.fn>;
     let mockClearDragExpandedFolder: ReturnType<typeof vi.fn>;
     let mockValidateDrop: ReturnType<typeof vi.fn>;
     let originalGetBoundingClientRect: typeof Element.prototype.getBoundingClientRect;
@@ -62,7 +62,7 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
     beforeEach(() => {
         mockSetDropIndicator = vi.fn();
         mockClearDropIndicator = vi.fn();
-        mockSetDragExpandedFolder = vi.fn();
+        mockAddDragExpandedFolder = vi.fn();
         mockClearDragExpandedFolder = vi.fn();
         mockValidateDrop = vi.fn().mockReturnValue(true);
 
@@ -72,8 +72,7 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
             dropIndicator: null,
             setDropIndicator: mockSetDropIndicator,
             clearDropIndicator: mockClearDropIndicator,
-            setDragExpandedFolder: mockSetDragExpandedFolder,
-            clearDragExpandedFolder: mockClearDragExpandedFolder,
+            addDragExpandedFolder: mockAddDragExpandedFolder,
             validateDrop: mockValidateDrop,
         };
 
@@ -316,14 +315,14 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
             const droppable = screen.getByTestId('droppable-tree-item');
             fireEvent.dragEnter(droppable);
 
-            expect(mockSetDragExpandedFolder).not.toHaveBeenCalled();
+            expect(mockAddDragExpandedFolder).not.toHaveBeenCalled();
 
             // Fast-forward 800ms
             act(() => {
                 vi.advanceTimersByTime(800);
             });
 
-            expect(mockSetDragExpandedFolder).toHaveBeenCalledWith('folder-collapsed');
+            expect(mockAddDragExpandedFolder).toHaveBeenCalledWith('folder-collapsed');
         });
 
         it('should not auto-expand already expanded folder', () => {
@@ -354,7 +353,7 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
                 vi.advanceTimersByTime(800);
             });
 
-            expect(mockSetDragExpandedFolder).not.toHaveBeenCalled();
+            expect(mockAddDragExpandedFolder).not.toHaveBeenCalled();
         });
 
         it('should cancel auto-expand when drag leaves', () => {
@@ -392,7 +391,7 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
                 vi.advanceTimersByTime(500);
             });
 
-            expect(mockSetDragExpandedFolder).not.toHaveBeenCalled();
+            expect(mockAddDragExpandedFolder).not.toHaveBeenCalled();
         });
     });
 
@@ -425,7 +424,7 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
             expect(mockOnDrop).toHaveBeenCalledWith('folder-1', 'inside');
         });
 
-        it('should clear state after drop', () => {
+        it('should clear drop indicator after drop but preserve drag-expanded folders', () => {
             const mockOnDrop = vi.fn();
 
             render(
@@ -450,8 +449,11 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
 
             fireEvent.drop(droppable, { clientY: 50 });
 
+            // Drop indicator should be cleared
             expect(mockClearDropIndicator).toHaveBeenCalled();
-            expect(mockClearDragExpandedFolder).toHaveBeenCalled();
+            // Drag-expanded folders should NOT be cleared here - they are preserved
+            // so TreeView can commit them to base expandedIds before endDrag() clears them
+            expect(mockClearDragExpandedFolder).not.toHaveBeenCalled();
         });
     });
 });

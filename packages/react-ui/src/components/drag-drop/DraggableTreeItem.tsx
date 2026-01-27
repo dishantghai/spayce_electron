@@ -43,6 +43,11 @@ export const DraggableTreeItem = memo(function DraggableTreeItem({
     const itemsToDrag = selectedItems && selectedItems.length > 0 ? selectedItems : [item];
 
     const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+        console.log(`[DragStart] ========== DRAG START ==========`);
+        console.log(`[DragStart] Item: ${item.name} (${item.id})`);
+        console.log(`[DragStart] Parent: ${parentId}`);
+        console.log(`[DragStart] Index: ${index}`);
+
         const dragDataPayload: DragData = {
             item,
             items: itemsToDrag,
@@ -64,12 +69,16 @@ export const DraggableTreeItem = memo(function DraggableTreeItem({
 
         setIsThisDragging(true);
         startDrag(dragDataPayload);
+        console.log(`[DragStart] Drag state set`);
     }, [item, itemsToDrag, spaceId, parentId, index, dragSource, ancestorIds, startDrag]);
 
     const handleDragEnd = useCallback(() => {
+        console.log(`[DragEnd] ========== DRAG END ==========`);
+        console.log(`[DragEnd] Item: ${item.name} (${item.id})`);
         setIsThisDragging(false);
         endDrag();
-    }, [endDrag]);
+        console.log(`[DragEnd] Drag state cleared`);
+    }, [endDrag, item.id, item.name]);
 
     const handleDrag = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         if (e.clientX !== 0 || e.clientY !== 0) {

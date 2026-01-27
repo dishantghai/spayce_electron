@@ -12,6 +12,7 @@ interface DroppableTreeItemProps {
     level: number;
     accentColor: string;
     ancestorIds: string[];
+    isExpanded?: boolean;
     children: React.ReactNode;
     /** Context where this droppable is rendered - only accepts drops from same context */
     dropContext?: DragSource;
@@ -28,6 +29,7 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
     level,
     accentColor,
     ancestorIds,
+    isExpanded = false,
     children,
     dropContext = 'sidebar',
     onDrop,
@@ -38,8 +40,7 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
         dragData,
         setDropIndicator,
         clearDropIndicator,
-        setDragExpandedFolder,
-        clearDragExpandedFolder,
+        addDragExpandedFolder,
         validateDrop,
     } = useDragDropUiStore();
 
@@ -113,57 +114,97 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
         e.preventDefault();
         e.stopPropagation();
 
-        if (!isDragging || !isValidDropTarget) return;
+        console.log(`[DragEnter] Item: ${item.name} (${item.id})`);
+
+        if (!isDragging || !isValidDropTarget) {
+            console.log(`[DragEnter] Skipped - isDragging: ${isDragging}, isValidDropTarget: ${isValidDropTarget}`);
+            return;
+        }
 
         setIsHovering(true);
 
         // Auto-expand folder after delay
-        if (isFolder && !item.isExpanded) {
+        if (isFolder && !isExpanded) {
+            // CRITICAL: Clear any existing timer to prevent orphaned timers firing after drag ends
+            if (autoExpandTimerRef.current) {
+                console.log(`[DragEnter] Clearing previous timer for: ${item.name}`);
+                clearTimeout(autoExpandTimerRef.current);
+            }
+
+            console.log(`[DragEnter] Setting auto-expand timer for folder: ${item.name}`);
             autoExpandTimerRef.current = setTimeout(() => {
-                setDragExpandedFolder(item.id);
+                console.log(`[DragEnter] Auto-expanding folder: ${item.name} (${item.id})`);
+                addDragExpandedFolder(item.id);
             }, AUTO_EXPAND_DELAY);
         }
-    }, [isDragging, isValidDropTarget, isFolder, item.isExpanded, item.id, setDragExpandedFolder]);
+    }, [isDragging, isValidDropTarget, isFolder, isExpanded, item.id, item.name, addDragExpandedFolder]);
 
     const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.stopPropagation();
 
+        console.log(`[DragLeave] Item: ${item.name} (${item.id})`);
+
         // Only handle if leaving the container entirely
         const relatedTarget = e.relatedTarget as Node | null;
-        if (containerRef.current?.contains(relatedTarget)) return;
+        if (containerRef.current?.contains(relatedTarget)) {
+            console.log(`[DragLeave] Skipped - still inside container`);
+            return;
+        }
 
+        console.log(`[DragLeave] Left container - clearing drop indicator`);
         setIsHovering(false);
         lastPositionRef.current = null;
         clearDropIndicator();
 
         // Clear auto-expand timer
         if (autoExpandTimerRef.current) {
+            console.log(`[DragLeave] Clearing auto-expand timer for: ${item.name}`);
             clearTimeout(autoExpandTimerRef.current);
             autoExpandTimerRef.current = null;
         }
-    }, [clearDropIndicator]);
+
+        // DO NOT clear dragExpandedFolder here!
+        // When moving from parent to child, this fires but we want the folder to stay expanded.
+        // The folder will be cleared on endDrag() or handleDrop() instead.
+        console.log(`[DragLeave] NOT clearing dragExpandedFolder (will clear on drop/end)`);
+    }, [clearDropIndicator, item.id, item.name]);
 
     const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!isDragging || !dragData || !isValidDropTarget) return;
+        console.log(`[Drop] ========== DROP EVENT START ==========`);
+        console.log(`[Drop] Target: ${item.name} (${item.id})`);
+
+        if (!isDragging || !dragData || !isValidDropTarget) {
+            console.log(`[Drop] Rejected - isDragging: ${isDragging}, dragData: ${!!dragData}, isValidDropTarget: ${isValidDropTarget}`);
+            return;
+        }
 
         const position = calculateDropPosition(e);
+        console.log(`[Drop] Position: ${position}`);
 
         // Clear timers and state
         if (autoExpandTimerRef.current) {
+            console.log(`[Drop] Clearing auto-expand timer`);
             clearTimeout(autoExpandTimerRef.current);
             autoExpandTimerRef.current = null;
         }
 
+        console.log(`[Drop] Clearing hover state and indicators`);
         setIsHovering(false);
         clearDropIndicator();
-        clearDragExpandedFolder();
+        // NOTE: Do NOT call clearDragExpandedFolders() here!
+        // The folders need to stay expanded until they're persisted to base expandedIds.
+        // endDrag() will be called by DraggableTreeItem.handleDragEnd() after the drop completes,
+        // and by that point TreeView will have committed the folders to base state.
 
+        console.log(`[Drop] Calling onDrop handler (dragExpandedFolders preserved for commit)`);
+        // Pass dragData so the handler knows which item was dragged
         onDrop?.(item.id, position);
-    }, [isDragging, dragData, isValidDropTarget, calculateDropPosition, clearDropIndicator, clearDragExpandedFolder, onDrop, item.id]);
+        console.log(`[Drop] ========== DROP EVENT END ==========`);
+    }, [isDragging, dragData, isValidDropTarget, calculateDropPosition, clearDropIndicator, onDrop, item.id, item.name]);
 
     // Cleanup on unmount
     useEffect(() => {

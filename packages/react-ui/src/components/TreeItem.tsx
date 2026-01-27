@@ -7,7 +7,7 @@ import { TreeItemIcon } from './TreeItemIcon';
 import { InlineInput } from './InlineInput';
 import { InlineRenameInput } from './InlineRenameInput';
 import { DraggableTreeItem, DroppableTreeItem, FlashItem } from './drag-drop';
-import type { DragSource } from '../stores/dragDropUiStore';
+import type { DragSource, DropPosition } from '../stores/dragDropUiStore';
 import styles from './TreeView.module.css';
 
 interface TreeItemProps {
@@ -31,6 +31,7 @@ interface TreeItemProps {
     onInlineInputCancel?: () => void;
     onRenameSubmit?: (itemId: string, newName: string) => void;
     onRenameCancel?: () => void;
+    onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
 }
 
 /**
@@ -57,6 +58,7 @@ export function TreeItem({
     onInlineInputCancel,
     onRenameSubmit,
     onRenameCancel,
+    onItemDrop,
 }: TreeItemProps): React.ReactElement {
     const [isHovered, setIsHovered] = useState(false);
     const isFolder = item.type === SpaceItemType.folder || item.type === SpaceItemType.localFolder;
@@ -76,12 +78,23 @@ export function TreeItem({
     // Click handler - expand/collapse folders AND notify parent for focus
     const handleClick = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        if (isRenaming) return; // Don't handle clicks during rename
+        console.log(`[TreeItem Click] ========== CLICK ==========`);
+        console.log(`[TreeItem Click] Item: ${item.name} (${item.id})`);
+        console.log(`[TreeItem Click] isFolder: ${isFolder}, isExpanded: ${isExpanded}, isRenaming: ${isRenaming}`);
+
+        if (isRenaming) {
+            console.log(`[TreeItem Click] Skipped - currently renaming`);
+            return;
+        }
+
         // Toggle expand/collapse for all folders (including empty ones)
         if (isFolder) {
+            console.log(`[TreeItem Click] Calling onItemExpand(${item.name}, ${!isExpanded})`);
             onItemExpand?.(item, !isExpanded);
         }
+
         // Always notify parent to update focus state
+        console.log(`[TreeItem Click] Calling onItemClick`);
         onItemClick?.(item);
     }, [item, isFolder, isExpanded, isRenaming, onItemClick, onItemExpand]);
 
@@ -150,7 +163,14 @@ export function TreeItem({
                     level={depth}
                     accentColor={accentColor}
                     ancestorIds={ancestorIds}
+                    isExpanded={isExpanded}
                     dropContext={dragDropContext}
+                    onDrop={(targetId, position) => {
+                        // This is called when something is dropped on this item
+                        // We don't know the dragged item ID here - it will be handled upstream
+                        // Just pass the drop event info up
+                        onItemDrop?.(targetId, targetId, position, spaceId);
+                    }}
                 >
                     <DraggableTreeItem
                         item={item}
@@ -285,6 +305,7 @@ export function TreeItem({
                                 onInlineInputCancel={onInlineInputCancel}
                                 onRenameSubmit={onRenameSubmit}
                                 onRenameCancel={onRenameCancel}
+                                onItemDrop={onItemDrop}
                             />
                         ))}
                 </div>

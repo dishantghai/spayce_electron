@@ -28,6 +28,7 @@ export function useSpacesData(): UseSpacesDataResult {
     const [spaces, setSpaces] = useState<Space[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<Error | null>(null);
+    const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 
     const transformItems = useCallback((items: any[]): SpaceItem[] => {
         // API returns nested tree structure with children arrays
@@ -58,7 +59,11 @@ export function useSpacesData(): UseSpacesDataResult {
 
     const fetchSpaces = useCallback(async () => {
         try {
-            setLoading(true);
+            // Only set loading=true on initial load, not during refetch
+            // This prevents Sidebar from unmounting/remounting during refetch
+            if (!hasInitiallyLoaded) {
+                setLoading(true);
+            }
             setError(null);
             const result = await spacesApi.getAll(PROFILE_ID);
 
@@ -87,15 +92,18 @@ export function useSpacesData(): UseSpacesDataResult {
                     })
                 );
                 setSpaces(uiSpaces);
+                setHasInitiallyLoaded(true);
             } else {
                 setError(new Error(result.error?.message || 'Failed to fetch spaces'));
             }
         } catch (err) {
             setError(err instanceof Error ? err : new Error('Unknown error'));
         } finally {
-            setLoading(false);
+            if (!hasInitiallyLoaded) {
+                setLoading(false);
+            }
         }
-    }, [transformItems]);
+    }, [transformItems, hasInitiallyLoaded]);
 
     useEffect(() => {
         fetchSpaces();

@@ -44,7 +44,7 @@ interface DragDropUiState {
     isDragging: boolean;
     dragData: DragData | null;
     dropIndicator: DropIndicatorState | null;
-    dragExpandedFolderId: string | null;
+    dragExpandedFolderIds: Set<string>;
     flashItemId: string | null;
     isOverPinsGrid: boolean;
     pinsDropIndex: number | null;
@@ -54,8 +54,8 @@ interface DragDropUiState {
     setDropIndicator: (indicator: DropIndicatorState | null) => void;
     clearDropIndicator: () => void;
     endDrag: () => void;
-    setDragExpandedFolder: (id: string | null) => void;
-    clearDragExpandedFolder: () => void;
+    addDragExpandedFolder: (id: string) => void;
+    clearDragExpandedFolders: () => void;
     setFlashItem: (id: string | null) => void;
     setOverPinsGrid: (isOver: boolean, dropIndex?: number | null) => void;
     validateCircularReference: (draggedItemId: string, targetFolderId: string | null, ancestorIds: string[]) => ValidationResult;
@@ -68,7 +68,7 @@ export const useDragDropUiStore = create<DragDropUiState>((set, get) => ({
     isDragging: false,
     dragData: null,
     dropIndicator: null,
-    dragExpandedFolderId: null,
+    dragExpandedFolderIds: new Set<string>(),
     flashItemId: null,
     isOverPinsGrid: false,
     pinsDropIndex: null,
@@ -117,17 +117,29 @@ export const useDragDropUiStore = create<DragDropUiState>((set, get) => ({
 
     clearDropIndicator: () => set({ dropIndicator: null }),
 
-    endDrag: () => set({
-        isDragging: false,
-        dragData: null,
-        dropIndicator: null,
-        dragExpandedFolderId: null,
-        validationError: null,
-    }),
+    endDrag: () => {
+        console.log('[Store endDrag] Clearing all drag state');
+        set({
+            isDragging: false,
+            dragData: null,
+            dropIndicator: null,
+            dragExpandedFolderIds: new Set<string>(),
+            validationError: null,
+        });
+    },
 
-    setDragExpandedFolder: (id) => set({ dragExpandedFolderId: id }),
+    addDragExpandedFolder: (id) => {
+        const current = get().dragExpandedFolderIds;
+        const updated = new Set(current);
+        updated.add(id);
+        console.log(`[Store addDragExpandedFolder] Adding folder ID: ${id}, total: ${updated.size}`);
+        set({ dragExpandedFolderIds: updated });
+    },
 
-    clearDragExpandedFolder: () => set({ dragExpandedFolderId: null }),
+    clearDragExpandedFolders: () => {
+        console.log('[Store clearDragExpandedFolders] Clearing all drag-expanded folders');
+        set({ dragExpandedFolderIds: new Set<string>() });
+    },
 
     setFlashItem: (id) => set({ flashItemId: id }),
 

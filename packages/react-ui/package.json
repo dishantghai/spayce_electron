@@ -24,6 +24,7 @@
         "@spayce/infrastructure": "workspace:*",
         "lucide-react": "^0.309.0",
         "react": "^18.2.0",
+        "react-arborist": "^3.4.3",
         "zustand": "^4.5.0"
     },
     "devDependencies": {
