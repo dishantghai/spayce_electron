@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
     SpayceColors,
     SpaceItemType,
@@ -6,7 +6,8 @@ import {
     Sidebar,
     SpacesScreen,
 } from '@spayce/react-ui';
-import { useClipboardStore, useInlineInputStore, useSelectionStore } from '@spayce/react-ui/stores';
+import { useClipboardStore, useInlineInputStore, useSelectionStore, useDragDropUiStore } from '@spayce/react-ui/stores';
+import type { DropPosition } from '@spayce/react-ui/stores';
 import { collectLinksRecursive, hasLinksRecursive, extractUrlsFromText } from '@spayce/react-ui/utils';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
@@ -200,6 +201,9 @@ export function App(): React.ReactElement {
     // Focus context: 'sidebar' or 'spacesScreen'
     // Rule 0: Default to 'sidebar' on app open
     const [focusContext, setFocusContext] = useState<'sidebar' | 'spacesScreen'>('sidebar');
+
+    // Sidebar expanded IDs map - lifted to App level to persist across Sidebar remounts (caused by refetch)
+    const [sidebarExpandedIdsMap, setSidebarExpandedIdsMap] = useState<Map<string, Set<string>>>(new Map());
 
     const [contextMenu, setContextMenu] = useState<{
         item: SpaceItem;
@@ -777,7 +781,169 @@ export function App(): React.ReactElement {
         }
     }, [focusContext, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, clipboardStore, refetch, sidebarSelectedId, getItemsByIds]);
 
-    // Show loading state
+    // Handle drag-drop item movement
+    const dragDropStore = useDragDropUiStore();
+    const handleItemDrop = useCallback(async (targetId: string, _targetId2: string, position: DropPosition, spaceId: string) => {
+        const dragData = dragDropStore.dragData;
+        if (!dragData) {
+            console.error('[Drop] No drag data available');
+            return;
+        }
+
+        const draggedItem = dragData.item;
+        console.log('[Drop] ========== DROP OPERATION START ==========');
+        console.log('[Drop] Dragged:', draggedItem.name, '(id:', draggedItem.id + ')');
+        console.log('[Drop] Target:', targetId, 'Position:', position);
+
+        // Find item info including parent, siblings, and index
+        const findItemInfo = (items: SpaceItem[], itemId: string, parentId: string | null = null): { item: SpaceItem; parent: string | null; siblings: SpaceItem[]; index: number } | undefined => {
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.id === itemId) {
+                    return { item, parent: parentId, siblings: items, index: i };
+                }
+                if (item.children) {
+                    const found = findItemInfo(item.children, itemId, item.id);
+                    if (found) return found;
+                }
+            }
+            return undefined;
+        };
+
+        const space = spaces.find(s => s.id === spaceId);
+        if (!space) {
+            console.error('[Drop] Space not found:', spaceId);
+            return;
+        }
+
+        // Find both dragged and target items
+        const draggedInfo = findItemInfo(space.rootItems, draggedItem.id);
+        const targetInfo = findItemInfo(space.rootItems, targetId);
+
+        if (!draggedInfo) {
+            console.error('[Drop] Dragged item not found in tree:', draggedItem.id);
+            return;
+        }
+        if (!targetInfo) {
+            console.error('[Drop] Target item not found:', targetId);
+            return;
+        }
+
+        console.log('[Drop] Dragged item current parent:', draggedInfo.parent, 'index:', draggedInfo.index);
+        console.log('[Drop] Target item parent:', targetInfo.parent, 'index:', targetInfo.index);
+
+        // Calculate target parent and position based on drop position
+        let targetParentId: string | null = null;
+        let toPosition = 0;
+
+        if (position === 'inside') {
+            // Drop inside folder - becomes first child
+            targetParentId = targetId;
+            toPosition = 0;
+            console.log('[Drop] Inside drop: inserting at position 0');
+        } else {
+            // Drop before/after - same parent as target
+            targetParentId = targetInfo.parent;
+
+            // Check if moving within same parent
+            const isSameParent = draggedInfo.parent === targetParentId;
+            console.log('[Drop] Same parent?', isSameParent);
+
+            if (position === 'before') {
+                toPosition = targetInfo.index;
+                // If moving within same parent and dragged item is before target,
+                // account for removal shifting indices down by 1
+                if (isSameParent && draggedInfo.index < targetInfo.index) {
+                    toPosition = targetInfo.index - 1;
+                    console.log('[Drop] Before: Adjusted for same-parent move (dragged < target):', toPosition);
+                } else {
+                    console.log('[Drop] Before: Position:', toPosition);
+                }
+            } else {
+                // after
+                toPosition = targetInfo.index + 1;
+                // If moving within same parent and dragged item is before target,
+                // removal shifts indices, so final position is targetIndex (not +1)
+                if (isSameParent && draggedInfo.index < targetInfo.index) {
+                    toPosition = targetInfo.index;
+                    console.log('[Drop] After: Adjusted for same-parent move (dragged < target):', toPosition);
+                } else {
+                    console.log('[Drop] After: Position:', toPosition);
+                }
+            }
+        }
+
+        console.log('[Drop] Final calculation - Parent:', targetParentId, 'Position:', toPosition);
+
+        // Call move API with position
+        const result = await itemsApi.move(draggedItem.id, spaceId, targetParentId || undefined, toPosition);
+        if (result?.success) {
+            console.log('[Drop] ✓ Move successful');
+            console.log('[Drop] ========== DROP OPERATION END ==========');
+
+            // Set flash item to highlight the dropped item
+            dragDropStore.setFlashItem(draggedItem.id);
+
+            // Refetch to update UI with new data
+            // useSpacesData now skips loading state during refetch to prevent Sidebar remount
+            refetch();
+        } else {
+            console.error('[Drop] ✗ Move failed:', result);
+            console.log('[Drop] ========== DROP OPERATION END ==========');
+        }
+    }, [dragDropStore, spaces, refetch]);
+
+    // Handle Arborist drag-drop item movement (new implementation)
+    // Arborist computes the position, we just persist to backend
+    const handleItemMoveArborist = useCallback(async (
+        draggedItemId: string,
+        newParentId: string | null,
+        newIndex: number,
+        spaceId: string
+    ): Promise<boolean> => {
+        console.log('[Arborist Move] ========== MOVE OPERATION START ==========');
+        console.log('[Arborist Move] Item:', draggedItemId);
+        console.log('[Arborist Move] New Parent:', newParentId);
+        console.log('[Arborist Move] New Index:', newIndex);
+        console.log('[Arborist Move] Space:', spaceId);
+
+        try {
+            // Call move API - Arborist already computed the correct position
+            const result = await itemsApi.move(
+                draggedItemId,
+                spaceId,
+                newParentId || undefined,
+                newIndex
+            );
+
+            if (result?.success) {
+                console.log('[Arborist Move] ✓ Backend update successful');
+                console.log('[Arborist Move] ========== MOVE OPERATION END ==========');
+
+                // Refresh data to sync UI with backend
+                await refetch();
+                return true;
+            } else {
+                console.error('[Arborist Move] ✗ Backend update failed:', result);
+                console.log('[Arborist Move] ========== MOVE OPERATION END ==========');
+
+                // Refresh to rollback UI to backend state
+                await refetch();
+                return false;
+            }
+        } catch (error) {
+            console.error('[Arborist Move] ✗ Error:', error);
+            console.log('[Arborist Move] ========== MOVE OPERATION END ==========');
+
+            // Refresh to rollback UI to backend state
+            await refetch();
+            return false;
+        }
+    }, [refetch]);
+
+    // Show loading state only on initial load (not during refetch)
+    // This prevents Sidebar from unmounting/remounting during refetch
+    // The useSpaces hook now uses isRefetching flag for refetches, keeping loading=false
     if (loading) {
         return (
             <div style={{
@@ -831,6 +997,7 @@ export function App(): React.ReactElement {
                 }}
             >
                 <Sidebar
+                    key="main-sidebar"
                     spaces={spaces}
                     activeSpaceIndex={sidebarActiveSpaceIndex}
                     selectedItemId={sidebarSelectedId}
@@ -857,6 +1024,10 @@ export function App(): React.ReactElement {
                     }}
                     onCopySelected={handleCopySelected}
                     onPasteToSelected={handlePasteToSelected}
+                    onItemDrop={handleItemDrop}
+                    onItemMoveArborist={handleItemMoveArborist}
+                    expandedIdsMap={sidebarExpandedIdsMap}
+                    onExpandedIdsMapChange={setSidebarExpandedIdsMap}
                 />
             </div>
 
@@ -893,6 +1064,8 @@ export function App(): React.ReactElement {
                         onFocusChange={(hasFocus: boolean) => {
                             if (hasFocus) setFocusContext('spacesScreen');
                         }}
+                        onItemDrop={handleItemDrop}
+                        onItemMoveArborist={handleItemMoveArborist}
                     />
                 ) : (
                     <div style={{

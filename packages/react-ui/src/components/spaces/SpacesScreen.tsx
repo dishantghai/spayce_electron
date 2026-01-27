@@ -4,6 +4,7 @@ import type { Space, SpaceItem } from '../../types';
 import { SpaceCard } from './SpaceCard';
 import { SpacesBottomBar } from './SpacesBottomBar';
 import { useInlineInputStore } from '../../stores/inlineInputStore';
+import type { DropPosition } from '../../stores/dragDropUiStore';
 import styles from './SpacesScreen.module.css';
 
 export interface SpacesScreenProps {
@@ -22,6 +23,9 @@ export interface SpacesScreenProps {
     onReorderSpaces?: (oldIndex: number, newIndex: number) => void;
     onFocusChange?: (hasFocus: boolean) => void;
     onRenameItem?: (itemId: string, newName: string) => Promise<void>;
+    onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
+    /** Called when an item is moved via Arborist drag-drop (new implementation) */
+    onItemMoveArborist?: (draggedItemId: string, newParentId: string | null, newIndex: number, spaceId: string) => Promise<boolean>;
 }
 
 export function SpacesScreen({
@@ -40,6 +44,8 @@ export function SpacesScreen({
     onReorderSpaces,
     onFocusChange,
     onRenameItem,
+    onItemDrop,
+    onItemMoveArborist,
 }: SpacesScreenProps): React.ReactElement {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -454,6 +460,8 @@ export function SpacesScreen({
                                 setCardRenameItemId(null);
                             }}
                             onRenameCancel={() => setCardRenameItemId(null)}
+                            onItemDrop={onItemDrop}
+                            onItemMoveArborist={onItemMoveArborist}
                         />
                     </div>
                 ))}

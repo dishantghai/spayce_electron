@@ -9,18 +9,24 @@ export interface UseSpacesResult {
     loading: boolean;
     error: Error | null;
     refetch: () => Promise<void>;
+    isRefetching: boolean;
 }
 
 export function useSpaces(profileId: string): UseSpacesResult {
     const [data, setData] = useState<SpaceEntity[] | null>(null);
     const [loading, setLoading] = useState(true);
+    const [isRefetching, setIsRefetching] = useState(false);
     const [error, setError] = useState<Error | null>(null);
 
     const { subscribe } = useInvalidation();
 
-    const fetchSpaces = useCallback(async () => {
+    const fetchSpaces = useCallback(async (isRefetch = false) => {
         try {
-            setLoading(true);
+            if (isRefetch) {
+                setIsRefetching(true);
+            } else {
+                setLoading(true);
+            }
             setError(null);
 
             const facade = serviceRegistry.get<SpacesFacade>(SERVICE_KEYS.SPACES_FACADE);
@@ -34,7 +40,11 @@ export function useSpaces(profileId: string): UseSpacesResult {
         } catch (err) {
             setError(err instanceof Error ? err : new Error('Failed to fetch spaces'));
         } finally {
-            setLoading(false);
+            if (isRefetch) {
+                setIsRefetching(false);
+            } else {
+                setLoading(false);
+            }
         }
     }, [profileId]);
 
@@ -43,9 +53,11 @@ export function useSpaces(profileId: string): UseSpacesResult {
     }, [fetchSpaces]);
 
     useEffect(() => {
-        const unsubscribe = subscribe('spaces', fetchSpaces);
+        const unsubscribe = subscribe('spaces', () => fetchSpaces(true));
         return unsubscribe;
     }, [subscribe, fetchSpaces]);
 
-    return { data, loading, error, refetch: fetchSpaces };
+    const refetch = useCallback(() => fetchSpaces(true), [fetchSpaces]);
+
+    return { data, loading, error, refetch, isRefetching };
 }

@@ -9,6 +9,9 @@ import {
 } from 'lucide-react';
 import type { Space, SpaceItem } from '../../types';
 import { TreeView } from '../TreeView';
+import { SpayceTree } from '../tree/arborist';
+import { FeatureFlags } from '../../config/features';
+import type { DropPosition } from '../../stores/dragDropUiStore';
 import styles from './SpaceCard.module.css';
 
 export interface SpaceCardProps {
@@ -27,6 +30,9 @@ export interface SpaceCardProps {
     onAddLink?: (spaceId: string, parentId?: string | null) => void;
     onRenameSubmit?: (itemId: string, newName: string) => void;
     onRenameCancel?: () => void;
+    onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
+    /** Called when an item is moved via Arborist drag-drop (new implementation) */
+    onItemMoveArborist?: (draggedItemId: string, newParentId: string | null, newIndex: number, spaceId: string) => Promise<boolean>;
 }
 
 export function SpaceCard({
@@ -45,6 +51,8 @@ export function SpaceCard({
     onAddLink,
     onRenameSubmit,
     onRenameCancel,
+    onItemDrop,
+    onItemMoveArborist,
 }: SpaceCardProps): React.ReactElement {
     const [internalExpandedIds, setInternalExpandedIds] = useState<Set<string>>(() => new Set());
     const expandedIds = controlledExpandedIds ?? internalExpandedIds;
@@ -95,6 +103,25 @@ export function SpaceCard({
             <div className={styles.cardContent}>
                 {space.rootItems.length === 0 ? (
                     <div className={styles.emptyState}>No items yet</div>
+                ) : FeatureFlags.USE_ARBORIST_TREE ? (
+                    <SpayceTree
+                        items={space.rootItems}
+                        spaceId={space.id}
+                        selectedId={selectedItemId}
+                        activeId={keyboardSelectedItemId}
+                        accentColor={space.accentColor}
+                        renameItemId={renameItemId}
+                        onItemClick={handleItemClick}
+                        onItemContextMenu={handleItemContextMenu}
+                        onAddSubfolder={handleAddSubfolder}
+                        onAddLink={handleAddLink}
+                        onRenameSubmit={onRenameSubmit}
+                        onRenameCancel={onRenameCancel}
+                        onItemMove={onItemMoveArborist ?
+                            (draggedId, parentId, index) => onItemMoveArborist(draggedId, parentId, index, space.id)
+                            : undefined
+                        }
+                    />
                 ) : (
                     <TreeView
                         items={space.rootItems}
@@ -112,6 +139,7 @@ export function SpaceCard({
                         onAddLink={handleAddLink}
                         onRenameSubmit={onRenameSubmit}
                         onRenameCancel={onRenameCancel}
+                        onItemDrop={onItemDrop}
                     />
                 )}
             </div>

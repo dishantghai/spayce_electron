@@ -59,6 +59,8 @@
     overflow-y: auto;
     overflow-x: hidden;
     padding: 12px;
+    position: relative;
+    /* Constrain drop indicator to card width */
 }
 
 .cardContent::-webkit-scrollbar {
