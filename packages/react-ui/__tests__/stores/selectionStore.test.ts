@@ -8,6 +8,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
             spaceId: null,
             selectedIds: new Set(),
             lastSelectedId: null,
+            context: null,
         });
     });
 
@@ -45,24 +46,24 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should set spaceId when selecting single item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             expect(useSelectionStore.getState().spaceId).toBe('space-123');
         });
 
         test('should update spaceId when switching spaces', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectSingle('space-456', 'item-2');
+                useSelectionStore.getState().selectSingle('space-456', 'item-2', 'sidebar');
             });
             expect(useSelectionStore.getState().spaceId).toBe('space-456');
         });
 
         test('should clear spaceId when clearing selection', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().clearSelection();
@@ -80,7 +81,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should add item to selectedIds when selecting', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(true);
@@ -89,7 +90,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should maintain Set type for selectedIds', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             expect(useSelectionStore.getState().selectedIds).toBeInstanceOf(Set);
         });
@@ -103,31 +104,31 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should set lastSelectedId when selecting item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             expect(useSelectionStore.getState().lastSelectedId).toBe('item-1');
         });
 
         test('should update lastSelectedId when selecting different item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-2');
+                useSelectionStore.getState().selectSingle('space-123', 'item-2', 'sidebar');
             });
             expect(useSelectionStore.getState().lastSelectedId).toBe('item-2');
         });
 
         test('should update lastSelectedId on toggle selection', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             expect(useSelectionStore.getState().lastSelectedId).toBe('item-1');
         });
 
         test('should clear lastSelectedId when clearing selection', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().clearSelection();
@@ -139,7 +140,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
     describe('AC5: selectSingle clears previous and selects one item', () => {
         test('should select single item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-123');
@@ -150,10 +151,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear previous selection when selecting new item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-2');
+                useSelectionStore.getState().selectSingle('space-123', 'item-2', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(false);
@@ -163,12 +164,12 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear previous multi-selection when selecting single item', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-3');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-3', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-4');
+                useSelectionStore.getState().selectSingle('space-123', 'item-4', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(false);
@@ -180,10 +181,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle selecting same item again', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(true);
@@ -195,7 +196,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
     describe('AC6: toggleSelection adds/removes items (Ctrl+Click)', () => {
         test('should add item to empty selection', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(true);
@@ -205,10 +206,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should add item to existing selection', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(true);
@@ -218,10 +219,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should remove item if already selected', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(false);
@@ -230,9 +231,9 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should allow toggling multiple items', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-3');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-3', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.size).toBe(3);
@@ -243,31 +244,31 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should update lastSelectedId when toggling', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             expect(useSelectionStore.getState().lastSelectedId).toBe('item-2');
         });
 
         test('should update lastSelectedId even when removing item', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             expect(useSelectionStore.getState().lastSelectedId).toBe('item-1');
         });
 
         test('should start fresh selection when space changes', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-456', 'item-3');
+                useSelectionStore.getState().toggleSelection('space-456', 'item-3', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-456');
@@ -279,10 +280,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should allow empty selection after deselecting all', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.size).toBe(0);
@@ -294,10 +295,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should select range from anchor to target', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3', 'item-4', 'item-5'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-2');
+                useSelectionStore.getState().selectSingle('space-123', 'item-2', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-4', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-4', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-2')).toBe(true);
@@ -309,10 +310,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should select range in reverse order', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3', 'item-4', 'item-5'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-4');
+                useSelectionStore.getState().selectSingle('space-123', 'item-4', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-2', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-2', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-2')).toBe(true);
@@ -324,10 +325,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should keep anchor (lastSelectedId) unchanged after range selection', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3', 'item-4', 'item-5'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-2');
+                useSelectionStore.getState().selectSingle('space-123', 'item-2', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-4', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-4', visibleIds, 'sidebar');
             });
             expect(useSelectionStore.getState().lastSelectedId).toBe('item-2');
         });
@@ -335,7 +336,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should behave like single click if no anchor exists', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3', 'item-4', 'item-5'];
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-3', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-3', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-3')).toBe(true);
@@ -346,10 +347,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should start fresh selection if space changes', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3', 'item-4', 'item-5'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-2');
+                useSelectionStore.getState().selectSingle('space-123', 'item-2', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-456', 'item-4', visibleIds);
+                useSelectionStore.getState().selectRange('space-456', 'item-4', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-456');
@@ -360,10 +361,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should select single item if anchor not in visible list', () => {
             const visibleIds = ['item-3', 'item-4', 'item-5'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-4', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-4', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-4')).toBe(true);
@@ -373,10 +374,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should select single item if target not in visible list', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-2');
+                useSelectionStore.getState().selectSingle('space-123', 'item-2', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-5', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-5', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-5')).toBe(true);
@@ -386,10 +387,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should handle single item range (same anchor and target)', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-2');
+                useSelectionStore.getState().selectSingle('space-123', 'item-2', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-2', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-2', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-2')).toBe(true);
@@ -399,10 +400,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should respect tree structure ordering from visible items', () => {
             const visibleIds = ['folder-1', 'folder-1-child-1', 'folder-1-child-2', 'item-2', 'item-3'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'folder-1-child-1');
+                useSelectionStore.getState().selectSingle('space-123', 'folder-1-child-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-2', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-2', visibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('folder-1-child-1')).toBe(true);
@@ -416,7 +417,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should select all items in empty selection', () => {
             const allVisibleIds = ['item-1', 'item-2', 'item-3', 'item-4'];
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', allVisibleIds);
+                useSelectionStore.getState().selectAll('space-123', allVisibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-123');
@@ -430,10 +431,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should replace existing selection with all items', () => {
             const allVisibleIds = ['item-1', 'item-2', 'item-3', 'item-4'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', allVisibleIds);
+                useSelectionStore.getState().selectAll('space-123', allVisibleIds, 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.size).toBe(4);
@@ -441,7 +442,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle empty visible items array', () => {
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', []);
+                useSelectionStore.getState().selectAll('space-123', [], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-123');
@@ -450,7 +451,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle single item', () => {
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', ['item-1']);
+                useSelectionStore.getState().selectAll('space-123', ['item-1'], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.size).toBe(1);
@@ -460,17 +461,17 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should update lastSelectedId to last item in list', () => {
             const allVisibleIds = ['item-1', 'item-2', 'item-3', 'item-4'];
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', allVisibleIds);
+                useSelectionStore.getState().selectAll('space-123', allVisibleIds, 'sidebar');
             });
             expect(useSelectionStore.getState().lastSelectedId).toBe('item-4');
         });
 
         test('should start fresh when space changes', () => {
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', ['item-1', 'item-2']);
+                useSelectionStore.getState().selectAll('space-123', ['item-1', 'item-2'], 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectAll('space-456', ['item-3', 'item-4']);
+                useSelectionStore.getState().selectAll('space-456', ['item-3', 'item-4'], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-456');
@@ -484,7 +485,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
     describe('AC9: clearSelection resets all state', () => {
         test('should clear all state', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().clearSelection();
@@ -497,9 +498,9 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear multi-selection', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-3');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-3', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().clearSelection();
@@ -510,7 +511,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should be idempotent (calling multiple times has same effect)', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().clearSelection();
@@ -527,10 +528,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
     describe('AC10: Selection clears on space switch', () => {
         test('should clear selection when selectSingle called with different space', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectSingle('space-456', 'item-2');
+                useSelectionStore.getState().selectSingle('space-456', 'item-2', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-456');
@@ -541,11 +542,11 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear selection when toggleSelection called with different space', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-456', 'item-3');
+                useSelectionStore.getState().toggleSelection('space-456', 'item-3', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-456');
@@ -555,10 +556,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear selection when selectRange called with different space', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-456', 'item-2', ['item-1', 'item-2']);
+                useSelectionStore.getState().selectRange('space-456', 'item-2', ['item-1', 'item-2'], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-456');
@@ -567,10 +568,10 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear selection when selectAll called with different space', () => {
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', ['item-1', 'item-2']);
+                useSelectionStore.getState().selectAll('space-123', ['item-1', 'item-2'], 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectAll('space-456', ['item-3', 'item-4']);
+                useSelectionStore.getState().selectAll('space-456', ['item-3', 'item-4'], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-456');
@@ -581,37 +582,37 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
     describe('AC13: isSelected helper works correctly', () => {
         test('should return false for unselected item', () => {
-            const isSelected = useSelectionStore.getState().isSelected('item-1');
+            const isSelected = useSelectionStore.getState().isSelected('item-1', 'sidebar');
             expect(isSelected).toBe(false);
         });
 
         test('should return true for selected item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
-            const isSelected = useSelectionStore.getState().isSelected('item-1');
+            const isSelected = useSelectionStore.getState().isSelected('item-1', 'sidebar');
             expect(isSelected).toBe(true);
         });
 
         test('should return false after item is deselected', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
-            const isSelected = useSelectionStore.getState().isSelected('item-1');
+            const isSelected = useSelectionStore.getState().isSelected('item-1', 'sidebar');
             expect(isSelected).toBe(false);
         });
 
         test('should work with multiple selections', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
-            expect(useSelectionStore.getState().isSelected('item-1')).toBe(true);
-            expect(useSelectionStore.getState().isSelected('item-2')).toBe(true);
-            expect(useSelectionStore.getState().isSelected('item-3')).toBe(false);
+            expect(useSelectionStore.getState().isSelected('item-1', 'sidebar')).toBe(true);
+            expect(useSelectionStore.getState().isSelected('item-2', 'sidebar')).toBe(true);
+            expect(useSelectionStore.getState().isSelected('item-3', 'sidebar')).toBe(false);
         });
     });
 
@@ -623,7 +624,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return array with single item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const items = useSelectionStore.getState().getSelectedItems();
             expect(items).toEqual(['item-1']);
@@ -631,9 +632,9 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return array with multiple items', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-3');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-3', 'sidebar');
             });
             const items = useSelectionStore.getState().getSelectedItems();
             expect(items.length).toBe(3);
@@ -644,7 +645,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return new array instance (not reference)', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const items1 = useSelectionStore.getState().getSelectedItems();
             const items2 = useSelectionStore.getState().getSelectedItems();
@@ -661,7 +662,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return single item when dragging unselected item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const payload = useSelectionStore.getState().getDragPayload('item-2');
             expect(payload.items).toEqual(['item-2']);
@@ -671,9 +672,9 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return all selected items when dragging selected item', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-3');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-3', 'sidebar');
             });
             const payload = useSelectionStore.getState().getDragPayload('item-2');
             expect(payload.items).toContain('item-1');
@@ -692,7 +693,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should indicate single selection for one selected item', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const payload = useSelectionStore.getState().getDragPayload('item-1');
             expect(payload.isMultiSelection).toBe(false);
@@ -707,8 +708,8 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear selection when dragging unselected item', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onDragInitiated('item-3');
@@ -719,8 +720,8 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should preserve selection when dragging selected item', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onDragInitiated('item-1');
@@ -748,8 +749,8 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear selection after successful multi-item drag', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onDragCompleted(true, true);
@@ -762,8 +763,8 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should preserve selection after failed multi-item drag', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             const beforeState = useSelectionStore.getState();
             act(() => {
@@ -776,7 +777,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should not clear selection for single-item drag completion', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onDragCompleted(true, false);
@@ -799,8 +800,8 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return selected item IDs', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             const items = useSelectionStore.getState().getSelectedItemsForClipboard();
             expect(items).toContain('item-1');
@@ -816,8 +817,8 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return clipboard data with selected items', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
-                useSelectionStore.getState().toggleSelection('space-123', 'item-2');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-2', 'sidebar');
             });
             const data = useSelectionStore.getState().onClipboardCopy();
             expect(data.items).toContain('item-1');
@@ -830,7 +831,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should maintain selection state after copy', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onClipboardCopy();
@@ -848,7 +849,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should return clipboard data with cut operation', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const data = useSelectionStore.getState().onClipboardCut();
             expect(data.items).toContain('item-1');
@@ -865,7 +866,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should clear selection after successful cut operation paste', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onClipboardPasteComplete(true, 'cut');
@@ -876,7 +877,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should preserve selection after successful copy operation paste', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onClipboardPasteComplete(true, 'copy');
@@ -887,7 +888,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should preserve selection after failed paste operation', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().onClipboardPasteComplete(false, 'cut');
@@ -901,7 +902,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should validate spaceId is non-empty string', () => {
             expect(() => {
                 act(() => {
-                    useSelectionStore.getState().selectSingle('', 'item-1');
+                    useSelectionStore.getState().selectSingle('', 'item-1', 'sidebar');
                 });
             }).toThrow();
         });
@@ -909,7 +910,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should validate itemId is non-empty string', () => {
             expect(() => {
                 act(() => {
-                    useSelectionStore.getState().selectSingle('space-123', '');
+                    useSelectionStore.getState().selectSingle('space-123', '', 'sidebar');
                 });
             }).toThrow();
         });
@@ -918,7 +919,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
             const longSpaceId = 'a'.repeat(256);
             expect(() => {
                 act(() => {
-                    useSelectionStore.getState().selectSingle(longSpaceId, 'item-1');
+                    useSelectionStore.getState().selectSingle(longSpaceId, 'item-1', 'sidebar');
                 });
             }).toThrow();
         });
@@ -927,7 +928,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
             const longItemId = 'a'.repeat(256);
             expect(() => {
                 act(() => {
-                    useSelectionStore.getState().selectSingle('space-123', longItemId);
+                    useSelectionStore.getState().selectSingle('space-123', longItemId, 'sidebar');
                 });
             }).toThrow();
         });
@@ -935,7 +936,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should accept valid alphanumeric spaceId with hyphens and underscores', () => {
             expect(() => {
                 act(() => {
-                    useSelectionStore.getState().selectSingle('space-123_abc', 'item-1');
+                    useSelectionStore.getState().selectSingle('space-123_abc', 'item-1', 'sidebar');
                 });
             }).not.toThrow();
         });
@@ -943,7 +944,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('should accept valid alphanumeric itemId with hyphens and underscores', () => {
             expect(() => {
                 act(() => {
-                    useSelectionStore.getState().selectSingle('space-123', 'item_abc-123');
+                    useSelectionStore.getState().selectSingle('space-123', 'item_abc-123', 'sidebar');
                 });
             }).not.toThrow();
         });
@@ -987,7 +988,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
     describe('AC39: Sanitization normalizes parameter formats where possible', () => {
         test('should trim whitespace from spaceId', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('  space-123  ', 'item-1');
+                useSelectionStore.getState().selectSingle('  space-123  ', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-123');
@@ -995,7 +996,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should trim whitespace from itemId', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', '  item-1  ');
+                useSelectionStore.getState().selectSingle('space-123', '  item-1  ', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-1')).toBe(true);
@@ -1005,7 +1006,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
     describe('AC41: Unit tests for all selection methods', () => {
         test('selectSingle should work correctly', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-123');
@@ -1015,11 +1016,11 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('toggleSelection should work correctly', () => {
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             expect(useSelectionStore.getState().selectedIds.has('item-1')).toBe(true);
             act(() => {
-                useSelectionStore.getState().toggleSelection('space-123', 'item-1');
+                useSelectionStore.getState().toggleSelection('space-123', 'item-1', 'sidebar');
             });
             expect(useSelectionStore.getState().selectedIds.has('item-1')).toBe(false);
         });
@@ -1027,24 +1028,24 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
         test('selectRange should work correctly', () => {
             const visibleIds = ['item-1', 'item-2', 'item-3'];
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-3', visibleIds);
+                useSelectionStore.getState().selectRange('space-123', 'item-3', visibleIds, 'sidebar');
             });
             expect(useSelectionStore.getState().selectedIds.size).toBe(3);
         });
 
         test('selectAll should work correctly', () => {
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', ['item-1', 'item-2', 'item-3']);
+                useSelectionStore.getState().selectAll('space-123', ['item-1', 'item-2', 'item-3'], 'sidebar');
             });
             expect(useSelectionStore.getState().selectedIds.size).toBe(3);
         });
 
         test('clearSelection should work correctly', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             act(() => {
                 useSelectionStore.getState().clearSelection();
@@ -1065,7 +1066,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle selectRange with no anchor', () => {
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-2', ['item-1', 'item-2']);
+                useSelectionStore.getState().selectRange('space-123', 'item-2', ['item-1', 'item-2'], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.has('item-2')).toBe(true);
@@ -1074,9 +1075,9 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle rapid space switches', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-1', 'item-1');
-                useSelectionStore.getState().selectSingle('space-2', 'item-2');
-                useSelectionStore.getState().selectSingle('space-3', 'item-3');
+                useSelectionStore.getState().selectSingle('space-1', 'item-1', 'sidebar');
+                useSelectionStore.getState().selectSingle('space-2', 'item-2', 'sidebar');
+                useSelectionStore.getState().selectSingle('space-3', 'item-3', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.spaceId).toBe('space-3');
@@ -1086,9 +1087,9 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle selecting same item multiple times', () => {
             act(() => {
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
-                useSelectionStore.getState().selectSingle('space-123', 'item-1');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
+                useSelectionStore.getState().selectSingle('space-123', 'item-1', 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.size).toBe(1);
@@ -1096,7 +1097,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle empty visible items array in selectAll', () => {
             act(() => {
-                useSelectionStore.getState().selectAll('space-123', []);
+                useSelectionStore.getState().selectAll('space-123', [], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.size).toBe(0);
@@ -1105,7 +1106,7 @@ describe('Feature: 013 - Multi-Selection State Management', () => {
 
         test('should handle empty visible items array in selectRange', () => {
             act(() => {
-                useSelectionStore.getState().selectRange('space-123', 'item-1', []);
+                useSelectionStore.getState().selectRange('space-123', 'item-1', [], 'sidebar');
             });
             const state = useSelectionStore.getState();
             expect(state.selectedIds.size).toBe(1);

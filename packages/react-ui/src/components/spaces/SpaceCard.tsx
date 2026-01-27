@@ -11,6 +11,7 @@ import type { Space, SpaceItem } from '../../types';
 import { TreeView } from '../TreeView';
 import { SpayceTree } from '../tree/arborist';
 import { FeatureFlags } from '../../config/features';
+import { useSelectionStore } from '../../stores/selectionStore';
 import type { DropPosition } from '../../stores/dragDropUiStore';
 import styles from './SpaceCard.module.css';
 
@@ -85,6 +86,18 @@ export function SpaceCard({
         onExpandedChange?.(newExpandedIds);
     }, [controlledExpandedIds, onExpandedChange]);
 
+    // Handle card clicks to clear multi-selection and call onSelect
+    const handleCardClick = useCallback((e: React.MouseEvent) => {
+        // Clear multi-selection when clicking on card background
+        const target = e.target as HTMLElement;
+        if (target.classList.contains(styles.spaceCard) ||
+            target.classList.contains(styles.cardContent) ||
+            target.classList.contains(styles.emptyState)) {
+            useSelectionStore.getState().clearSelection();
+        }
+        onSelect?.();
+    }, [onSelect]);
+
     const cardClasses = [
         styles.spaceCard,
         isSelected && styles.spaceCardSelected,
@@ -94,7 +107,7 @@ export function SpaceCard({
         <div
             className={cardClasses}
             style={{ '--space-accent-color': space.accentColor } as React.CSSProperties}
-            onClick={onSelect}
+            onClick={handleCardClick}
         >
             {/* Header */}
             <CardHeader space={space} />

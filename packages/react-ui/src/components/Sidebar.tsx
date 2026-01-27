@@ -11,6 +11,7 @@ import { CreateSpaceView } from './CreateSpaceView';
 import type { Space, SpaceItem } from '../types';
 import { SpaceItemType } from '../types';
 import { useInlineInputStore } from '../stores/inlineInputStore';
+import { useSelectionStore } from '../stores/selectionStore';
 import { normalizeUrl } from '../utils/url';
 import type { DropPosition } from '../stores/dragDropUiStore';
 import styles from './Sidebar.module.css';
@@ -154,9 +155,10 @@ export function Sidebar({
         });
     }, [activeSpace, setExpandedIdsMap]);
 
-    // Clear focus when switching spaces
+    // Clear focus and multi-selection when switching spaces (F017)
     useEffect(() => {
         setFocusedItemId(null);
+        useSelectionStore.getState().clearSelection();
     }, [activeSpaceIndex]);
 
     // Sync focusedItemId with selectedItemId when it changes externally (e.g., from context menu)
@@ -425,6 +427,8 @@ export function Sidebar({
                 case 'Escape':
                     e.preventDefault();
                     setFocusedItemId(null);
+                    // Clear multi-selection on ESC
+                    useSelectionStore.getState().clearSelection();
                     break;
 
                 case '1': case '2': case '3': case '4': case '5':
@@ -545,6 +549,14 @@ export function Sidebar({
         setSidebarRenameItemId(null);
     }, [setSidebarRenameItemId]);
 
+    // Handle clicks on tree container empty space to clear multi-selection
+    const handleTreeContainerClick = useCallback((e: React.MouseEvent) => {
+        // Only clear if clicking directly on the container (not on child elements)
+        if (e.target === e.currentTarget) {
+            useSelectionStore.getState().clearSelection();
+        }
+    }, []);
+
     // Auto-close floating sidebar on mouse leave
     useEffect(() => {
         if (mode !== 'floating') return;
@@ -662,7 +674,7 @@ export function Sidebar({
                         />
 
                         {/* Tree view - Feature flag toggles between legacy and Arborist */}
-                        <div className={styles.treeContainer}>
+                        <div className={styles.treeContainer} onClick={handleTreeContainerClick}>
                             {FeatureFlags.USE_ARBORIST_TREE ? (
                                 <SpayceTree
                                     items={treeItems}

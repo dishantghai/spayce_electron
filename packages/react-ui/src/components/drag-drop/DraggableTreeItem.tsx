@@ -47,6 +47,7 @@ export const DraggableTreeItem = memo(function DraggableTreeItem({
         console.log(`[DragStart] Item: ${item.name} (${item.id})`);
         console.log(`[DragStart] Parent: ${parentId}`);
         console.log(`[DragStart] Index: ${index}`);
+        console.log(`[DragStart] Multi-select: ${itemsToDrag.length} items:`, itemsToDrag.map(i => i.name));
 
         const dragDataPayload: DragData = {
             item,

@@ -124,3 +124,20 @@
 .treeItem:focus-visible {
     outline: none;
 }
+
+/* F019: Multi-selection highlight */
+.treeItemMultiSelected {
+    background-color: var(--selection-bg, rgba(109, 90, 230, 0.1));
+    border-left: 2px solid var(--tree-accent-color, #6D5AE6);
+    padding-left: calc(var(--item-padding-left, 8px) - 2px);
+    /* Compensate for border */
+}
+
+.treeItemMultiSelected:hover {
+    background-color: var(--selection-bg-hover, rgba(109, 90, 230, 0.15));
+}
+
+/* Ensure multi-selection doesn't conflict with active state */
+.treeItemMultiSelected.treeItemActive {
+    border-left-color: var(--tree-accent-color, #6D5AE6);
+}

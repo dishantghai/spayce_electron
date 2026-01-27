@@ -1,0 +1,39 @@
+{
+  "id": "F017",
+  "title": "Ctrl+Click Toggle Selection",
+  "type": "feature",
+  "priority": "P1",
+  "status": "completed",
+  "estimated_hours": 3,
+  "related_specs": [
+    "013"
+  ],
+  "related_epic": null,
+  "dependencies": [
+    "F011"
+  ],
+  "affected_files": [
+    "packages/react-ui/src/stores/selectionStore.ts",
+    "packages/react-ui/src/components/TreeItem.tsx",
+    "packages/react-ui/src/components/TreeView.tsx",
+    "packages/react-ui/src/components/Sidebar.tsx",
+    "packages/desktop/src/renderer/App.tsx"
+  ],
+  "created_at": "2026-01-27T12:15:00Z",
+  "updated_at": "2026-01-27T12:15:00Z",
+  "implementation_started": "2026-01-27T13:00:00Z",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-27T17:52:39.251670",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  },
+  "completed": "2026-01-27T13:07:00Z"
+}

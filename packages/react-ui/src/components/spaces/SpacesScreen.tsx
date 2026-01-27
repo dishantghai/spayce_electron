@@ -4,6 +4,7 @@ import type { Space, SpaceItem } from '../../types';
 import { SpaceCard } from './SpaceCard';
 import { SpacesBottomBar } from './SpacesBottomBar';
 import { useInlineInputStore } from '../../stores/inlineInputStore';
+import { useSelectionStore } from '../../stores/selectionStore';
 import type { DropPosition } from '../../stores/dragDropUiStore';
 import styles from './SpacesScreen.module.css';
 
@@ -175,6 +176,8 @@ export function SpacesScreen({
                 case 'Escape':
                     e.preventDefault();
                     setKeyboardSelectedItemId(null);
+                    // Clear multi-selection on ESC
+                    useSelectionStore.getState().clearSelection();
                     break;
             }
         };
@@ -335,6 +338,15 @@ export function SpacesScreen({
         }
     }, [onSpaceSelect, onFocusChange, activeSpaceIndex]);
 
+    // Handle clicks on empty space to clear multi-selection
+    const handleContainerClick = useCallback((e: React.MouseEvent) => {
+        // Only clear if clicking directly on the container or cards container (not on child elements)
+        const target = e.target as HTMLElement;
+        if (target.classList.contains(styles.spacesScreen) || target.classList.contains(styles.cardsContainer)) {
+            useSelectionStore.getState().clearSelection();
+        }
+    }, []);
+
     // Calculate card width based on container width (fit 3 cards)
     const [cardWidth, setCardWidth] = useState(288);
 
@@ -427,6 +439,7 @@ export function SpacesScreen({
             ref={containerRef}
             className={styles.spacesScreen}
             tabIndex={0}
+            onClick={handleContainerClick}
         >
             {/* Cards Container */}
             <div ref={scrollContainerRef} className={styles.cardsContainer}>

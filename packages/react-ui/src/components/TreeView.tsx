@@ -5,6 +5,8 @@ import { TreeItem } from './TreeItem';
 import { InlineInput } from './InlineInput';
 import type { DragSource, DropPosition } from '../stores/dragDropUiStore';
 import { useDragDropUiStore } from '../stores/dragDropUiStore';
+import { useSelectionStore } from '../stores/selectionStore';
+import { getVisibleItemIds } from '../utils/treeUtils';
 import styles from './TreeView.module.css';
 
 export interface TreeViewProps {
@@ -104,6 +106,12 @@ export function TreeView({
         }
         return base;
     }, [controlledExpandedIds, internalExpandedIds, dragExpandedFolderIds]);
+
+    // F018: Compute visible item IDs for range selection
+    const allVisibleIds = useMemo(
+        () => getVisibleItemIds(items, expandedIds),
+        [items, expandedIds]
+    );
 
     // Check if inline input should appear at root level
     const showRootInlineInput = inlineInput && inlineInput.parentId === null;
@@ -232,8 +240,16 @@ export function TreeView({
         );
     }
 
+    // Handle clicks on empty space to clear multi-selection
+    const handleContainerClick = useCallback((e: React.MouseEvent) => {
+        // Only clear if clicking directly on the container (not on child elements)
+        if (e.target === e.currentTarget) {
+            useSelectionStore.getState().clearSelection();
+        }
+    }, []);
+
     return (
-        <div className={styles.tree} role="tree">
+        <div className={styles.tree} role="tree" onClick={handleContainerClick}>
             {/* Root level inline input */}
             {showRootInlineInput && (
                 <InlineInput
@@ -259,6 +275,8 @@ export function TreeView({
                     inlineInput={inlineInput}
                     renameItemId={renameItemId}
                     dragDropContext={dragDropContext}
+                    allVisibleIds={allVisibleIds}
+                    allItems={items}
                     onItemClick={onItemClick}
                     onItemContextMenu={onItemContextMenu}
                     onItemExpand={handleItemExpand}

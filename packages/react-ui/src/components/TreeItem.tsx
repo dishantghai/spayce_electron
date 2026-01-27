@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import { FolderPlus, Link, MoreVertical } from 'lucide-react';
 import type { SpaceItem, InlineInputState } from '../types';
 import { SpaceItemType } from '../types';
@@ -8,6 +8,8 @@ import { InlineInput } from './InlineInput';
 import { InlineRenameInput } from './InlineRenameInput';
 import { DraggableTreeItem, DroppableTreeItem, FlashItem } from './drag-drop';
 import type { DragSource, DropPosition } from '../stores/dragDropUiStore';
+import { useSelectionStore } from '../stores/selectionStore';
+import { getItemsByIds } from '../utils/treeUtils';
 import styles from './TreeView.module.css';
 
 interface TreeItemProps {
@@ -22,6 +24,10 @@ interface TreeItemProps {
     renameItemId?: string | null;
     /** Context for drag-drop operations - 'sidebar' or 'spaceCard' */
     dragDropContext?: DragSource;
+    /** F018: All visible item IDs for range selection */
+    allVisibleIds?: string[];
+    /** F020: All items in the tree for looking up selected items */
+    allItems?: SpaceItem[];
     onItemClick?: (item: SpaceItem) => void;
     onItemContextMenu?: (item: SpaceItem, event: React.MouseEvent) => void;
     onItemExpand?: (item: SpaceItem, expanded: boolean) => void;
@@ -49,6 +55,8 @@ export function TreeItem({
     inlineInput,
     renameItemId,
     dragDropContext = 'sidebar',
+    allVisibleIds = [],
+    allItems = [],
     onItemClick,
     onItemContextMenu,
     onItemExpand,
@@ -68,6 +76,27 @@ export function TreeItem({
     const hasChildren = item.children && item.children.length > 0;
     const isRenaming = renameItemId === item.id;
 
+    // F019: Check if item is multi-selected using efficient selector
+    const isMultiSelected = useSelectionStore((state) =>
+        state.spaceId === spaceId && state.context === dragDropContext && state.selectedIds.has(item.id)
+    );
+
+    // F020: Get selected IDs for computing drag items
+    const selectedIds = useSelectionStore((state) => state.selectedIds);
+    const selectionSpaceId = useSelectionStore((state) => state.spaceId);
+    const selectionContext = useSelectionStore((state) => state.context);
+
+    // F020: Compute selected items for multi-drag
+    const selectedItemsForDrag = useMemo(() => {
+        // Only compute if we have multiple selections in the same space and context
+        if (selectedIds.size <= 1 || selectionSpaceId !== spaceId || selectionContext !== dragDropContext) {
+            return undefined;
+        }
+        // Get actual SpaceItem objects for selected IDs
+        const foundItems = getItemsByIds(allItems, Array.from(selectedIds));
+        return foundItems.length > 0 ? foundItems : undefined;
+    }, [selectedIds, selectionSpaceId, selectionContext, spaceId, dragDropContext, allItems]);
+
     // Check if inline input should appear inside this folder
     const showInlineInputInside = inlineInput && inlineInput.parentId === item.id;
 
@@ -76,27 +105,41 @@ export function TreeItem({
     const indentPx = depth * 20;
 
     // Click handler - expand/collapse folders AND notify parent for focus
+    // F017: Supports Ctrl+Click (Cmd+Click on Mac) for multi-selection toggle
     const handleClick = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        console.log(`[TreeItem Click] ========== CLICK ==========`);
-        console.log(`[TreeItem Click] Item: ${item.name} (${item.id})`);
-        console.log(`[TreeItem Click] isFolder: ${isFolder}, isExpanded: ${isExpanded}, isRenaming: ${isRenaming}`);
+        e.stopPropagation(); // Prevent event from bubbling to TreeView container
 
         if (isRenaming) {
-            console.log(`[TreeItem Click] Skipped - currently renaming`);
             return;
         }
 
-        // Toggle expand/collapse for all folders (including empty ones)
-        if (isFolder) {
-            console.log(`[TreeItem Click] Calling onItemExpand(${item.name}, ${!isExpanded})`);
-            onItemExpand?.(item, !isExpanded);
-        }
+        // F017: Detect platform for Cmd vs Ctrl
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const isCtrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+        const isShift = e.shiftKey;
 
-        // Always notify parent to update focus state
-        console.log(`[TreeItem Click] Calling onItemClick`);
-        onItemClick?.(item);
-    }, [item, isFolder, isExpanded, isRenaming, onItemClick, onItemExpand]);
+        if (isCtrlOrCmd) {
+            // F017: Toggle selection (add/remove from multi-selection)
+            useSelectionStore.getState().toggleSelection(spaceId, item.id, dragDropContext);
+            // Don't expand/collapse folders on Ctrl+Click - just toggle selection
+        } else if (isShift) {
+            // F018: Range selection - select all items between anchor and clicked item
+            useSelectionStore.getState().selectRange(spaceId, item.id, allVisibleIds, dragDropContext);
+            // Don't expand/collapse folders on Shift+Click - just select range
+        } else {
+            // Regular click - clear multi-selection and select single
+            useSelectionStore.getState().clearSelection();
+
+            // Toggle expand/collapse for all folders (including empty ones)
+            if (isFolder) {
+                onItemExpand?.(item, !isExpanded);
+            }
+
+            // Notify parent to update focus state
+            onItemClick?.(item);
+        }
+    }, [item, spaceId, isFolder, isExpanded, isRenaming, allVisibleIds, onItemClick, onItemExpand]);
 
     const handleContextMenu = useCallback(
         (e: React.MouseEvent, setFocus = true) => {
@@ -145,6 +188,7 @@ export function TreeItem({
         isChild && styles.treeItemChild,
         isSelected && styles.treeItemSelected,
         isActive && styles.treeItemActive,
+        isMultiSelected && styles.treeItemMultiSelected,
     ]
         .filter(Boolean)
         .join(' ');
@@ -180,15 +224,18 @@ export function TreeItem({
                         level={depth}
                         accentColor={accentColor}
                         ancestorIds={ancestorIds}
-                        selectedItems={[]}
+                        selectedItems={selectedItemsForDrag || []}
                         dragSource={dragDropContext}
                     >
                         <div
                             className={rowClasses}
                             style={{
-                                paddingLeft: `${itemPaddingLeft}px`,
+                                paddingLeft: isMultiSelected ? `${itemPaddingLeft - 2}px` : `${itemPaddingLeft}px`,
                                 '--tree-accent-color': accentColor,
                                 '--child-highlight-offset': `${childHighlightOffset}px`,
+                                '--item-padding-left': `${itemPaddingLeft}px`,
+                                '--selection-bg': hexToRgba(accentColor, 0.1),
+                                '--selection-bg-hover': hexToRgba(accentColor, 0.15),
                             } as React.CSSProperties}
                             onClick={handleClick}
                             onContextMenu={handleContextMenu}
@@ -296,6 +343,8 @@ export function TreeItem({
                                 inlineInput={inlineInput}
                                 renameItemId={renameItemId}
                                 dragDropContext={dragDropContext}
+                                allVisibleIds={allVisibleIds}
+                                allItems={allItems}
                                 onItemClick={onItemClick}
                                 onItemContextMenu={onItemContextMenu}
                                 onItemExpand={onItemExpand}
@@ -320,4 +369,16 @@ function getExtension(filename: string): string | undefined {
         return filename.substring(lastDot).toLowerCase();
     }
     return undefined;
+}
+
+/**
+ * F019: Convert hex color to rgba with specified alpha
+ */
+function hexToRgba(hex: string, alpha: number): string {
+    // Remove # if present
+    const cleanHex = hex.replace('#', '');
+    const r = parseInt(cleanHex.slice(0, 2), 16);
+    const g = parseInt(cleanHex.slice(2, 4), 16);
+    const b = parseInt(cleanHex.slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

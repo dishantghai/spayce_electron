@@ -781,8 +781,9 @@ export function App(): React.ReactElement {
         }
     }, [focusContext, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, clipboardStore, refetch, sidebarSelectedId, getItemsByIds]);
 
-    // Handle drag-drop item movement
+    // Handle drag-drop item movement (supports multi-select F020)
     const dragDropStore = useDragDropUiStore();
+    const selectionStore = useSelectionStore();
     const handleItemDrop = useCallback(async (targetId: string, _targetId2: string, position: DropPosition, spaceId: string) => {
         const dragData = dragDropStore.dragData;
         if (!dragData) {
@@ -790,9 +791,13 @@ export function App(): React.ReactElement {
             return;
         }
 
-        const draggedItem = dragData.item;
+        // F020: Get all items to move (multi-select or single)
+        const itemsToMove = dragData.items && dragData.items.length > 0 ? dragData.items : [dragData.item];
+        const isMultiDrag = itemsToMove.length > 1;
+
         console.log('[Drop] ========== DROP OPERATION START ==========');
-        console.log('[Drop] Dragged:', draggedItem.name, '(id:', draggedItem.id + ')');
+        console.log('[Drop] Items to move:', itemsToMove.length, isMultiDrag ? '(multi-select)' : '(single)');
+        console.log('[Drop] Items:', itemsToMove.map(i => i.name).join(', '));
         console.log('[Drop] Target:', targetId, 'Position:', position);
 
         // Find item info including parent, siblings, and index
@@ -816,12 +821,13 @@ export function App(): React.ReactElement {
             return;
         }
 
-        // Find both dragged and target items
-        const draggedInfo = findItemInfo(space.rootItems, draggedItem.id);
+        // Find target item info (use first item for position calculation)
+        const firstItem = itemsToMove[0];
+        const draggedInfo = findItemInfo(space.rootItems, firstItem.id);
         const targetInfo = findItemInfo(space.rootItems, targetId);
 
         if (!draggedInfo) {
-            console.error('[Drop] Dragged item not found in tree:', draggedItem.id);
+            console.error('[Drop] First dragged item not found in tree:', firstItem.id);
             return;
         }
         if (!targetInfo) {
@@ -829,7 +835,7 @@ export function App(): React.ReactElement {
             return;
         }
 
-        console.log('[Drop] Dragged item current parent:', draggedInfo.parent, 'index:', draggedInfo.index);
+        console.log('[Drop] First item current parent:', draggedInfo.parent, 'index:', draggedInfo.index);
         console.log('[Drop] Target item parent:', targetInfo.parent, 'index:', targetInfo.index);
 
         // Calculate target parent and position based on drop position
@@ -875,23 +881,42 @@ export function App(): React.ReactElement {
 
         console.log('[Drop] Final calculation - Parent:', targetParentId, 'Position:', toPosition);
 
-        // Call move API with position
-        const result = await itemsApi.move(draggedItem.id, spaceId, targetParentId || undefined, toPosition);
-        if (result?.success) {
-            console.log('[Drop] ✓ Move successful');
-            console.log('[Drop] ========== DROP OPERATION END ==========');
+        // F020: Move all items (multi-select support)
+        // Move items in sequence, adjusting position for each subsequent item
+        let currentPosition = toPosition;
+        let allSucceeded = true;
 
-            // Set flash item to highlight the dropped item
-            dragDropStore.setFlashItem(draggedItem.id);
+        for (let i = 0; i < itemsToMove.length; i++) {
+            const itemToMove = itemsToMove[i];
+            console.log(`[Drop] Moving item ${i + 1}/${itemsToMove.length}: ${itemToMove.name} to position ${currentPosition}`);
 
-            // Refetch to update UI with new data
-            // useSpacesData now skips loading state during refetch to prevent Sidebar remount
-            refetch();
-        } else {
-            console.error('[Drop] ✗ Move failed:', result);
-            console.log('[Drop] ========== DROP OPERATION END ==========');
+            const result = await itemsApi.move(itemToMove.id, spaceId, targetParentId || undefined, currentPosition);
+            if (result?.success) {
+                console.log(`[Drop] ✓ Item ${itemToMove.name} moved successfully`);
+                // Increment position for next item so they stay in order
+                currentPosition++;
+            } else {
+                console.error(`[Drop] ✗ Failed to move item ${itemToMove.name}:`, result);
+                allSucceeded = false;
+            }
         }
-    }, [dragDropStore, spaces, refetch]);
+
+        if (allSucceeded) {
+            console.log('[Drop] ✓ All items moved successfully');
+            // Set flash item to highlight the first dropped item
+            dragDropStore.setFlashItem(itemsToMove[0].id);
+        } else {
+            console.error('[Drop] ✗ Some items failed to move');
+        }
+
+        // F020: Clear selection after drop
+        selectionStore.clearSelection();
+
+        console.log('[Drop] ========== DROP OPERATION END ==========');
+
+        // Refetch to update UI with new data
+        refetch();
+    }, [dragDropStore, selectionStore, spaces, refetch]);
 
     // Handle Arborist drag-drop item movement (new implementation)
     // Arborist computes the position, we just persist to backend

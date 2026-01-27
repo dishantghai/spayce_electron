@@ -14,17 +14,20 @@ interface DragPayload {
     selectionCount: number;
 }
 
+export type SelectionContext = 'sidebar' | 'spaceCard';
+
 interface SelectionStore {
     spaceId: string | null;
     selectedIds: Set<string>;
     lastSelectedId: string | null;
+    context: SelectionContext | null;
 
-    selectSingle: (spaceId: string, itemId: string) => void;
-    toggleSelection: (spaceId: string, itemId: string) => void;
-    selectRange: (spaceId: string, itemId: string, allVisibleIds: string[]) => void;
-    selectAll: (spaceId: string, allVisibleIds: string[]) => void;
+    selectSingle: (spaceId: string, itemId: string, context: SelectionContext) => void;
+    toggleSelection: (spaceId: string, itemId: string, context: SelectionContext) => void;
+    selectRange: (spaceId: string, itemId: string, allVisibleIds: string[], context: SelectionContext) => void;
+    selectAll: (spaceId: string, allVisibleIds: string[], context: SelectionContext) => void;
     clearSelection: () => void;
-    isSelected: (itemId: string) => boolean;
+    isSelected: (itemId: string, context: SelectionContext) => boolean;
     getSelectedItems: () => string[];
 
     getDragPayload: (draggedItemId: string) => DragPayload;
@@ -93,8 +96,9 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
     spaceId: null,
     selectedIds: new Set(),
     lastSelectedId: null,
+    context: null,
 
-    selectSingle: (spaceId, itemId) => {
+    selectSingle: (spaceId, itemId, context) => {
         const validSpaceId = validateSpaceId(spaceId);
         const validItemId = validateItemId(itemId);
 
@@ -102,19 +106,22 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
             spaceId: validSpaceId,
             selectedIds: new Set([validItemId]),
             lastSelectedId: validItemId,
+            context,
         });
     },
 
-    toggleSelection: (spaceId, itemId) => {
+    toggleSelection: (spaceId, itemId, context) => {
         const validSpaceId = validateSpaceId(spaceId);
         const validItemId = validateItemId(itemId);
         const state = get();
 
-        if (state.spaceId !== validSpaceId) {
+        // Clear selection if switching context or space
+        if (state.spaceId !== validSpaceId || state.context !== context) {
             set({
                 spaceId: validSpaceId,
                 selectedIds: new Set([validItemId]),
                 lastSelectedId: validItemId,
+                context,
             });
             return;
         }
@@ -132,17 +139,19 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
         });
     },
 
-    selectRange: (spaceId, itemId, allVisibleIds) => {
+    selectRange: (spaceId, itemId, allVisibleIds, context) => {
         const validSpaceId = validateSpaceId(spaceId);
         const validItemId = validateItemId(itemId);
         const state = get();
         const anchor = state.lastSelectedId;
 
-        if (!anchor || state.spaceId !== validSpaceId) {
+        // Clear selection if switching context or space, or no anchor
+        if (!anchor || state.spaceId !== validSpaceId || state.context !== context) {
             set({
                 spaceId: validSpaceId,
                 selectedIds: new Set([validItemId]),
                 lastSelectedId: validItemId,
+                context,
             });
             return;
         }
@@ -155,6 +164,7 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
                 spaceId: validSpaceId,
                 selectedIds: new Set([validItemId]),
                 lastSelectedId: validItemId,
+                context,
             });
             return;
         }
@@ -169,7 +179,7 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
         });
     },
 
-    selectAll: (spaceId, allVisibleIds) => {
+    selectAll: (spaceId, allVisibleIds, context) => {
         const validSpaceId = validateSpaceId(spaceId);
         const lastId = allVisibleIds.length > 0 ? allVisibleIds[allVisibleIds.length - 1] : null;
 
@@ -177,6 +187,7 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
             spaceId: validSpaceId,
             selectedIds: new Set(allVisibleIds),
             lastSelectedId: lastId,
+            context,
         });
     },
 
@@ -185,11 +196,13 @@ export const useSelectionStore = create<SelectionStore>((set, get) => ({
             spaceId: null,
             selectedIds: new Set(),
             lastSelectedId: null,
+            context: null,
         });
     },
 
-    isSelected: (itemId) => {
-        return get().selectedIds.has(itemId);
+    isSelected: (itemId, context) => {
+        const state = get();
+        return state.context === context && state.selectedIds.has(itemId);
     },
 
     getSelectedItems: () => {
