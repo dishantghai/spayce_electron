@@ -32,13 +32,14 @@ export function DroppableSpaceCard({
         }
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        setIsHovering(true);
+        // Don't set isHovering here - cross-space drops are handled by DroppableTreeItem
+        // The card-level highlight causes false positives on adjacent cards
     }, [canAccept]);
 
     const handleDragEnter = useCallback((e: React.DragEvent) => {
         if (!canAccept) return;
         e.preventDefault();
-        setIsHovering(true);
+        // Don't set isHovering here - cross-space drops are handled by DroppableTreeItem
     }, [canAccept]);
 
     const handleDragLeave = useCallback((e: React.DragEvent) => {

@@ -1,0 +1,24 @@
+{
+  "id": "F032",
+  "title": "Bidirectional Drag Between Sidebar and Space Cards",
+  "type": "feature",
+  "priority": "P1",
+  "status": "completed",
+  "estimated_hours": 4,
+  "related_specs": [],
+  "related_epic": null,
+  "dependencies": [
+    "F011",
+    "F030"
+  ],
+  "affected_files": [
+    "packages/react-ui/src/components/drag-drop/DroppableSpaceCard.tsx",
+    "packages/react-ui/src/components/drag-drop/DroppableTreeItem.tsx",
+    "packages/react-ui/src/components/Sidebar.tsx",
+    "packages/react-ui/src/components/spaces/SpaceCard.tsx",
+    "packages/react-ui/src/stores/dragDropUiStore.ts"
+  ],
+  "created_at": "2026-01-27T16:35:00Z",
+  "updated_at": "2026-01-27T16:35:00Z",
+  "completed": "2026-01-28T16:09:10.228067"
+}

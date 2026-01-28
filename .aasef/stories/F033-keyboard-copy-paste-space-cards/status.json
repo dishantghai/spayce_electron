@@ -1,0 +1,25 @@
+{
+  "id": "F033",
+  "title": "Keyboard Copy/Paste in Space Cards",
+  "type": "feature",
+  "priority": "P1",
+  "status": "completed",
+  "estimated_hours": 3,
+  "related_specs": [],
+  "related_epic": null,
+  "dependencies": [
+    "F007",
+    "F008",
+    "F009",
+    "F028"
+  ],
+  "affected_files": [
+    "packages/react-ui/src/components/spaces/SpaceCard.tsx",
+    "packages/react-ui/src/components/spaces/SpaceCardTreeItem.tsx",
+    "packages/react-ui/src/stores/clipboardStore.ts",
+    "packages/react-ui/src/stores/selectionStore.ts"
+  ],
+  "created_at": "2026-01-27T16:35:00Z",
+  "updated_at": "2026-01-27T16:35:00Z",
+  "completed": "2026-01-28T16:09:19.626759"
+}

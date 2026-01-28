@@ -102,7 +102,7 @@ export function SpacesScreen({
         });
     }, []);
 
-    // Scroll to active space when it changes
+    // Scroll to active space when it changes - ensure card is fully visible
     useEffect(() => {
         if (!scrollContainerRef.current || spaces.length === 0) return;
 
@@ -113,18 +113,25 @@ export function SpacesScreen({
             const containerRect = container.getBoundingClientRect();
             const cardRect = cardElement.getBoundingClientRect();
 
-            // Check if card is not fully visible
-            const isLeftHidden = cardRect.left < containerRect.left;
-            const isRightHidden = cardRect.right > containerRect.right;
+            // Calculate scroll position to center the card
+            const idealScrollLeft = cardElement.offsetLeft - (containerRect.width / 2) + (cardRect.width / 2);
 
-            if (isLeftHidden || isRightHidden) {
-                // Center the card in view
-                const scrollLeft = cardElement.offsetLeft - (containerRect.width / 2) + (cardRect.width / 2);
-                container.scrollTo({
-                    left: Math.max(0, scrollLeft),
-                    behavior: 'smooth',
-                });
-            }
+            // Ensure the card is fully visible with margin
+            const margin = 20; // 20px margin on each side
+            const minScroll = cardElement.offsetLeft - margin;
+            const maxScroll = cardElement.offsetLeft + cardRect.width + margin - containerRect.width;
+
+            // Use ideal center, but constrain to ensure full visibility
+            let scrollLeft = idealScrollLeft;
+            scrollLeft = Math.max(0, scrollLeft); // Don't scroll past left edge
+            scrollLeft = Math.max(minScroll, scrollLeft); // Ensure left edge is visible
+            scrollLeft = Math.min(maxScroll, scrollLeft); // Ensure right edge is visible
+            scrollLeft = Math.max(0, scrollLeft); // Final check for negative values
+
+            container.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth',
+            });
         }
     }, [activeSpaceIndex, spaces.length]);
 

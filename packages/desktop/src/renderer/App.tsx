@@ -7,7 +7,7 @@ import {
     SpacesScreen,
 } from '@spayce/react-ui';
 import { useClipboardStore, useInlineInputStore, useSelectionStore, useDragDropUiStore } from '@spayce/react-ui/stores';
-import type { DropPosition } from '@spayce/react-ui/stores';
+import type { DropPosition, DragData } from '@spayce/react-ui/stores';
 import { collectLinksRecursive, hasLinksRecursive, extractUrlsFromText } from '@spayce/react-ui/utils';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
 import * as LucideIcons from 'lucide-react';
@@ -588,13 +588,49 @@ export function App(): React.ReactElement {
     };
 
     const handleReorderSpaces = async (oldIndex: number, newIndex: number) => {
+        console.log('[F036-App] handleReorderSpaces called:', oldIndex, '->', newIndex);
+        console.log('[F036-App] Current spaces:', spaces.map(s => s.name));
+
+        if (oldIndex === newIndex) {
+            console.log('[F036-App] No change needed, indices are same');
+            return;
+        }
+
+        // F036: Preserve selection by tracking space IDs before reorder
+        const sidebarActiveSpaceId = spaces[sidebarActiveSpaceIndex]?.id;
+        const spacesScreenActiveSpaceId = spaces[spacesScreenActiveSpaceIndex]?.id;
+        console.log('[F036-App] Preserving selections - sidebar:', sidebarActiveSpaceId, 'screen:', spacesScreenActiveSpaceId);
+
         const newOrder = [...spaces];
         const [removed] = newOrder.splice(oldIndex, 1);
         newOrder.splice(newIndex, 0, removed);
+
+        console.log('[F036-App] New order:', newOrder.map(s => s.name));
+        console.log('[F036-App] Calling reorderSpaces API...');
+
         await reorderSpaces(newOrder.map(s => s.id));
+
+        console.log('[F036-App] Reorder complete');
+
+        // F036: After reorder, update indices to point to the same space IDs
+        // Note: spaces array will update after refetch, so we use newOrder to calculate
+        if (sidebarActiveSpaceId) {
+            const newSidebarIndex = newOrder.findIndex(s => s.id === sidebarActiveSpaceId);
+            if (newSidebarIndex !== -1) {
+                console.log('[F036-App] Updating sidebar index:', sidebarActiveSpaceIndex, '->', newSidebarIndex);
+                setSidebarActiveSpaceIndex(newSidebarIndex);
+            }
+        }
+
+        if (spacesScreenActiveSpaceId) {
+            const newScreenIndex = newOrder.findIndex(s => s.id === spacesScreenActiveSpaceId);
+            if (newScreenIndex !== -1) {
+                console.log('[F036-App] Updating screen index:', spacesScreenActiveSpaceIndex, '->', newScreenIndex);
+                setSpacesScreenActiveSpaceIndex(newScreenIndex);
+            }
+        }
     };
 
-    // Helper to get items by IDs from tree
     const getItemsByIds = useCallback((space: Space, ids: string[]): SpaceItem[] => {
         const items: SpaceItem[] = [];
 
@@ -625,16 +661,27 @@ export function App(): React.ReactElement {
     }, [focusContext, sidebarSelectedId, cardSelectedId, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, getItemsByIds]);
 
     // Handle copy selected items (Cmd+C / Ctrl+C)
-    // Priority: multi-selection > keyboard-focused item (from Sidebar) > clicked selection
+    // Priority: multi-selection > keyboard-focused item (from Sidebar/SpacesScreen) > clicked selection
     // Hover state is ignored - only actual selection/focus matters
-    const handleCopySelected = useCallback((keyboardFocusedId: string | null) => {
-        console.log('[F010-App] handleCopySelected called!');
-        console.log('[F010-App] keyboardFocusedId (from Sidebar):', keyboardFocusedId);
-        console.log('[F010-App] sidebarSelectedId (clicked):', sidebarSelectedId);
+    // F033: Accepts optional spaceId for SpacesScreen calls
+    const handleCopySelected = useCallback((keyboardFocusedId: string | null, spaceId?: string) => {
+        console.log('[F033-App] handleCopySelected called!');
+        console.log('[F033-App] keyboardFocusedId:', keyboardFocusedId);
+        console.log('[F033-App] spaceId param:', spaceId);
+        console.log('[F033-App] sidebarSelectedId (clicked):', sidebarSelectedId);
 
-        const activeSpaceIndex = focusContext === 'sidebar' ? sidebarActiveSpaceIndex : spacesScreenActiveSpaceIndex;
-        const activeSpace = spaces[activeSpaceIndex];
-        const activeSpaceId = activeSpace?.id;
+        // F033: Use provided spaceId if available (from SpacesScreen), otherwise determine from focus context
+        let activeSpace: Space | undefined;
+        let activeSpaceId: string | undefined;
+
+        if (spaceId) {
+            activeSpace = spaces.find(s => s.id === spaceId);
+            activeSpaceId = spaceId;
+        } else {
+            const activeSpaceIndex = focusContext === 'sidebar' ? sidebarActiveSpaceIndex : spacesScreenActiveSpaceIndex;
+            activeSpace = spaces[activeSpaceIndex];
+            activeSpaceId = activeSpace?.id;
+        }
 
         if (!activeSpace || !activeSpaceId) {
             console.error('[F010-App] ERROR: No active space or spaceId!');
@@ -686,19 +733,30 @@ export function App(): React.ReactElement {
         }
 
         // Verify clipboard state after copy
-        console.log('[F010-App] Clipboard items after copy:', clipboardStore.getItems().map(i => i.name));
+        console.log('[F033-App] Clipboard items after copy:', clipboardStore.getItems().map(i => i.name));
     }, [focusContext, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, getItemsByIds, clipboardStore, sidebarSelectedId]);
 
     // Handle paste (Cmd+V / Ctrl+V)
     // Supports both internal clipboard (SpaceItems) and system clipboard (URLs)
     // Uses keyboard-focused item as paste target (if it's a folder)
-    const handlePasteToSelected = useCallback(async (keyboardFocusedId: string | null) => {
-        console.log('[F010-App] handlePasteToSelected called!');
-        console.log('[F010-App] keyboardFocusedId:', keyboardFocusedId);
+    // F033: Accepts optional spaceId for SpacesScreen calls
+    const handlePasteToSelected = useCallback(async (keyboardFocusedId: string | null, spaceId?: string) => {
+        console.log('[F033-App] handlePasteToSelected called!');
+        console.log('[F033-App] keyboardFocusedId:', keyboardFocusedId);
+        console.log('[F033-App] spaceId param:', spaceId);
 
-        const activeSpaceIndex = focusContext === 'sidebar' ? sidebarActiveSpaceIndex : spacesScreenActiveSpaceIndex;
-        const activeSpace = spaces[activeSpaceIndex];
-        const activeSpaceId = activeSpace?.id;
+        // F033: Use provided spaceId if available (from SpacesScreen), otherwise determine from focus context
+        let activeSpace: Space | undefined;
+        let activeSpaceId: string | undefined;
+
+        if (spaceId) {
+            activeSpace = spaces.find(s => s.id === spaceId);
+            activeSpaceId = spaceId;
+        } else {
+            const activeSpaceIndex = focusContext === 'sidebar' ? sidebarActiveSpaceIndex : spacesScreenActiveSpaceIndex;
+            activeSpace = spaces[activeSpaceIndex];
+            activeSpaceId = activeSpace?.id;
+        }
 
         if (!activeSpace || !activeSpaceId) {
             console.error('[F010-App] ERROR: No active space for paste!');
@@ -856,6 +914,33 @@ export function App(): React.ReactElement {
         setRootContextMenu(null);
     }, [rootContextMenu, clipboardStore, handleAddFolder, handleAddLink, pasteItem, refetch]);
 
+    // F030: Handle cross-card drag-drop (move items between space cards)
+    const handleCrossCardMove = useCallback(async (dragData: DragData, targetSpaceId: string) => {
+        console.log('[F030] ========== CROSS-CARD MOVE START ==========');
+        console.log('[F030] Source space:', dragData.spaceId);
+        console.log('[F030] Target space:', targetSpaceId);
+
+        // Get all items to move (multi-select or single)
+        const itemsToMove = dragData.items && dragData.items.length > 0 ? dragData.items : [dragData.item];
+        console.log('[F030] Items to move:', itemsToMove.map((i: SpaceItem) => i.name).join(', '));
+
+        // Move each item to target space root
+        for (const item of itemsToMove) {
+            console.log('[F030] Moving item:', item.name, 'to space:', targetSpaceId);
+            const result = await itemsApi.move(item.id, targetSpaceId, undefined, undefined);
+            if (result?.success) {
+                console.log('[F030] ✓ Item moved successfully:', item.name);
+            } else {
+                console.error('[F030] ✗ Failed to move item:', item.name, result);
+            }
+        }
+
+        console.log('[F030] ========== CROSS-CARD MOVE END ==========');
+
+        // Refresh data to update both source and target spaces
+        await refetch();
+    }, [refetch]);
+
     // Handle drag-drop item movement (supports multi-select F020)
     const dragDropStore = useDragDropUiStore();
     const selectionStore = useSelectionStore();
@@ -890,27 +975,40 @@ export function App(): React.ReactElement {
             return undefined;
         };
 
-        const space = spaces.find(s => s.id === spaceId);
-        if (!space) {
-            console.error('[Drop] Space not found:', spaceId);
+        // F030: Check if this is a cross-space drop
+        const isCrossSpaceDrop = dragData.spaceId !== spaceId;
+        console.log('[Drop] Cross-space drop:', isCrossSpaceDrop);
+        console.log('[Drop] Source space:', dragData.spaceId, 'Target space:', spaceId);
+
+        const targetSpace = spaces.find(s => s.id === spaceId);
+        if (!targetSpace) {
+            console.error('[Drop] Target space not found:', spaceId);
             return;
         }
 
-        // Find target item info (use first item for position calculation)
-        const firstItem = itemsToMove[0];
-        const draggedInfo = findItemInfo(space.rootItems, firstItem.id);
-        const targetInfo = findItemInfo(space.rootItems, targetId);
-
-        if (!draggedInfo) {
-            console.error('[Drop] First dragged item not found in tree:', firstItem.id);
-            return;
-        }
+        // Find target item info in target space
+        const targetInfo = findItemInfo(targetSpace.rootItems, targetId);
         if (!targetInfo) {
             console.error('[Drop] Target item not found:', targetId);
             return;
         }
 
-        console.log('[Drop] First item current parent:', draggedInfo.parent, 'index:', draggedInfo.index);
+        // F030: For cross-space drops, skip validation in source space
+        // Just verify items exist in dragData
+        if (isCrossSpaceDrop) {
+            console.log('[Drop] Cross-space drop - using items from dragData directly');
+            // Items are already validated in dragData, no need to find them in source space
+        } else {
+            // Same-space drop: validate dragged item exists in target space
+            const firstItem = itemsToMove[0];
+            const draggedInfo = findItemInfo(targetSpace.rootItems, firstItem.id);
+            if (!draggedInfo) {
+                console.error('[Drop] First dragged item not found in tree:', firstItem.id);
+                return;
+            }
+            console.log('[Drop] First item current parent:', draggedInfo.parent, 'index:', draggedInfo.index);
+        }
+
         console.log('[Drop] Target item parent:', targetInfo.parent, 'index:', targetInfo.index);
 
         // Calculate target parent and position based on drop position
@@ -926,30 +1024,39 @@ export function App(): React.ReactElement {
             // Drop before/after - same parent as target
             targetParentId = targetInfo.parent;
 
-            // Check if moving within same parent
-            const isSameParent = draggedInfo.parent === targetParentId;
-            console.log('[Drop] Same parent?', isSameParent);
-
             if (position === 'before') {
                 toPosition = targetInfo.index;
-                // If moving within same parent and dragged item is before target,
-                // account for removal shifting indices down by 1
-                if (isSameParent && draggedInfo.index < targetInfo.index) {
-                    toPosition = targetInfo.index - 1;
-                    console.log('[Drop] Before: Adjusted for same-parent move (dragged < target):', toPosition);
+                // F030: For same-space drops, adjust for removal shifting indices
+                if (!isCrossSpaceDrop) {
+                    const firstItem = itemsToMove[0];
+                    const draggedInfo = findItemInfo(targetSpace.rootItems, firstItem.id);
+                    const isSameParent = draggedInfo?.parent === targetParentId;
+                    if (isSameParent && draggedInfo && draggedInfo.index < targetInfo.index) {
+                        toPosition = targetInfo.index - 1;
+                        console.log('[Drop] Before: Adjusted for same-parent move:', toPosition);
+                    } else {
+                        console.log('[Drop] Before: Position:', toPosition);
+                    }
                 } else {
-                    console.log('[Drop] Before: Position:', toPosition);
+                    console.log('[Drop] Before (cross-space): Position:', toPosition);
                 }
             } else {
                 // after
                 toPosition = targetInfo.index + 1;
-                // If moving within same parent and dragged item is before target,
-                // removal shifts indices, so final position is targetIndex (not +1)
-                if (isSameParent && draggedInfo.index < targetInfo.index) {
-                    toPosition = targetInfo.index;
-                    console.log('[Drop] After: Adjusted for same-parent move (dragged < target):', toPosition);
+                // F030: For same-space drops, adjust for removal shifting indices
+                if (!isCrossSpaceDrop) {
+                    const firstItem = itemsToMove[0];
+                    const draggedInfo = findItemInfo(targetSpace.rootItems, firstItem.id);
+                    const isSameParent = draggedInfo?.parent === targetParentId;
+                    if (isSameParent && draggedInfo && draggedInfo.index < targetInfo.index) {
+                        // removal shifts indices, so final position is targetIndex (not +1)
+                        toPosition = targetInfo.index;
+                        console.log('[Drop] After: Adjusted for same-parent move:', toPosition);
+                    } else {
+                        console.log('[Drop] After: Position:', toPosition);
+                    }
                 } else {
-                    console.log('[Drop] After: Position:', toPosition);
+                    console.log('[Drop] After (cross-space): Position:', toPosition);
                 }
             }
         }
@@ -1127,6 +1234,7 @@ export function App(): React.ReactElement {
                     onItemDrop={handleItemDrop}
                     onItemMoveArborist={handleItemMoveArborist}
                     onRootContextMenu={handleRootContextMenu}
+                    onReorderSpaces={handleReorderSpaces}
                     expandedIdsMap={sidebarExpandedIdsMap}
                     onExpandedIdsMapChange={setSidebarExpandedIdsMap}
                 />
@@ -1148,7 +1256,10 @@ export function App(): React.ReactElement {
                         activeSpaceIndex={spacesScreenActiveSpaceIndex}
                         selectedItemId={cardSelectedId}
                         hasFocus={focusContext === 'spacesScreen'}
-                        onSpaceSelect={setSpacesScreenActiveSpaceIndex}
+                        onSpaceSelect={(index: number) => {
+                            setSpacesScreenActiveSpaceIndex(index);
+                            setFocusContext('spacesScreen');
+                        }}
                         onItemClick={(item: SpaceItem, spaceId: string) => {
                             console.log('SpacesScreen item clicked:', item.name, 'in space:', spaceId);
                             setCardSelectedId(item.id);
@@ -1168,6 +1279,9 @@ export function App(): React.ReactElement {
                         onItemDrop={handleItemDrop}
                         onItemMoveArborist={handleItemMoveArborist}
                         onRootContextMenu={handleRootContextMenu}
+                        onCrossCardMove={handleCrossCardMove}
+                        onCopySelected={handleCopySelected}
+                        onPasteToSelected={handlePasteToSelected}
                     />
                 ) : (
                     <div style={{

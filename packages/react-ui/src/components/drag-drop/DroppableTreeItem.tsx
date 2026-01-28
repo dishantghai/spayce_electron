@@ -44,14 +44,13 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
         validateDrop,
     } = useDragDropUiStore();
 
-    // F032: Accept drops from same context OR cross-space drops from different context
-    // Cross-space drops are allowed when dragData.spaceId !== this item's spaceId
+    // F032: Accept drops from same context OR from different context (bidirectional)
+    // This enables: sidebar ↔ spaceCard drops regardless of whether it's same or different space
     const isAcceptableDrop = useDragDropUiStore((state) => {
         if (!state.dragData) return false;
-        const isSameContext = state.dragData.source === dropContext;
-        const isCrossSpace = state.dragData.spaceId !== spaceId;
-        // Accept if same context (normal reorder) OR cross-space from different context
-        return isSameContext || isCrossSpace;
+        // Always accept - the UI components (sidebar/cards) handle same-space reorder
+        // and cross-space moves identically. validateDrop handles circular refs.
+        return true;
     });
 
     const isDropTarget = useDragDropUiStore((state) =>
@@ -68,11 +67,11 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
     const [isHovering, setIsHovering] = useState(false);
 
     const isFolder = item.type === SpaceItemType.folder;
-    // F032: Valid drop target if same context OR cross-space drop
-    const isFromSameContext = dragData?.source === dropContext;
+    // F032: Valid drop target - accept from any context (sidebar or spaceCard)
+    // validateDrop handles circular reference prevention
     const isCrossSpaceDrop = dragData && dragData.spaceId !== spaceId;
-    const canAcceptDrop = isFromSameContext || isCrossSpaceDrop;
-    const isValidDropTarget = dragData && canAcceptDrop ? validateDrop(dragData, item.id, ancestorIds) : false;
+    const isFromSameContext = dragData?.source === dropContext;
+    const isValidDropTarget = dragData ? validateDrop(dragData, item.id, ancestorIds) : false;
 
     const calculateDropPosition = useCallback((e: React.DragEvent<HTMLDivElement>): DropPosition => {
         const rect = e.currentTarget.getBoundingClientRect();
@@ -187,6 +186,10 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
 
         console.log(`[Drop] ========== DROP EVENT START ==========`);
         console.log(`[Drop] Target: ${item.name} (${item.id})`);
+        console.log(`[Drop] isCrossSpaceDrop: ${isCrossSpaceDrop}, isFromSameContext: ${isFromSameContext}`);
+
+        // F030: Handle cross-space drops normally - onDrop will handle the cross-space logic
+        // No need to bubble to DroppableSpaceCard since we have position info here
 
         if (!isDragging || !dragData || !isValidDropTarget) {
             console.log(`[Drop] Rejected - isDragging: ${isDragging}, dragData: ${!!dragData}, isValidDropTarget: ${isValidDropTarget}`);
@@ -215,7 +218,7 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
         // Pass dragData so the handler knows which item was dragged
         onDrop?.(item.id, position);
         console.log(`[Drop] ========== DROP EVENT END ==========`);
-    }, [isDragging, dragData, isValidDropTarget, calculateDropPosition, clearDropIndicator, onDrop, item.id, item.name]);
+    }, [isDragging, dragData, isValidDropTarget, isCrossSpaceDrop, isFromSameContext, calculateDropPosition, clearDropIndicator, onDrop, item.id, item.name]);
 
     // Cleanup on unmount
     useEffect(() => {

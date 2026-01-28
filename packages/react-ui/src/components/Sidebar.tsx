@@ -57,6 +57,8 @@ export interface SidebarProps {
     onItemMoveArborist?: (draggedItemId: string, newParentId: string | null, newIndex: number, spaceId: string) => Promise<boolean>;
     /** F035: Called when right-clicking on empty area of sidebar tree (root context menu) */
     onRootContextMenu?: (spaceId: string, event: React.MouseEvent) => void;
+    /** F036: Called when space circles are reordered by dragging */
+    onReorderSpaces?: (oldIndex: number, newIndex: number) => void;
 }
 
 /**
@@ -93,6 +95,7 @@ export function Sidebar({
     onItemDrop,
     onItemMoveArborist,
     onRootContextMenu,
+    onReorderSpaces,
 }: SidebarProps): React.ReactElement {
     const sidebarRef = useRef<HTMLElement>(null);
     const [viewMode, setViewMode] = useState<SidebarViewMode>('normal');
@@ -752,6 +755,7 @@ export function Sidebar({
                             onAddSpace={handleAddSpace}
                             onSettingsClick={onSettingsClick}
                             userName={userName}
+                            onReorderSpaces={onReorderSpaces}
                         />
                     </>
                 )}

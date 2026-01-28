@@ -155,11 +155,17 @@ function SpaceTabButton({
         isDragging && styles.spaceTabDragging,
     ].filter(Boolean).join(' ');
 
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+        // Blur immediately to prevent focus ring and keyboard event hijacking
+        e.currentTarget.blur();
+        onClick();
+    };
+
     return (
         <button
             className={buttonClasses}
             style={{ '--tab-color': space.accentColor } as React.CSSProperties}
-            onClick={onClick}
+            onClick={handleClick}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             draggable
