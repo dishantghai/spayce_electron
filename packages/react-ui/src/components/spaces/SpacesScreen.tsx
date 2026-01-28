@@ -3,9 +3,10 @@ import { Plus, Folder, FolderOpen } from 'lucide-react';
 import type { Space, SpaceItem } from '../../types';
 import { SpaceCard } from './SpaceCard';
 import { SpacesBottomBar } from './SpacesBottomBar';
+import { DroppableSpaceCard } from '../drag-drop';
 import { useInlineInputStore } from '../../stores/inlineInputStore';
 import { useSelectionStore } from '../../stores/selectionStore';
-import type { DropPosition } from '../../stores/dragDropUiStore';
+import type { DropPosition, DragData } from '../../stores/dragDropUiStore';
 import styles from './SpacesScreen.module.css';
 
 export interface SpacesScreenProps {
@@ -24,9 +25,19 @@ export interface SpacesScreenProps {
     onReorderSpaces?: (oldIndex: number, newIndex: number) => void;
     onFocusChange?: (hasFocus: boolean) => void;
     onRenameItem?: (itemId: string, newName: string) => Promise<void>;
+    /** Called when inline input is submitted (for creating folders/links in cards) */
+    onInlineInputSubmit?: (value: string, type: 'folder' | 'link', parentId: string | null, spaceId: string) => void;
     onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
     /** Called when an item is moved via Arborist drag-drop (new implementation) */
     onItemMoveArborist?: (draggedItemId: string, newParentId: string | null, newIndex: number, spaceId: string) => Promise<boolean>;
+    /** Called when items are moved across space cards (F030) */
+    onCrossCardMove?: (dragData: DragData, targetSpaceId: string) => Promise<void>;
+    /** F033: Called when Cmd+C is pressed on selected item(s) in cards */
+    onCopySelected?: (selectedItemId: string | null, spaceId: string) => void;
+    /** F033: Called when Cmd+V is pressed to paste into selected location in cards */
+    onPasteToSelected?: (selectedItemId: string | null, spaceId: string) => Promise<void>;
+    /** F034: Called when right-clicking on empty area of card (root context menu) */
+    onRootContextMenu?: (spaceId: string, event: React.MouseEvent) => void;
 }
 
 export function SpacesScreen({
@@ -47,17 +58,30 @@ export function SpacesScreen({
     onRenameItem,
     onItemDrop,
     onItemMoveArborist,
+    onInlineInputSubmit,
+    onCrossCardMove,
+    onCopySelected,
+    onPasteToSelected,
+    onRootContextMenu,
 }: SpacesScreenProps): React.ReactElement {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const [keyboardSelectedItemId, setKeyboardSelectedItemId] = useState<string | null>(null);
     const [expandedIds, setExpandedIds] = useState<Map<string, Set<string>>>(new Map());
 
+    // Track previous selectedItemId to detect external changes only
+    const prevSelectedItemIdRef = useRef<string | null>(selectedItemId);
+
     // Sync keyboardSelectedItemId with selectedItemId when it changes externally (e.g., from context menu)
     // This prevents dual selection where keyboardSelectedItemId and selectedItemId both highlight items
+    // Only sync when selectedItemId changes from external source, not from keyboard navigation
     useEffect(() => {
-        if (selectedItemId !== null && selectedItemId !== keyboardSelectedItemId) {
-            setKeyboardSelectedItemId(selectedItemId);
+        // Only update if selectedItemId changed from external source (not from keyboard nav setting it)
+        if (selectedItemId !== prevSelectedItemIdRef.current) {
+            prevSelectedItemIdRef.current = selectedItemId;
+            if (selectedItemId !== null) {
+                setKeyboardSelectedItemId(selectedItemId);
+            }
         }
     }, [selectedItemId]);
 
@@ -179,12 +203,27 @@ export function SpacesScreen({
                     // Clear multi-selection on ESC
                     useSelectionStore.getState().clearSelection();
                     break;
+
+                // F033: Keyboard copy/paste in space cards
+                case 'c':
+                    if ((e.metaKey || e.ctrlKey) && !e.shiftKey) {
+                        e.preventDefault();
+                        onCopySelected?.(keyboardSelectedItemId, activeSpace.id);
+                    }
+                    break;
+
+                case 'v':
+                    if ((e.metaKey || e.ctrlKey) && !e.shiftKey) {
+                        e.preventDefault();
+                        onPasteToSelected?.(keyboardSelectedItemId, activeSpace.id);
+                    }
+                    break;
             }
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [spaces, activeSpaceIndex, keyboardSelectedItemId, expandedIds, onSpaceSelect, hasFocus]);
+    }, [spaces, activeSpaceIndex, keyboardSelectedItemId, expandedIds, onSpaceSelect, hasFocus, onCopySelected, onPasteToSelected]);
 
     // Flatten items respecting expanded state
     const flattenItems = useCallback((items: SpaceItem[], spaceId: string): SpaceItem[] => {
@@ -323,7 +362,8 @@ export function SpacesScreen({
         if (spaceIndex !== -1 && spaceIndex !== activeSpaceIndex) {
             onSpaceSelect?.(spaceIndex);
         }
-        setKeyboardSelectedItemId(item.id);
+        // Don't set keyboardSelectedItemId directly - let parent update selectedItemId
+        // which will sync to keyboardSelectedItemId via useEffect (prevents sync conflicts)
         onFocusChange?.(true);
         onItemClick?.(item, spaceId);
     }, [onItemClick, spaces, activeSpaceIndex, onSpaceSelect, onFocusChange]);
@@ -347,22 +387,14 @@ export function SpacesScreen({
         }
     }, []);
 
-    // Calculate card width based on container width (fit 3 cards)
-    const [cardWidth, setCardWidth] = useState(288);
-
-    useEffect(() => {
-        const updateCardWidth = () => {
-            if (scrollContainerRef.current) {
-                const containerWidth = scrollContainerRef.current.clientWidth - 48; // Subtract padding
-                const calculatedWidth = Math.max(288, (containerWidth / 3) - 20);
-                setCardWidth(Math.min(400, calculatedWidth)); // Cap at 400px
-            }
-        };
-
-        updateCardWidth();
-        window.addEventListener('resize', updateCardWidth);
-        return () => window.removeEventListener('resize', updateCardWidth);
-    }, []);
+    // Card sizing: Fixed width to show 2.5 cards when sidebar (320px) is open
+    // Based on actual screen measurement showing 3.5 cards at 400px:
+    // - Current visible: 3.5 cards with 400px width
+    // - Target: 2.5 cards
+    // - Ratio: 3.5 / 2.5 = 1.4x
+    // - New width: 400 * 1.4 = 560px
+    // This ensures exactly 2.5 cards visible with sidebar open
+    const cardWidth = 560;
 
     // Loading state
     if (isLoading) {
@@ -452,30 +484,37 @@ export function SpacesScreen({
                             '--space-accent-color': space.accentColor,
                         } as React.CSSProperties}
                     >
-                        <SpaceCard
+                        <DroppableSpaceCard
                             space={space}
-                            spaceIndex={index}
-                            isSelected={index === activeSpaceIndex}
-                            selectedItemId={selectedItemId}
-                            keyboardSelectedItemId={keyboardSelectedItemId}
-                            expandedIds={getExpandedIds(space.id)}
-                            renameItemId={cardRenameItemId}
-                            onSelect={() => handleCardSelect(index)}
-                            onItemClick={handleItemClick}
-                            onItemContextMenu={onItemContextMenu}
-                            onExpandedChange={(ids) => handleExpandedChange(space.id, ids)}
-                            onAddFolder={onAddFolder}
-                            onAddLink={onAddLink}
-                            onRenameSubmit={async (itemId: string, newName: string) => {
-                                if (onRenameItem) {
-                                    await onRenameItem(itemId, newName);
-                                }
-                                setCardRenameItemId(null);
-                            }}
-                            onRenameCancel={() => setCardRenameItemId(null)}
-                            onItemDrop={onItemDrop}
-                            onItemMoveArborist={onItemMoveArborist}
-                        />
+                            onAcceptItem={(dragData) => onCrossCardMove?.(dragData, space.id) ?? Promise.resolve()}
+                        >
+                            <SpaceCard
+                                space={space}
+                                spaceIndex={index}
+                                isSelected={index === activeSpaceIndex}
+                                selectedItemId={selectedItemId}
+                                keyboardSelectedItemId={keyboardSelectedItemId}
+                                expandedIds={getExpandedIds(space.id)}
+                                renameItemId={cardRenameItemId}
+                                onSelect={() => handleCardSelect(index)}
+                                onItemClick={handleItemClick}
+                                onItemContextMenu={onItemContextMenu}
+                                onExpandedChange={(ids) => handleExpandedChange(space.id, ids)}
+                                onAddFolder={onAddFolder}
+                                onAddLink={onAddLink}
+                                onInlineInputSubmit={onInlineInputSubmit}
+                                onRenameSubmit={async (itemId: string, newName: string) => {
+                                    if (onRenameItem) {
+                                        await onRenameItem(itemId, newName);
+                                    }
+                                    setCardRenameItemId(null);
+                                }}
+                                onRenameCancel={() => setCardRenameItemId(null)}
+                                onItemDrop={onItemDrop}
+                                onItemMoveArborist={onItemMoveArborist}
+                                onRootContextMenu={onRootContextMenu}
+                            />
+                        </DroppableSpaceCard>
                     </div>
                 ))}
             </div>

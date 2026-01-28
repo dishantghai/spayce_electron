@@ -55,6 +55,8 @@ export interface SidebarProps {
     onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
     /** Called when an item is moved via Arborist drag-drop (new implementation) */
     onItemMoveArborist?: (draggedItemId: string, newParentId: string | null, newIndex: number, spaceId: string) => Promise<boolean>;
+    /** F035: Called when right-clicking on empty area of sidebar tree (root context menu) */
+    onRootContextMenu?: (spaceId: string, event: React.MouseEvent) => void;
 }
 
 /**
@@ -90,6 +92,7 @@ export function Sidebar({
     onPasteToSelected,
     onItemDrop,
     onItemMoveArborist,
+    onRootContextMenu,
 }: SidebarProps): React.ReactElement {
     const sidebarRef = useRef<HTMLElement>(null);
     const [viewMode, setViewMode] = useState<SidebarViewMode>('normal');
@@ -117,6 +120,9 @@ export function Sidebar({
         }
     }, [controlledExpandedIdsMap, expandedIdsMap, onExpandedIdsMapChange]);
     const [focusedItemId, setFocusedItemId] = useState<string | null>(null);
+
+    // Track previous selectedItemId to detect external changes only
+    const prevSelectedItemIdRef = useRef<string | null>(selectedItemId);
 
     // Get expandedIds for current space, initializing from space data if needed
     const expandedIds = React.useMemo(() => {
@@ -163,9 +169,14 @@ export function Sidebar({
 
     // Sync focusedItemId with selectedItemId when it changes externally (e.g., from context menu)
     // This prevents dual selection where focusedItemId overrides selectedItemId
+    // Only sync when selectedItemId changes from external source, not from keyboard navigation
     useEffect(() => {
-        if (selectedItemId !== null && selectedItemId !== focusedItemId) {
-            setFocusedItemId(selectedItemId);
+        // Only update if selectedItemId changed from external source (not from keyboard nav setting it)
+        if (selectedItemId !== prevSelectedItemIdRef.current) {
+            prevSelectedItemIdRef.current = selectedItemId;
+            if (selectedItemId !== null) {
+                setFocusedItemId(selectedItemId);
+            }
         }
     }, [selectedItemId]);
 
@@ -557,6 +568,17 @@ export function Sidebar({
         }
     }, []);
 
+    // F035: Handle right-click on tree container empty space for root context menu
+    const handleTreeContainerContextMenu = useCallback((e: React.MouseEvent) => {
+        // Only trigger if clicked on background, not on items
+        if (e.target !== e.currentTarget) return;
+        if (!activeSpace) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        onRootContextMenu?.(activeSpace.id, e);
+    }, [activeSpace, onRootContextMenu]);
+
     // Auto-close floating sidebar on mouse leave
     useEffect(() => {
         if (mode !== 'floating') return;
@@ -674,7 +696,7 @@ export function Sidebar({
                         />
 
                         {/* Tree view - Feature flag toggles between legacy and Arborist */}
-                        <div className={styles.treeContainer} onClick={handleTreeContainerClick}>
+                        <div className={styles.treeContainer} onClick={handleTreeContainerClick} onContextMenu={handleTreeContainerContextMenu}>
                             {FeatureFlags.USE_ARBORIST_TREE ? (
                                 <SpayceTree
                                     items={treeItems}

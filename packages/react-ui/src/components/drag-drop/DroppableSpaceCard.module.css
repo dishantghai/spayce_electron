@@ -1,0 +1,12 @@
+.droppableCard {
+    height: 100%;
+    transition: border-color 200ms ease,
+        box-shadow 200ms ease;
+    border: 2px solid transparent;
+    border-radius: var(--radius-lg, 12px);
+}
+
+.dropTarget {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 12px 2px color-mix(in srgb, var(--accent-color) 30%, transparent);
+}

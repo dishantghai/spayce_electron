@@ -44,12 +44,21 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
         validateDrop,
     } = useDragDropUiStore();
 
-    // Only subscribe to dropIndicator when this item is the target AND drag source matches context
+    // F032: Accept drops from same context OR cross-space drops from different context
+    // Cross-space drops are allowed when dragData.spaceId !== this item's spaceId
+    const isAcceptableDrop = useDragDropUiStore((state) => {
+        if (!state.dragData) return false;
+        const isSameContext = state.dragData.source === dropContext;
+        const isCrossSpace = state.dragData.spaceId !== spaceId;
+        // Accept if same context (normal reorder) OR cross-space from different context
+        return isSameContext || isCrossSpace;
+    });
+
     const isDropTarget = useDragDropUiStore((state) =>
-        state.dropIndicator?.targetId === item.id && state.dragData?.source === dropContext
+        state.dropIndicator?.targetId === item.id && isAcceptableDrop
     );
     const dropPosition = useDragDropUiStore((state) =>
-        state.dropIndicator?.targetId === item.id && state.dragData?.source === dropContext
+        state.dropIndicator?.targetId === item.id && isAcceptableDrop
             ? state.dropIndicator.position
             : null
     );
@@ -59,9 +68,11 @@ export const DroppableTreeItem = memo(function DroppableTreeItem({
     const [isHovering, setIsHovering] = useState(false);
 
     const isFolder = item.type === SpaceItemType.folder;
-    // Only valid drop target if drag source matches this context
+    // F032: Valid drop target if same context OR cross-space drop
     const isFromSameContext = dragData?.source === dropContext;
-    const isValidDropTarget = dragData && isFromSameContext ? validateDrop(dragData, item.id, ancestorIds) : false;
+    const isCrossSpaceDrop = dragData && dragData.spaceId !== spaceId;
+    const canAcceptDrop = isFromSameContext || isCrossSpaceDrop;
+    const isValidDropTarget = dragData && canAcceptDrop ? validateDrop(dragData, item.id, ancestorIds) : false;
 
     const calculateDropPosition = useCallback((e: React.DragEvent<HTMLDivElement>): DropPosition => {
         const rect = e.currentTarget.getBoundingClientRect();

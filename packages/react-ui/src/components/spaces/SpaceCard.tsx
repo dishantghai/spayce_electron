@@ -7,11 +7,12 @@ import {
     FileText,
     Upload,
 } from 'lucide-react';
-import type { Space, SpaceItem } from '../../types';
+import type { Space, SpaceItem, InlineInputState } from '../../types';
 import { TreeView } from '../TreeView';
 import { SpayceTree } from '../tree/arborist';
 import { FeatureFlags } from '../../config/features';
 import { useSelectionStore } from '../../stores/selectionStore';
+import { useInlineInputStore } from '../../stores/inlineInputStore';
 import type { DropPosition } from '../../stores/dragDropUiStore';
 import styles from './SpaceCard.module.css';
 
@@ -34,6 +35,10 @@ export interface SpaceCardProps {
     onItemDrop?: (itemId: string, targetId: string, position: DropPosition, spaceId: string) => void;
     /** Called when an item is moved via Arborist drag-drop (new implementation) */
     onItemMoveArborist?: (draggedItemId: string, newParentId: string | null, newIndex: number, spaceId: string) => Promise<boolean>;
+    /** Called when inline input is submitted (for creating folders/links) */
+    onInlineInputSubmit?: (value: string, type: 'folder' | 'link', parentId: string | null, spaceId: string) => void;
+    /** F034: Called when right-clicking on empty area of card (root context menu) */
+    onRootContextMenu?: (spaceId: string, event: React.MouseEvent) => void;
 }
 
 export function SpaceCard({
@@ -54,9 +59,18 @@ export function SpaceCard({
     onRenameCancel,
     onItemDrop,
     onItemMoveArborist,
+    onInlineInputSubmit,
+    onRootContextMenu,
 }: SpaceCardProps): React.ReactElement {
     const [internalExpandedIds, setInternalExpandedIds] = useState<Set<string>>(() => new Set());
     const expandedIds = controlledExpandedIds ?? internalExpandedIds;
+
+    // Get card-specific inline input state from store
+    const { cardInput, setCardInput, clearCardInput } = useInlineInputStore();
+
+    // Filter cardInput to only show for this space
+    const inlineInputForThisCard: InlineInputState | null =
+        cardInput && cardInput.spaceId === space.id ? cardInput : null;
 
     // Adapter callback for TreeView's onItemClick (adds spaceId)
     const handleItemClick = useCallback((item: SpaceItem) => {
@@ -68,15 +82,46 @@ export function SpaceCard({
         onItemContextMenu?.(item, space.id, event);
     }, [space.id, onItemContextMenu]);
 
-    // Adapter callback for TreeView's onAddSubfolder (adds spaceId)
+    // Adapter callback for TreeView's onAddSubfolder (adds spaceId and sets inline input)
     const handleAddSubfolder = useCallback((parentItem: SpaceItem) => {
-        onAddFolder?.(space.id, parentItem.id);
-    }, [space.id, onAddFolder]);
+        // Expand the parent folder first
+        const newExpandedIds = new Set(expandedIds);
+        newExpandedIds.add(parentItem.id);
+        if (!controlledExpandedIds) {
+            setInternalExpandedIds(newExpandedIds);
+        }
+        onExpandedChange?.(newExpandedIds);
 
-    // Adapter callback for TreeView's onAddLink (adds spaceId)
+        // Set card inline input state
+        setCardInput({ spaceId: space.id, parentId: parentItem.id, type: 'folder' });
+        onAddFolder?.(space.id, parentItem.id);
+    }, [space.id, expandedIds, controlledExpandedIds, onExpandedChange, setCardInput, onAddFolder]);
+
+    // Adapter callback for TreeView's onAddLink (adds spaceId and sets inline input)
     const handleAddLink = useCallback((parentItem: SpaceItem) => {
+        // Expand the parent folder first
+        const newExpandedIds = new Set(expandedIds);
+        newExpandedIds.add(parentItem.id);
+        if (!controlledExpandedIds) {
+            setInternalExpandedIds(newExpandedIds);
+        }
+        onExpandedChange?.(newExpandedIds);
+
+        // Set card inline input state
+        setCardInput({ spaceId: space.id, parentId: parentItem.id, type: 'link' });
         onAddLink?.(space.id, parentItem.id);
-    }, [space.id, onAddLink]);
+    }, [space.id, expandedIds, controlledExpandedIds, onExpandedChange, setCardInput, onAddLink]);
+
+    // Handle inline input submission
+    const handleInlineInputSubmit = useCallback((value: string, type: 'folder' | 'link', parentId: string | null) => {
+        onInlineInputSubmit?.(value, type, parentId, space.id);
+        clearCardInput();
+    }, [space.id, onInlineInputSubmit, clearCardInput]);
+
+    // Handle inline input cancel
+    const handleInlineInputCancel = useCallback(() => {
+        clearCardInput();
+    }, [clearCardInput]);
 
     // Handle expanded state changes
     const handleExpandedChange = useCallback((newExpandedIds: Set<string>) => {
@@ -98,6 +143,20 @@ export function SpaceCard({
         onSelect?.();
     }, [onSelect]);
 
+    // F034: Handle right-click on empty area for root context menu
+    const handleRootContextMenu = useCallback((e: React.MouseEvent) => {
+        // Only trigger if clicked on background, not on items
+        const target = e.target as HTMLElement;
+        const isBackground = target.classList.contains(styles.cardContent) ||
+            target.classList.contains(styles.emptyState);
+
+        if (!isBackground) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        onRootContextMenu?.(space.id, e);
+    }, [space.id, onRootContextMenu]);
+
     const cardClasses = [
         styles.spaceCard,
         isSelected && styles.spaceCardSelected,
@@ -113,14 +172,14 @@ export function SpaceCard({
             <CardHeader space={space} />
 
             {/* Content - Tree View (shared component with Sidebar) */}
-            <div className={styles.cardContent}>
+            <div className={styles.cardContent} onContextMenu={handleRootContextMenu}>
                 {space.rootItems.length === 0 ? (
                     <div className={styles.emptyState}>No items yet</div>
                 ) : FeatureFlags.USE_ARBORIST_TREE ? (
                     <SpayceTree
                         items={space.rootItems}
                         spaceId={space.id}
-                        selectedId={selectedItemId}
+                        selectedId={keyboardSelectedItemId || selectedItemId}
                         activeId={keyboardSelectedItemId}
                         accentColor={space.accentColor}
                         renameItemId={renameItemId}
@@ -139,10 +198,11 @@ export function SpaceCard({
                     <TreeView
                         items={space.rootItems}
                         spaceId={space.id}
-                        selectedId={selectedItemId}
+                        selectedId={keyboardSelectedItemId || selectedItemId}
                         activeId={keyboardSelectedItemId}
                         accentColor={space.accentColor}
                         expandedIds={expandedIds}
+                        inlineInput={inlineInputForThisCard}
                         renameItemId={renameItemId}
                         dragDropContext="spaceCard"
                         onItemClick={handleItemClick}
@@ -150,6 +210,8 @@ export function SpaceCard({
                         onExpandedChange={handleExpandedChange}
                         onAddSubfolder={handleAddSubfolder}
                         onAddLink={handleAddLink}
+                        onInlineInputSubmit={handleInlineInputSubmit}
+                        onInlineInputCancel={handleInlineInputCancel}
                         onRenameSubmit={onRenameSubmit}
                         onRenameCancel={onRenameCancel}
                         onItemDrop={onItemDrop}
@@ -162,8 +224,14 @@ export function SpaceCard({
                 <SpaceActionsBar
                     spaceId={space.id}
                     spaceColor={space.accentColor}
-                    onAddFolder={onAddFolder}
-                    onAddLink={onAddLink}
+                    onAddFolder={(spaceId, parentId) => {
+                        setCardInput({ spaceId, parentId: parentId ?? null, type: 'folder' });
+                        onAddFolder?.(spaceId, parentId);
+                    }}
+                    onAddLink={(spaceId, parentId) => {
+                        setCardInput({ spaceId, parentId: parentId ?? null, type: 'link' });
+                        onAddLink?.(spaceId, parentId);
+                    }}
                 />
             )}
         </div>

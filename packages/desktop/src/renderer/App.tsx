@@ -212,6 +212,12 @@ export function App(): React.ReactElement {
         context: 'sidebar' | 'card';
     } | null>(null);
 
+    // F034/F035: Root context menu state (for empty area clicks)
+    const [rootContextMenu, setRootContextMenu] = useState<{
+        spaceId: string;
+        position: { x: number; y: number };
+    } | null>(null);
+
     // Clipboard store for copy/paste functionality
     const clipboardStore = useClipboardStore();
     const hasClipboard = clipboardStore.hasItems();
@@ -781,6 +787,75 @@ export function App(): React.ReactElement {
         }
     }, [focusContext, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, spaces, clipboardStore, refetch, sidebarSelectedId, getItemsByIds]);
 
+    // F034/F035: Handle root context menu for Space Cards and Sidebar
+    const handleRootContextMenu = useCallback((spaceId: string, event: React.MouseEvent) => {
+        const space = spaces.find(s => s.id === spaceId);
+        if (!space) return;
+
+        setRootContextMenu({
+            spaceId,
+            position: { x: event.clientX, y: event.clientY },
+        });
+    }, [spaces]);
+
+    // Get root context menu items
+    const getRootContextMenuItems = useCallback((spaceId: string) => {
+        const hasClipboard = clipboardStore.hasItems();
+        const items: ContextMenuItem[] = [
+            { id: 'new-folder', label: 'New Folder', icon: LucideIcons.FolderPlus },
+            { id: 'new-link', label: 'Add Link', icon: LucideIcons.Link },
+            { id: 'divider1', label: '', icon: LucideIcons.Minus, isDivider: true },
+            { id: 'import-folder', label: 'Import Local Folder', icon: LucideIcons.FolderInput, isDisabled: true },
+            { id: 'import-file', label: 'Import Local File', icon: LucideIcons.FileInput, isDisabled: true },
+        ];
+
+        if (hasClipboard) {
+            items.push(
+                { id: 'divider2', label: '', icon: LucideIcons.Minus, isDivider: true },
+                { id: 'paste', label: 'Paste', icon: LucideIcons.ClipboardPaste },
+            );
+        }
+
+        return items;
+    }, [clipboardStore]);
+
+    // Handle root context menu actions
+    const handleRootContextMenuAction = useCallback(async (actionId: string) => {
+        if (!rootContextMenu) return;
+        const { spaceId } = rootContextMenu;
+
+        switch (actionId) {
+            case 'new-folder':
+                handleAddFolder(spaceId, null);
+                break;
+            case 'new-link':
+                handleAddLink(spaceId, null);
+                break;
+            case 'import-folder':
+                console.log('Import folder at root - not yet implemented');
+                break;
+            case 'import-file':
+                console.log('Import file at root - not yet implemented');
+                break;
+            case 'paste':
+                // Paste to root level (parentId = null)
+                if (clipboardStore.hasItems()) {
+                    try {
+                        const clipboardItems = clipboardStore.getItems();
+                        for (const sourceItem of clipboardItems) {
+                            await pasteItem(spaceId, null, sourceItem);
+                        }
+                        clipboardStore.clear();
+                        await refetch();
+                    } catch (err) {
+                        console.error('Failed to paste items to root:', err);
+                    }
+                }
+                break;
+        }
+        setRootContextMenu(null);
+    }, [rootContextMenu, clipboardStore, handleAddFolder, handleAddLink, pasteItem, refetch]);
+
     // Handle drag-drop item movement (supports multi-select F020)
     const dragDropStore = useDragDropUiStore();
     const selectionStore = useSelectionStore();
@@ -1051,6 +1126,7 @@ export function App(): React.ReactElement {
                     onPasteToSelected={handlePasteToSelected}
                     onItemDrop={handleItemDrop}
                     onItemMoveArborist={handleItemMoveArborist}
+                    onRootContextMenu={handleRootContextMenu}
                     expandedIdsMap={sidebarExpandedIdsMap}
                     onExpandedIdsMapChange={setSidebarExpandedIdsMap}
                 />
@@ -1091,6 +1167,7 @@ export function App(): React.ReactElement {
                         }}
                         onItemDrop={handleItemDrop}
                         onItemMoveArborist={handleItemMoveArborist}
+                        onRootContextMenu={handleRootContextMenu}
                     />
                 ) : (
                     <div style={{
@@ -1134,6 +1211,16 @@ export function App(): React.ReactElement {
                     position={contextMenu.position}
                     onItemClick={handleContextMenuItemClick}
                     onClose={() => setContextMenu(null)}
+                />
+            )}
+
+            {/* F034/F035: Root Context Menu (for empty area clicks) */}
+            {rootContextMenu && (
+                <ContextMenu
+                    items={getRootContextMenuItems(rootContextMenu.spaceId)}
+                    position={rootContextMenu.position}
+                    onItemClick={handleRootContextMenuAction}
+                    onClose={() => setRootContextMenu(null)}
                 />
             )}
         </div>
