@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import type { SpaceItem } from '../types';
 
-export type DragSource = 'sidebar' | 'spaceCard';
+export type DragSource = 'sidebar' | 'spaceCard' | 'pins-grid';
 export type DropPosition = 'before' | 'after' | 'inside';
 
 export interface DragData {

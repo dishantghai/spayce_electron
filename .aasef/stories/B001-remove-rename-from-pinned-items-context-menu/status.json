@@ -1,0 +1,25 @@
+{
+  "id": "B001",
+  "title": "Remove 'Rename' from Pinned Items Context Menu",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-01-29T13:58:42.992191",
+  "related_specs": [],
+  "related_epic": null,
+  "affected_files": [],
+  "implementation_started": "2026-01-29T13:59:22.043622",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-29T13:59:22.044902",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  },
+  "completed": "2026-01-29T17:31:50.004961"
+}

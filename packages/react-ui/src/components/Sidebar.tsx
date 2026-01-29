@@ -59,6 +59,8 @@ export interface SidebarProps {
     onVisibilityChange?: (visible: boolean) => void;
     onItemClick?: (item: SpaceItem, spaceId: string) => void;
     onItemContextMenu?: (item: SpaceItem, spaceId: string, event: React.MouseEvent) => void;
+    /** B001: Separate context menu handler for pinned items in pins grid (no rename) */
+    onPinnedItemContextMenu?: (item: SpaceItem, spaceId: string, event: React.MouseEvent) => void;
     onCreateSpace?: (spaceData: { name: string; iconName: string; accentColor: string }) => void;
     onAddFolder?: (spaceId: string) => void;
     onAddLink?: (spaceId: string) => void;
@@ -103,6 +105,7 @@ export function Sidebar({
     onVisibilityChange,
     onItemClick,
     onItemContextMenu,
+    onPinnedItemContextMenu,
     onCreateSpace,
     onAddFolder,
     onAddLink,
@@ -526,6 +529,18 @@ export function Sidebar({
         [activeSpace, onItemClick]
     );
 
+    // B001: Separate handler for pinned items context menu (uses onPinnedItemContextMenu if provided)
+    const handlePinnedItemContextMenu = useCallback(
+        (item: SpaceItem, event: React.MouseEvent) => {
+            if (activeSpace) {
+                // Use onPinnedItemContextMenu if provided, otherwise fall back to onItemContextMenu
+                const handler = onPinnedItemContextMenu || onItemContextMenu;
+                handler?.(item, activeSpace.id, event);
+            }
+        },
+        [activeSpace, onPinnedItemContextMenu, onItemContextMenu]
+    );
+
     // Inline input handlers
     const handleAddFolderClick = useCallback((spaceId: string) => {
         setSidebarInput({ spaceId, parentId: null, type: 'folder' });
@@ -720,7 +735,7 @@ export function Sidebar({
                             spaceColor={activeSpace.accentColor}
                             spaceId={activeSpace.id}
                             onItemClick={handlePinnedItemClick}
-                            onItemContextMenu={handleItemContextMenu}
+                            onItemContextMenu={handlePinnedItemContextMenu}
                             onPinItem={onPinItem ? (itemId, position) => onPinItem(itemId, position, activeSpace.id) : undefined}
                             onReorderPins={onReorderPins ? (oldIndex, newIndex) => onReorderPins(oldIndex, newIndex, activeSpace.id) : undefined}
                         />

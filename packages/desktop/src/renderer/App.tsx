@@ -125,7 +125,8 @@ async function pasteItem(
 }
 
 // Helper to generate context menu items based on item type
-function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMenuItem[] {
+// B001: Added context parameter to conditionally exclude Rename for pinned items in pins grid
+function getContextMenuItems(item: SpaceItem, hasClipboard: boolean, context?: 'sidebar' | 'card' | 'pins-grid'): ContextMenuItem[] {
     const items: ContextMenuItem[] = [];
 
     if (item.type === SpaceItemType.folder || item.type === SpaceItemType.localFolder) {
@@ -172,8 +173,11 @@ function getContextMenuItems(item: SpaceItem, hasClipboard: boolean): ContextMen
             { id: 'delete', label: 'Delete', icon: LucideIcons.Trash2, isDestructive: true },
         );
     } else if (item.type === SpaceItemType.link) {
+        // B001: Don't show rename for pinned items in pins grid
+        if (context !== 'pins-grid') {
+            items.push({ id: 'rename', label: 'Rename', icon: LucideIcons.Pencil });
+        }
         items.push(
-            { id: 'rename', label: 'Rename', icon: LucideIcons.Pencil },
             { id: 'copy_link', label: 'Copy Link', icon: LucideIcons.Copy },
             { id: 'divider1', label: '', icon: LucideIcons.Minus, isDivider: true }
         );
@@ -227,7 +231,7 @@ export function App(): React.ReactElement {
         item: SpaceItem;
         spaceId: string;
         position: { x: number; y: number };
-        context: 'sidebar' | 'card';
+        context: 'sidebar' | 'card' | 'pins-grid';
     } | null>(null);
 
     // F034/F035: Root context menu state (for empty area clicks)
@@ -276,6 +280,17 @@ export function App(): React.ReactElement {
             spaceId,
             position: { x: event.clientX, y: event.clientY },
             context: 'sidebar',
+        });
+    };
+
+    // B001: Pins grid context menu handler - pins are references, not renameable
+    const handlePinsGridContextMenu = (item: SpaceItem, spaceId: string, event: React.MouseEvent) => {
+        setSidebarSelectedId(item.id);
+        setContextMenu({
+            item,
+            spaceId,
+            position: { x: event.clientX, y: event.clientY },
+            context: 'pins-grid',
         });
     };
 
@@ -1344,6 +1359,7 @@ export function App(): React.ReactElement {
                     onVisibilityChange={handleSidebarVisibilityChange}
                     onItemClick={handleItemClick}
                     onItemContextMenu={handleSidebarContextMenu}
+                    onPinnedItemContextMenu={handlePinsGridContextMenu}
                     onCreateSpace={handleCreateSpace}
                     onAddFolder={handleAddFolder}
                     onAddLink={handleAddLink}
@@ -1448,7 +1464,7 @@ export function App(): React.ReactElement {
             {/* Context Menu */}
             {contextMenu && (
                 <ContextMenu
-                    items={getContextMenuItems(contextMenu.item, hasClipboard)}
+                    items={getContextMenuItems(contextMenu.item, hasClipboard, contextMenu.context)}
                     position={contextMenu.position}
                     onItemClick={handleContextMenuItemClick}
                     onClose={() => setContextMenu(null)}

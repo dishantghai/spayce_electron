@@ -232,10 +232,22 @@ export function SpacesScreen({
         return () => document.removeEventListener('keydown', handleKeyDown);
     }, [spaces, activeSpaceIndex, keyboardSelectedItemId, expandedIds, onSpaceSelect, hasFocus, onCopySelected, onPasteToSelected]);
 
+    // Filter out pinned items recursively (they're shown in pins grid, not in tree)
+    const filterPinnedItems = useCallback((items: SpaceItem[]): SpaceItem[] => {
+        return items
+            .filter(item => !item.isPinned)
+            .map(item => ({
+                ...item,
+                children: item.children ? filterPinnedItems(item.children) : [],
+            }));
+    }, []);
+
     // Flatten items respecting expanded state
     const flattenItems = useCallback((items: SpaceItem[], spaceId: string): SpaceItem[] => {
         const result: SpaceItem[] = [];
         const spaceExpandedIds = getExpandedIds(spaceId);
+        // Filter out pinned items before flattening
+        const nonPinnedItems = filterPinnedItems(items);
 
         const addItems = (itemList: SpaceItem[]) => {
             for (const item of itemList) {
@@ -246,9 +258,9 @@ export function SpacesScreen({
             }
         };
 
-        addItems(items);
+        addItems(nonPinnedItems);
         return result;
-    }, [getExpandedIds]);
+    }, [getExpandedIds, filterPinnedItems]);
 
     // Navigate to next item
     const navigateToNextItem = useCallback((space: Space) => {
@@ -318,13 +330,14 @@ export function SpacesScreen({
             newSet.delete(item.id);
             handleExpandedChange(space.id, newSet);
         } else {
-            // Go to parent
-            const parent = findParentItem(space.rootItems, keyboardSelectedItemId);
+            // Go to parent - use filtered items for parent lookup
+            const nonPinnedItems = filterPinnedItems(space.rootItems);
+            const parent = findParentItem(nonPinnedItems, keyboardSelectedItemId);
             if (parent) {
                 setKeyboardSelectedItemId(parent.id);
             }
         }
-    }, [keyboardSelectedItemId, flattenItems, getExpandedIds, handleExpandedChange]);
+    }, [keyboardSelectedItemId, flattenItems, getExpandedIds, handleExpandedChange, filterPinnedItems]);
 
     // Find parent of an item
     const findParentItem = (items: SpaceItem[], itemId: string, parent: SpaceItem | null = null): SpaceItem | null => {
