@@ -14,6 +14,23 @@ import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
 import { itemsApi } from './ipc/spacesApi';
 
+// Helper to recursively find all pinned items from the entire tree
+const findAllPinnedItems = (items: SpaceItem[]): SpaceItem[] => {
+    const pinned: SpaceItem[] = [];
+    const traverse = (itemList: SpaceItem[]) => {
+        for (const item of itemList) {
+            if (item.isPinned) {
+                pinned.push(item);
+            }
+            if (item.children && item.children.length > 0) {
+                traverse(item.children);
+            }
+        }
+    };
+    traverse(items);
+    return pinned;
+};
+
 // Loading skeleton for spaces
 function SpacesLoadingSkeleton(): React.ReactElement {
     return (
@@ -184,6 +201,7 @@ export function App(): React.ReactElement {
         loading,
         error,
         refetch,
+        setSpaces,
         createSpace,
         updateSpace,
         reorderSpaces,
@@ -914,6 +932,98 @@ export function App(): React.ReactElement {
         setRootContextMenu(null);
     }, [rootContextMenu, clipboardStore, handleAddFolder, handleAddLink, pasteItem, refetch]);
 
+    // F022: Handle pinning an item to the pins grid
+    // Uses optimistic pattern: return immediately, persist in background
+    const handlePinItem = useCallback(async (itemId: string, position: number, spaceId: string): Promise<boolean> => {
+        console.log('[F022] Pin item:', itemId, 'at position:', position, 'in space:', spaceId);
+
+        // Fire-and-forget: persist in background, refetch will update UI
+        itemsApi.pin(itemId, position)
+            .then(result => {
+                if (result?.success) {
+                    console.log('[F022] ✓ Item pinned successfully');
+                    // Background refetch - don't await
+                    refetch();
+                } else {
+                    console.error('[F022] ✗ Failed to pin item:', result);
+                    refetch(); // Revert on error
+                }
+            })
+            .catch(error => {
+                console.error('[F022] ✗ Error pinning item:', error);
+                refetch(); // Revert on error
+            });
+
+        // Return immediately for responsive UI
+        return true;
+    }, [refetch]);
+
+    // F022/F023: Handle reordering pins in the grid
+    // Uses optimistic pattern: update UI immediately, persist in background
+    const handleReorderPins = useCallback((oldIndex: number, newIndex: number, spaceId: string): void => {
+        // Find the space and ALL its pinned items (including nested in folders)
+        const space = spaces.find(s => s.id === spaceId);
+        if (!space) return;
+
+        // Use recursive search to match Sidebar's view of pinned items
+        const pinnedItems = findAllPinnedItems(space.rootItems)
+            .sort((a, b) => (a.pinPosition ?? 0) - (b.pinPosition ?? 0));
+
+        if (oldIndex < 0 || oldIndex >= pinnedItems.length) return;
+        if (newIndex < 0 || newIndex >= pinnedItems.length) return;
+        if (oldIndex === newIndex) return;
+
+        // Calculate new order of IDs using proper array move logic
+        const orderedIds = pinnedItems.map(p => p.id);
+        // Remove item from old position
+        const [movedId] = orderedIds.splice(oldIndex, 1);
+        // Insert at new position (array is now shorter by 1, so newIndex is correct for final position)
+        orderedIds.splice(newIndex, 0, movedId);
+
+        console.log('[F023] Reorder pins:', oldIndex, '->', newIndex, 'new order:', orderedIds);
+
+        // F023: Optimistic UI update - update local state immediately
+        // Recursively update pinPosition for all pinned items (including nested)
+        const updateItemsRecursively = (items: SpaceItem[]): SpaceItem[] => {
+            return items.map(item => {
+                let updatedItem = item;
+                if (item.isPinned) {
+                    const newPosition = orderedIds.indexOf(item.id);
+                    if (newPosition !== -1) {
+                        updatedItem = { ...item, pinPosition: newPosition };
+                    }
+                }
+                if (updatedItem.children && updatedItem.children.length > 0) {
+                    updatedItem = { ...updatedItem, children: updateItemsRecursively(updatedItem.children) };
+                }
+                return updatedItem;
+            });
+        };
+
+        setSpaces(prevSpaces => prevSpaces.map(s => {
+            if (s.id !== spaceId) return s;
+            return {
+                ...s,
+                rootItems: updateItemsRecursively(s.rootItems),
+            };
+        }));
+
+        // Fire-and-forget: persist in background
+        itemsApi.reorderPins(spaceId, orderedIds)
+            .then(result => {
+                if (result?.success) {
+                    console.log('[F023] ✓ Pins reordered successfully');
+                } else {
+                    console.error('[F023] ✗ Failed to reorder pins:', result);
+                    refetch(); // Revert on error
+                }
+            })
+            .catch(error => {
+                console.error('[F023] ✗ Error reordering pins:', error);
+                refetch(); // Revert on error
+            });
+    }, [spaces, refetch]);
+
     // F030: Handle cross-card drag-drop (move items between space cards)
     const handleCrossCardMove = useCallback(async (dragData: DragData, targetSpaceId: string) => {
         console.log('[F030] ========== CROSS-CARD MOVE START ==========');
@@ -956,9 +1066,24 @@ export function App(): React.ReactElement {
         const isMultiDrag = itemsToMove.length > 1;
 
         console.log('[Drop] ========== DROP OPERATION START ==========');
+        console.log('[Drop] Source:', dragData.source);
         console.log('[Drop] Items to move:', itemsToMove.length, isMultiDrag ? '(multi-select)' : '(single)');
         console.log('[Drop] Items:', itemsToMove.map(i => i.name).join(', '));
         console.log('[Drop] Target:', targetId, 'Position:', position);
+
+        // If dragging from pins grid, unpin items first
+        const isFromPinsGrid = dragData.source === 'pins-grid';
+        if (isFromPinsGrid) {
+            console.log('[Drop] Unpinning items from pins grid');
+            for (const item of itemsToMove) {
+                if (item.isPinned) {
+                    const result = await itemsApi.unpin(item.id);
+                    if (!result?.success) {
+                        console.error('[Drop] Failed to unpin item:', item.name);
+                    }
+                }
+            }
+        }
 
         // Find item info including parent, siblings, and index
         const findItemInfo = (items: SpaceItem[], itemId: string, parentId: string | null = null): { item: SpaceItem; parent: string | null; siblings: SpaceItem[]; index: number } | undefined => {
@@ -1235,6 +1360,8 @@ export function App(): React.ReactElement {
                     onItemMoveArborist={handleItemMoveArborist}
                     onRootContextMenu={handleRootContextMenu}
                     onReorderSpaces={handleReorderSpaces}
+                    onPinItem={handlePinItem}
+                    onReorderPins={handleReorderPins}
                     expandedIdsMap={sidebarExpandedIdsMap}
                     onExpandedIdsMapChange={setSidebarExpandedIdsMap}
                 />

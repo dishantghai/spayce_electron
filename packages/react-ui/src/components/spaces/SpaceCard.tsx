@@ -173,50 +173,57 @@ export function SpaceCard({
 
             {/* Content - Tree View (shared component with Sidebar) */}
             <div className={styles.cardContent} onContextMenu={handleRootContextMenu}>
-                {space.rootItems.length === 0 ? (
-                    <div className={styles.emptyState}>No items yet</div>
-                ) : FeatureFlags.USE_ARBORIST_TREE ? (
-                    <SpayceTree
-                        items={space.rootItems}
-                        spaceId={space.id}
-                        selectedId={keyboardSelectedItemId || selectedItemId}
-                        activeId={keyboardSelectedItemId}
-                        accentColor={space.accentColor}
-                        renameItemId={renameItemId}
-                        onItemClick={handleItemClick}
-                        onItemContextMenu={handleItemContextMenu}
-                        onAddSubfolder={handleAddSubfolder}
-                        onAddLink={handleAddLink}
-                        onRenameSubmit={onRenameSubmit}
-                        onRenameCancel={onRenameCancel}
-                        onItemMove={onItemMoveArborist ?
-                            (draggedId, parentId, index) => onItemMoveArborist(draggedId, parentId, index, space.id)
-                            : undefined
-                        }
-                    />
-                ) : (
-                    <TreeView
-                        items={space.rootItems}
-                        spaceId={space.id}
-                        selectedId={keyboardSelectedItemId || selectedItemId}
-                        activeId={keyboardSelectedItemId}
-                        accentColor={space.accentColor}
-                        expandedIds={expandedIds}
-                        inlineInput={inlineInputForThisCard}
-                        renameItemId={renameItemId}
-                        dragDropContext="spaceCard"
-                        onItemClick={handleItemClick}
-                        onItemContextMenu={handleItemContextMenu}
-                        onExpandedChange={handleExpandedChange}
-                        onAddSubfolder={handleAddSubfolder}
-                        onAddLink={handleAddLink}
-                        onInlineInputSubmit={handleInlineInputSubmit}
-                        onInlineInputCancel={handleInlineInputCancel}
-                        onRenameSubmit={onRenameSubmit}
-                        onRenameCancel={onRenameCancel}
-                        onItemDrop={onItemDrop}
-                    />
-                )}
+                {(() => {
+                    // Filter out pinned items - they're shown in sidebar only
+                    const unpinnedItems = space.rootItems.filter(item => !item.isPinned);
+
+                    if (unpinnedItems.length === 0) {
+                        return <div className={styles.emptyState}>No items yet</div>;
+                    }
+
+                    return FeatureFlags.USE_ARBORIST_TREE ? (
+                        <SpayceTree
+                            items={unpinnedItems}
+                            spaceId={space.id}
+                            selectedId={keyboardSelectedItemId || selectedItemId}
+                            activeId={keyboardSelectedItemId}
+                            accentColor={space.accentColor}
+                            renameItemId={renameItemId}
+                            onItemClick={handleItemClick}
+                            onItemContextMenu={handleItemContextMenu}
+                            onAddSubfolder={handleAddSubfolder}
+                            onAddLink={handleAddLink}
+                            onRenameSubmit={onRenameSubmit}
+                            onRenameCancel={onRenameCancel}
+                            onItemMove={onItemMoveArborist ?
+                                (draggedId, parentId, index) => onItemMoveArborist(draggedId, parentId, index, space.id)
+                                : undefined
+                            }
+                        />
+                    ) : (
+                        <TreeView
+                            items={unpinnedItems}
+                            spaceId={space.id}
+                            selectedId={keyboardSelectedItemId || selectedItemId}
+                            activeId={keyboardSelectedItemId}
+                            accentColor={space.accentColor}
+                            expandedIds={expandedIds}
+                            inlineInput={inlineInputForThisCard}
+                            renameItemId={renameItemId}
+                            dragDropContext="spaceCard"
+                            onItemClick={handleItemClick}
+                            onItemContextMenu={handleItemContextMenu}
+                            onExpandedChange={handleExpandedChange}
+                            onAddSubfolder={handleAddSubfolder}
+                            onAddLink={handleAddLink}
+                            onInlineInputSubmit={handleInlineInputSubmit}
+                            onInlineInputCancel={handleInlineInputCancel}
+                            onRenameSubmit={onRenameSubmit}
+                            onRenameCancel={onRenameCancel}
+                            onItemDrop={onItemDrop}
+                        />
+                    );
+                })()}
             </div>
 
             {/* Actions Bar - only show for selected card */}

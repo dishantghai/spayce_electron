@@ -7,6 +7,7 @@ interface UseSpacesDataResult {
     loading: boolean;
     error: Error | null;
     refetch: () => Promise<void>;
+    setSpaces: React.Dispatch<React.SetStateAction<Space[]>>;
     createSpace: (input: {
         name: string;
         iconName: string;
@@ -192,6 +193,7 @@ export function useSpacesData(): UseSpacesDataResult {
         loading,
         error,
         refetch: fetchSpaces,
+        setSpaces,
         createSpace,
         updateSpace,
         deleteSpace,

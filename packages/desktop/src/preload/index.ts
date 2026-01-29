@@ -24,6 +24,9 @@ const electronAPI = {
         rename: (itemId: string, newName: string) => ipcRenderer.invoke('items:rename', itemId, newName),
         updateMetadata: (itemId: string, metadata: { faviconUrl?: string | null; description?: string | null; isExpanded?: boolean }) =>
             ipcRenderer.invoke('items:updateMetadata', itemId, metadata),
+        pin: (itemId: string, position?: number) => ipcRenderer.invoke('items:pin', itemId, position),
+        unpin: (itemId: string) => ipcRenderer.invoke('items:unpin', itemId),
+        reorderPins: (spaceId: string, orderedItemIds: string[]) => ipcRenderer.invoke('items:reorderPins', spaceId, orderedItemIds),
     },
 
     // Search operations

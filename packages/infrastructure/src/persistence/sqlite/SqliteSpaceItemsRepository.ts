@@ -334,15 +334,41 @@ export class SqliteSpaceItemsRepository implements ISpaceItemsRepository {
 
     async pinItem(itemId: string, position: number): Promise<void> {
         try {
-            this.db
-                .prepare(
-                    `
-                UPDATE space_items
-                SET is_pinned = 1, pin_position = ?
-                WHERE id = ?
-            `
-                )
-                .run(position, itemId);
+            // Get the item's space_id first
+            const item = this.db
+                .prepare('SELECT space_id FROM space_items WHERE id = ?')
+                .get(itemId) as { space_id: string } | undefined;
+
+            if (!item) {
+                throw new Error(`Item ${itemId} not found`);
+            }
+
+            // Use a transaction to shift existing pins and insert at position
+            const transaction = this.db.transaction(() => {
+                // Shift existing pins at or after the target position
+                this.db
+                    .prepare(
+                        `
+                        UPDATE space_items
+                        SET pin_position = pin_position + 1
+                        WHERE space_id = ? AND is_pinned = 1 AND pin_position >= ?
+                        `
+                    )
+                    .run(item.space_id, position);
+
+                // Pin the item at the target position
+                this.db
+                    .prepare(
+                        `
+                        UPDATE space_items
+                        SET is_pinned = 1, pin_position = ?
+                        WHERE id = ?
+                        `
+                    )
+                    .run(position, itemId);
+            });
+
+            transaction();
         } catch (error) {
             throw new DatabaseError('pinItem', error as Error);
         }

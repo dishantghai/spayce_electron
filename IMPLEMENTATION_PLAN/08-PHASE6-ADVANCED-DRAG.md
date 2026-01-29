@@ -204,6 +204,7 @@ packages/react-ui/src/components/BottomBar.tsx
 - [ ] Folders rejected (cursor shows not-allowed)
 - [ ] Drop position shows between existing pins
 - [ ] Max 15 pins (5x3 grid) - reject if full
+- [ ] Look at Image for Reference for Design
 - [ ] Already pinned links can be reordered
 
 ### Flutter Source Reference
@@ -425,9 +426,11 @@ packages/react-ui/src/stores/dragDropUiStore.ts
 ### Acceptance Criteria
 
 - [ ] Pins are draggable within grid
-- [ ] Drop indicator shows between pins
+- [ ] We need a UX pattern for this like Arc Browser, where when you drag an item the round space icons seem to reorder in realtime to make space of the dragged Link item as Square preview (as in Story F025 - Smart Drag Preview (Square for Pins)), the space item itself does not remain anchored in its old place, instead the created spaces is used to readjust items to create space for the item to be droped depending on in which two items the dragged space item/ icon is, so a empty space created there, then on successful drop it is now visible in that space and backend updated transactionally, in case of failure nothing changes and all icons stay in their old positions.
+- For Reordering UX look at How it works in Sidebar Bottombar for Reordering Spaces.
 - [ ] Smooth animation on reorder
 - [ ] Order persists after refresh
+- Look at Image for Reference
 
 ### Flutter Source Reference
 

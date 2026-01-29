@@ -146,9 +146,9 @@ export function registerIpcHandlers(): void {
     });
 
     // Pin operations
-    ipcMain.handle('items:pin', async (_, itemId: string) => {
+    ipcMain.handle('items:pin', async (_, itemId: string, position?: number) => {
         const facade = serviceRegistry.get<SpaceItemsFacade>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
-        return facade.pinItem(itemId);
+        return facade.pinItem(itemId, position);
     });
 
     ipcMain.handle('items:unpin', async (_, itemId: string) => {

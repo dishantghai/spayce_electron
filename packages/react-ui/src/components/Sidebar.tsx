@@ -20,6 +20,23 @@ import styles from './Sidebar.module.css';
 const isFolderType = (item: SpaceItem): boolean =>
     item.type === SpaceItemType.folder || item.type === SpaceItemType.localFolder;
 
+// Helper to recursively find all pinned items from the entire tree
+const findAllPinnedItems = (items: SpaceItem[]): SpaceItem[] => {
+    const pinned: SpaceItem[] = [];
+    const traverse = (itemList: SpaceItem[]) => {
+        for (const item of itemList) {
+            if (item.isPinned) {
+                pinned.push(item);
+            }
+            if (item.children && item.children.length > 0) {
+                traverse(item.children);
+            }
+        }
+    };
+    traverse(items);
+    return pinned;
+};
+
 export type SidebarMode = 'fixed' | 'floating';
 export type SidebarViewMode = 'normal' | 'createSpace' | 'editSpace';
 
@@ -59,6 +76,10 @@ export interface SidebarProps {
     onRootContextMenu?: (spaceId: string, event: React.MouseEvent) => void;
     /** F036: Called when space circles are reordered by dragging */
     onReorderSpaces?: (oldIndex: number, newIndex: number) => void;
+    /** F022: Called when an item is pinned to the pins grid */
+    onPinItem?: (itemId: string, position: number, spaceId: string) => Promise<boolean>;
+    /** F022/F023: Called when pins are reordered in the grid - sync for optimistic UI */
+    onReorderPins?: (oldIndex: number, newIndex: number, spaceId: string) => void;
 }
 
 /**
@@ -96,6 +117,8 @@ export function Sidebar({
     onItemMoveArborist,
     onRootContextMenu,
     onReorderSpaces,
+    onPinItem,
+    onReorderPins,
 }: SidebarProps): React.ReactElement {
     const sidebarRef = useRef<HTMLElement>(null);
     const [viewMode, setViewMode] = useState<SidebarViewMode>('normal');
@@ -183,11 +206,20 @@ export function Sidebar({
         }
     }, [selectedItemId]);
 
-    // Get pinned items from active space
-    const pinnedItems = activeSpace?.rootItems.filter((item) => item.isPinned) || [];
+    // Get ALL pinned items from active space (including nested in folders), sorted by pinPosition
+    const pinnedItems = (activeSpace ? findAllPinnedItems(activeSpace.rootItems) : [])
+        .sort((a, b) => (a.pinPosition ?? 0) - (b.pinPosition ?? 0));
 
-    // Get non-pinned items for tree view
-    const treeItems = activeSpace?.rootItems.filter((item) => !item.isPinned) || [];
+    // Get non-pinned items for tree view - recursively filter out ALL pinned items
+    const filterPinnedItems = (items: SpaceItem[]): SpaceItem[] => {
+        return items
+            .filter(item => !item.isPinned)
+            .map(item => ({
+                ...item,
+                children: item.children ? filterPinnedItems(item.children) : [],
+            }));
+    };
+    const treeItems = activeSpace ? filterPinnedItems(activeSpace.rootItems) : [];
 
     // Handle add space button click - switch to create view
     const handleAddSpace = useCallback(() => {
@@ -686,8 +718,11 @@ export function Sidebar({
                         <PinnedLinksGrid
                             pinnedItems={pinnedItems}
                             spaceColor={activeSpace.accentColor}
+                            spaceId={activeSpace.id}
                             onItemClick={handlePinnedItemClick}
                             onItemContextMenu={handleItemContextMenu}
+                            onPinItem={onPinItem ? (itemId, position) => onPinItem(itemId, position, activeSpace.id) : undefined}
+                            onReorderPins={onReorderPins ? (oldIndex, newIndex) => onReorderPins(oldIndex, newIndex, activeSpace.id) : undefined}
                         />
 
                         {/* Space header */}

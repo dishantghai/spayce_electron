@@ -145,6 +145,33 @@ export const itemsApi = {
         }
         return mockApi.items.rename();
     },
+
+    pin: async (itemId: string, position: number) => {
+        const api = getElectronAPI();
+        if (api?.items) {
+            return api.items.pin(itemId, position);
+        }
+        console.warn('[Browser Dev] Using mock itemsApi.pin');
+        return { success: true };
+    },
+
+    unpin: async (itemId: string) => {
+        const api = getElectronAPI();
+        if (api?.items) {
+            return api.items.unpin(itemId);
+        }
+        console.warn('[Browser Dev] Using mock itemsApi.unpin');
+        return { success: true };
+    },
+
+    reorderPins: async (spaceId: string, orderedItemIds: string[]) => {
+        const api = getElectronAPI();
+        if (api?.items) {
+            return api.items.reorderPins(spaceId, orderedItemIds);
+        }
+        console.warn('[Browser Dev] Using mock itemsApi.reorderPins');
+        return { success: true };
+    },
 };
 
 export const searchApi = {

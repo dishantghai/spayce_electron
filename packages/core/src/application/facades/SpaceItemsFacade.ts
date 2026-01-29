@@ -127,9 +127,9 @@ export class SpaceItemsFacade {
         }
     }
 
-    async pinItem(itemId: string): Promise<Result<void, AppError>> {
+    async pinItem(itemId: string, position?: number): Promise<Result<void, AppError>> {
         try {
-            await this.pinItemUseCase.execute({ itemId });
+            await this.pinItemUseCase.execute({ itemId, position });
             return ok(undefined);
         } catch (error) {
             return err(this.mapError(error));
