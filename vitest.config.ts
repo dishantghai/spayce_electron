@@ -16,6 +16,9 @@ export default defineConfig({
             ['packages/react-ui/__tests__/**/*.{test,spec}.{ts,tsx}', 'jsdom'],
         ],
 
+        // Setup files
+        setupFiles: ['./packages/react-ui/__tests__/setup.ts'],
+
         // Performance optimizations
         pool: 'forks',
         poolOptions: {

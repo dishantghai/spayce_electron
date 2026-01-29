@@ -5,8 +5,16 @@ import { SqliteSpaceItemsRepository } from '../src/persistence/sqlite/SqliteSpac
 import { DatabaseInitializer } from '../src/persistence/sqlite/DatabaseInitializer';
 import type { SpaceEntity, SpaceItemEntity } from '@spayce/core';
 import { SpaceItemType } from '@spayce/core';
+import { canRunNativeTests, getNativeTestSkipReason } from './helpers/testDb';
 
-describe('SqliteSpacesRepository', () => {
+const describeNative = canRunNativeTests() ? describe : describe.skip;
+const skipReason = getNativeTestSkipReason();
+
+if (skipReason) {
+    console.warn(`⚠️  Skipping native DB tests: ${skipReason}`);
+}
+
+describeNative('SqliteSpacesRepository', () => {
     let db: Database.Database;
     let repository: SqliteSpacesRepository;
 

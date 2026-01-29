@@ -40,7 +40,7 @@ export interface ValidationResult {
     error?: string;
 }
 
-interface DragDropUiState {
+export interface DragDropUiState {
     isDragging: boolean;
     dragData: DragData | null;
     dropIndicator: DropIndicatorState | null;

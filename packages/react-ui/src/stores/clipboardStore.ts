@@ -5,7 +5,7 @@ import { SpaceItemType } from '../types';
 export type ClipboardAction = 'copy' | 'cut';
 export type PastePosition = 'before' | 'after' | 'inside';
 
-interface ClipboardState {
+export interface ClipboardState {
     items: SpaceItem[];
     sourceSpaceId: string | null;
     action: ClipboardAction | null;

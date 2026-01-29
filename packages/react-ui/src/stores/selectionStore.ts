@@ -16,7 +16,7 @@ interface DragPayload {
 
 export type SelectionContext = 'sidebar' | 'spaceCard';
 
-interface SelectionStore {
+export interface SelectionStore {
     spaceId: string | null;
     selectedIds: Set<string>;
     lastSelectedId: string | null;

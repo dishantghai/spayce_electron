@@ -10,10 +10,19 @@ import Database from 'better-sqlite3';
 import * as fs from 'fs';
 import * as path from 'path';
 import { DatabaseInitializer } from '../../src/persistence/sqlite/DatabaseInitializer';
+import { SchemaValidator } from '../../src/persistence/sqlite/validation/SchemaValidator';
+import { canRunNativeTests, getNativeTestSkipReason } from '../helpers/testDb';
 
 const PROJECT_ROOT = path.resolve(__dirname, '../../../..');
 
-describe('Spec 011: Database Setup and Seeding', () => {
+const describeNative = canRunNativeTests() ? describe : describe.skip;
+const skipReason = getNativeTestSkipReason();
+
+if (skipReason) {
+    console.warn(`⚠️  Skipping database setup tests: ${skipReason}`);
+}
+
+describeNative('Spec 011: Database Setup and Seeding', () => {
     describe('AC1: Database Schema Validation', () => {
         let db: Database.Database;
 

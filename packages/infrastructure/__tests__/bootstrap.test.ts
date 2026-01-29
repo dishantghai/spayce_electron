@@ -1,12 +1,20 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { ServiceBootstrap } from '../src/bootstrap/ServiceBootstrap';
 import { serviceRegistry, SERVICE_KEYS } from '../src/di/ServiceRegistry';
 import type { ISpacesRepository, ISpaceItemsRepository, IEventBus, ILogger } from '@spayce/core';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { canRunNativeTests, getNativeTestSkipReason } from './helpers/testDb';
 
-describe('ServiceBootstrap', () => {
+const describeNative = canRunNativeTests() ? describe : describe.skip;
+const skipReason = getNativeTestSkipReason();
+
+if (skipReason) {
+    console.warn(`⚠️  Skipping bootstrap tests: ${skipReason}`);
+}
+
+describeNative('ServiceBootstrap', () => {
     let testDbPath: string;
 
     beforeEach(() => {

@@ -13,10 +13,19 @@ import {
     createTestDb,
     TEST_PROFILE_ID,
     TEST_USER_ID,
+    canRunNativeTests,
+    getNativeTestSkipReason,
     type TestDbContext
 } from '../helpers/testDb';
 
-describe('Spec 011: Flutter Feature Parity', () => {
+const describeNative = canRunNativeTests() ? describe : describe.skip;
+const skipReason = getNativeTestSkipReason();
+
+if (skipReason) {
+    console.warn(`⚠️  Skipping native DB tests: ${skipReason}`);
+}
+
+describeNative('Spec 011: Flutter Feature Parity', () => {
     let ctx: TestDbContext;
     let spacesRepo: TestDbContext['spacesRepo'];
     let itemsRepo: TestDbContext['itemsRepo'];
@@ -28,7 +37,9 @@ describe('Spec 011: Flutter Feature Parity', () => {
     });
 
     afterEach(() => {
-        ctx.cleanup();
+        if (ctx?.cleanup) {
+            ctx.cleanup();
+        }
     });
 
     describe('Space Management Features (6 features)', () => {

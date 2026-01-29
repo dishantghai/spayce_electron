@@ -3,8 +3,16 @@ import Database from 'better-sqlite3';
 import { SchemaValidator } from '../src/persistence/sqlite/validation/SchemaValidator';
 import { IntegrityChecker } from '../src/persistence/sqlite/validation/IntegrityChecker';
 import { DatabaseInitializer } from '../src/persistence/sqlite/DatabaseInitializer';
+import { canRunNativeTests, getNativeTestSkipReason } from './helpers/testDb';
 
-describe('SchemaValidator', () => {
+const describeNative = canRunNativeTests() ? describe : describe.skip;
+const skipReason = getNativeTestSkipReason();
+
+if (skipReason) {
+    console.warn(`⚠️  Skipping validation tests: ${skipReason}`);
+}
+
+describeNative('SchemaValidator', () => {
     let db: Database.Database;
 
     beforeEach(() => {
@@ -53,7 +61,7 @@ describe('SchemaValidator', () => {
     });
 });
 
-describe('IntegrityChecker', () => {
+describeNative('IntegrityChecker', () => {
     let db: Database.Database;
 
     beforeEach(() => {

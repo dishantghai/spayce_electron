@@ -1,0 +1,24 @@
+{
+  "id": "B002",
+  "title": "Page Title Extraction Failing for Paste Link Trajectories",
+  "type": "bug",
+  "status": "in_progress",
+  "created": "2026-01-29T13:58:47.922261",
+  "related_specs": [],
+  "related_epic": null,
+  "affected_files": [],
+  "implementation_started": "2026-01-29T14:14:19.514153",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-29T14:14:19.517292",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  }
+}
