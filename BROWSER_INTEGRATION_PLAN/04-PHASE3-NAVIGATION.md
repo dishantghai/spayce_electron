@@ -347,7 +347,21 @@ Lines 304-386: `_buildNavigationBar` method
 
 ### HiFi Design Reference
 
-- `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png`
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser View (Navigation Bar) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+>
+> **Key UI Elements to Match:**
+> - Navigation bar height: 48px
+> - Background color: `--color-bg-surface` (#1A1628)
+> - Left padding: 32px (for macOS traffic lights)
+> - Nav buttons: 32x32px with 8px border-radius
+> - Button icon size: 16px
+> - Button hover state: `--color-bg-accent` background
+> - Gap between nav buttons: 2px
+> - Gap between button groups: 8px
 
 ---
 
@@ -656,6 +670,24 @@ export function extractDomain(url: string): string | null {
 Source: `/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/browser/domain/url_validator.dart`
 
 Full file (71 lines)
+
+### HiFi Design Reference
+
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser View (URL Bar) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+>
+> **Key UI Elements to Match:**
+> - URL bar height: 32px
+> - Background: `--color-bg-dark` (#0F0B1A), focused: `--color-bg-surface`
+> - Border-radius: 8px (`--radius-md`)
+> - Border: 1px solid `--color-border-subtle`, focused: `--color-primary`
+> - Icon size: 14px (lock/globe/search)
+> - Font: monospace, 13px
+> - Lock icon color: `--color-success` (green) for HTTPS
+> - Placeholder text color: `--color-text-muted`
 
 ---
 

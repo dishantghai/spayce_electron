@@ -379,11 +379,18 @@ Links to Flutter implementation and HiFi designs.
 
 From `project_ops/HIFI_UI_DESIGN_SCREENS/`:
 
-| Design | Description | Relevant Specs |
-|--------|-------------|----------------|
-| `Browser Tab Bar.png` | Tab bar design | Spec 020 |
-| `Browser View.png` | Full browser layout | Specs 019, 023 |
-| `Workspace View in Browser.png` | Workspace tab | Story F015 |
+| Design | File Path | Relevant Specs/Stories |
+|--------|-----------|------------------------|
+| **Browser Tab Bar** | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` | Spec 020, Story F011, Story F012 |
+| **Browser View** | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` | Specs 019, 023, 024, Stories F005, F006 |
+| **Workspace View in Browser** | `project_ops/HIFI_UI_DESIGN_SCREENS/Workspace View in Browser.png` | Story F010 |
+
+### Pixel-Perfect Implementation Requirements
+
+Each spec/story requiring HiFi design implementation includes a dedicated **HiFi Design Reference** section with:
+- Exact file path to the design image
+- Key UI elements to match (dimensions, colors, spacing)
+- Design system tokens to use
 
 ### Design System Compliance
 

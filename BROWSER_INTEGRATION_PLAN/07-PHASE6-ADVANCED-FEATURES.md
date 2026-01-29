@@ -258,6 +258,20 @@ Source: `/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/brows
 
 Lines 44-117: BrowserError model and error types
 
+### HiFi Design Reference
+
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser View (Error States) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+>
+> **Key UI Elements to Match:**
+> - Error view centered in browser area
+> - Error icon sizing and colors by error type
+> - Retry button styling per design system
+> - Error message typography
+
 ### Estimated Effort
 
 0.5 Claude Opus session
@@ -282,6 +296,21 @@ As a user, I want clear visual feedback when pages are loading, including progre
 ### Technical Notes
 
 Already partially implemented in Phase 1-2. This story ensures polish and edge case handling.
+
+### HiFi Design Reference
+
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser View (Loading Bar) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+>
+> **Key UI Elements to Match:**
+> - Progress bar position: top of browser area, full width
+> - Progress bar height: 2-3px
+> - Progress bar color: `--color-primary` (#6D5AE6)
+> - Loading spinner in tab: 16px, animated rotation
+> - Stop button styling during load
 
 ### Flutter Reference
 
@@ -487,6 +516,20 @@ const tabContextMenuItems = [
 ];
 ```
 
+### HiFi Design Reference
+
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser Tab Bar (Context Menu) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` |
+>
+> **Key UI Elements to Match:**
+> - Context menu styling per design system
+> - Menu item padding and typography
+> - Separator styling
+> - Keyboard shortcut display alignment
+
 ### Estimated Effort
 
 0.5 Claude Opus session
@@ -538,6 +581,21 @@ function NewTabPage() {
 Source: `/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/browser/presentation/widgets/new_tab_menu.dart`
 
 Full file - New tab menu component
+
+### HiFi Design Reference
+
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser Tab Bar (New Tab) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` |
+>
+> **Key UI Elements to Match:**
+> - New tab page background: `--color-bg-dark`
+> - Search bar centered, large, with focus state
+> - Quick links grid layout and card styling
+> - Section headers typography
+> - Favicon thumbnails for quick links
 
 ### Estimated Effort
 

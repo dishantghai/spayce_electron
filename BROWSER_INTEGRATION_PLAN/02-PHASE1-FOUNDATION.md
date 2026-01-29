@@ -1067,7 +1067,17 @@ Key patterns:
 
 ### HiFi Design Reference
 
-- `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png`
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser View (Overall Layout) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+>
+> **Key UI Elements to Match:**
+> - Browser area background color: `--color-bg-dark` (#0F0B1A)
+> - Browser area sizing relative to sidebar
+> - Loading progress bar: top positioning, 2-3px height, primary color
+> - Integration with existing sidebar layout (respect sidebar width)
 
 ---
 

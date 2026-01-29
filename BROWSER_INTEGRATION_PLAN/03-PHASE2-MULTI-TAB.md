@@ -430,7 +430,21 @@ Key patterns:
 
 ### HiFi Design Reference
 
-- `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png`
+> **For Pixel-Perfect UI Implementation:**
+>
+> | Design | File Path |
+> |--------|----------|
+> | Browser Tab Bar | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` |
+>
+> **Key UI Elements to Match:**
+> - Tab bar height (40px) and background color (`--color-bg-sidebar`)
+> - Tab item dimensions: min-width 120px, max-width 200px
+> - Active tab indicator: 2px top border with primary color
+> - Favicon size: 16x16px with 2px border-radius
+> - Close button: 18x18px, visible on hover/active
+> - New tab (+) button positioning and styling
+> - Tab spacing and padding values
+> - Horizontal scroll behavior when tabs overflow
 
 ---
 
