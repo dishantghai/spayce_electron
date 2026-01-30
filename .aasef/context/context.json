@@ -56,7 +56,7 @@
     }
   ],
   "codebase": {
-    "structure": "# Codebase Structure\n\n## Project Type\n**Electron-based desktop application** with browser integration capabilities, built as a TypeScript monorepo using clean architecture principles. The app appears to be \"Spayce\" - a space/item management tool with browsing features.\n\n## Key Directories\n- `packages/` - Monorepo packages following clean architecture layers\n- `packages/core/` - Domain and application layers (business logic)\n- `packages/infrastructure/` - Database and services implementation\n- `packages/react-ui/` - Presentation layer hooks and components\n- `packages/shared/` - Reusable React components and theme system\n- `packages/desktop/` - Electron application (main/renderer processes)\n- `scripts/` - Development and migration utilities\n- `docs/` - Technical documentation and setup guides\n- `BROWSER_INTEGRATION_PLAN/` - Phased browser integration strategy\n- `project_ops/` - Project documentation and migration specs\n- `.aasef/` - AASEF framework for project context\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `tsconfig.json` - Root TypeScript configuration\n- `vitest.config.ts` - Testing configuration\n- `resources/db/spaces.sqlite` - SQLite database file\n- `scripts/migrate-db.ts` - Database migration utilities\n- `scripts/seed-db.ts` - Database seeding script\n\n## Patterns Observed\n- **Clean Architecture**: Clear separation of domain, application, infrastructure, and presentation layers\n- **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and build config\n- **Test Organization**: Tests co-located with source code using `__tests__` directories\n- **Migration-First Development**: Extensive migration documentation and verification scripts\n- **Comprehensive Documentation**: Detailed guides for setup, testing, and architecture decisions\n\n## Notes for AI Assistants\n- **Tech Stack**: Electron + React + TypeScript + SQLite + Vite + pnpm workspaces (per Tech Decisions)",
+    "structure": "# Codebase Structure\n\n## Project Type\n**Electron-based desktop application** implementing a multi-tab browser with spaces/collections management. Uses a **monorepo architecture** with clean architecture principles (Domain-Driven Design).\n\n## Key Directories\n- `packages/core/` - Domain and application layers (entities, use cases, queries)\n- `packages/infrastructure/` - Database and services implementation (SQLite repositories)\n- `packages/react-ui/` - Presentation layer hooks and React components\n- `packages/shared/` - Reusable UI components and design system\n- `packages/desktop/` - Electron main/renderer processes\n- `scripts/` - Development and migration utilities\n- `docs/` - Technical documentation and setup guides\n- `BROWSER_INTEGRATION_PLAN/` - Multi-phase browser integration roadmap\n- `.aasef/` - AASEF framework specifications and context\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `vitest.config.ts` - Testing configuration for Vitest\n- `tsconfig.json` - Root TypeScript configuration\n- `resources/db/spaces.sqlite` - SQLite database file\n- `scripts/seed-db.ts` - Database seeding script\n- `scripts/migrate-db.ts` - Database migration utilities\n\n## Patterns Observed\n- **Clean Architecture**: Strict separation of domain, application, infrastructure, and presentation layers\n- **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and test configuration\n- **Test Coverage**: Comprehensive test suites in `__tests__/` directories with integration tests\n- **Migration System**: Structured approach to database and codebase migrations\n- **Documentation-Driven**: Extensive docs for setup, testing, and architectural decisions\n\n## Notes for AI Assistants\n- **Tech Stack**: Electron + React + TypeScript + SQLite (better-sqlite3) + Vite + pnpm workspaces\n- **State Management**: Zustand for UI state, domain data via custom hooks with invalidation pattern",
     "components_implemented": [
       "TreeView",
       "TreeItem",
@@ -76,7 +76,7 @@
       "navigation",
       "spaces"
     ],
-    "last_synced": "2026-01-30T21:23:31.328690"
+    "last_synced": "2026-01-30T22:06:28.658719"
   },
   "decisions": [
     "Use WebContentsView (not deprecated BrowserView) for tabs",
@@ -86,9 +86,10 @@
     "Fixed and floating sidebar modes"
   ],
   "created_at": "2026-01-17T22:47:24.865263",
-  "updated_at": "2026-01-30T21:23:31.328801",
+  "updated_at": "2026-01-30T22:06:28.659287",
   "enabled_ides": [
     "windsurf",
-    "antigravity"
+    "antigravity",
+    "claude-code"
   ]
 }

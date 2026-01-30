@@ -1,43 +1,41 @@
 # Codebase Structure
 
 ## Project Type
-**Electron-based desktop application** with browser integration capabilities, built as a TypeScript monorepo using clean architecture principles. The app appears to be "Spayce" - a space/item management tool with browsing features.
+**Electron-based desktop application** implementing a multi-tab browser with spaces/collections management. Uses a **monorepo architecture** with clean architecture principles (Domain-Driven Design).
 
 ## Key Directories
-- `packages/` - Monorepo packages following clean architecture layers
-- `packages/core/` - Domain and application layers (business logic)
-- `packages/infrastructure/` - Database and services implementation
-- `packages/react-ui/` - Presentation layer hooks and components
-- `packages/shared/` - Reusable React components and theme system
-- `packages/desktop/` - Electron application (main/renderer processes)
+- `packages/core/` - Domain and application layers (entities, use cases, queries)
+- `packages/infrastructure/` - Database and services implementation (SQLite repositories)
+- `packages/react-ui/` - Presentation layer hooks and React components
+- `packages/shared/` - Reusable UI components and design system
+- `packages/desktop/` - Electron main/renderer processes
 - `scripts/` - Development and migration utilities
 - `docs/` - Technical documentation and setup guides
-- `BROWSER_INTEGRATION_PLAN/` - Phased browser integration strategy
-- `project_ops/` - Project documentation and migration specs
-- `.aasef/` - AASEF framework for project context
+- `BROWSER_INTEGRATION_PLAN/` - Multi-phase browser integration roadmap
+- `.aasef/` - AASEF framework specifications and context
 
 ## Key Files
 - `pnpm-workspace.yaml` - Monorepo workspace configuration
+- `vitest.config.ts` - Testing configuration for Vitest
 - `tsconfig.json` - Root TypeScript configuration
-- `vitest.config.ts` - Testing configuration
 - `resources/db/spaces.sqlite` - SQLite database file
-- `scripts/migrate-db.ts` - Database migration utilities
 - `scripts/seed-db.ts` - Database seeding script
+- `scripts/migrate-db.ts` - Database migration utilities
 
 ## Patterns Observed
-- **Clean Architecture**: Clear separation of domain, application, infrastructure, and presentation layers
-- **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and build config
-- **Test Organization**: Tests co-located with source code using `__tests__` directories
-- **Migration-First Development**: Extensive migration documentation and verification scripts
-- **Comprehensive Documentation**: Detailed guides for setup, testing, and architecture decisions
+- **Clean Architecture**: Strict separation of domain, application, infrastructure, and presentation layers
+- **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and test configuration
+- **Test Coverage**: Comprehensive test suites in `__tests__/` directories with integration tests
+- **Migration System**: Structured approach to database and codebase migrations
+- **Documentation-Driven**: Extensive docs for setup, testing, and architectural decisions
 
 ## Notes for AI Assistants
-- **Tech Stack**: Electron + React + TypeScript + SQLite + Vite + pnpm workspaces (per Tech Decisions)
-- **Architecture**: Follow clean architecture with readonly domain entities and repository patterns
-- **Database**: Uses SQLite with better-sqlite3, not SurrealDB (despite any legacy files)
-- **Styling**: CSS Modules with design tokens, not Tailwind
-- **State Management**: Zustand for UI state, data hooks for business data
-- **Testing**: Vitest for unit tests, comprehensive test coverage expected
-- **Migration Context**: Project appears to be migrating from Flutter to Electron (see migration specs)
-- **Browser Integration**: Planned multi-phase browser integration using WebContentsView
-- **Focus on Implementation**: Extensive documentation suggests this is an actively developed project with specific architectural requirements
+- **Tech Stack**: Electron + React + TypeScript + SQLite (better-sqlite3) + Vite + pnpm workspaces
+- **State Management**: Zustand for UI state, domain data via custom hooks with invalidation pattern
+- **Styling**: CSS Modules with CSS custom properties (design tokens), NOT Tailwind
+- **Database**: SQLite with better-sqlite3, NOT SurrealDB (despite any legacy file references)
+- **Architecture**: Follow clean architecture - domain entities are readonly, use repository interfaces
+- **Browser Integration**: Uses WebContentsView (Electron 30+), NOT deprecated BrowserView
+- **Focus Management**: Independent contexts for sidebar vs spaces screen
+- **Error Handling**: Result<T, Error> pattern in application layer, error boundaries in React
+- **Testing**: Vitest for unit tests, comprehensive test coverage across all layers
