@@ -41,9 +41,22 @@
     "005-create-space-flow",
     "006-keyboard-navigation"
   ],
-  "stories": [],
+  "stories": [
+    {
+      "id": "B001",
+      "title": "Remove 'Rename' from Pinned Items Context Menu",
+      "type": "bug",
+      "dir": "B001-remove-rename-from-pinned-items-context-menu"
+    },
+    {
+      "id": "B002",
+      "title": "Page Title Extraction Failing for Paste Link Trajectories",
+      "type": "bug",
+      "dir": "B002-page-title-extraction-failing-for-paste-link-traje"
+    }
+  ],
   "codebase": {
-    "structure": "# Codebase Structure\n\n## Project Type\nElectron desktop application called \"Spayce\" - a spatial browser/workspace manager using clean architecture with a monorepo structure.\n\n## Key Directories\n- `packages/core/` - Domain and application layers (business logic, use cases, queries)\n- `packages/infrastructure/` - Database and service implementations (SQLite repositories)\n- `packages/react-ui/` - Presentation layer hooks and React components\n- `packages/shared/` - Reusable UI components and design system\n- `packages/desktop/` - Electron application (main process, renderer, preload)\n- `scripts/` - Development and migration utilities\n- `IMPLEMENTATION_PLAN/` - Detailed implementation specifications and phases\n- `project_ops/` - Project documentation and migration specs\n- `.aasef/` - AASEF framework context and specs\n- `resources/db/` - SQLite database files\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `vitest.config.ts` - Test configuration using Vitest\n- `tsconfig.json` - TypeScript configuration\n- `SPACES_MIGRATION_PLAN.md` - Migration documentation\n- `TESTING_GUIDE.md` - Testing procedures and guidelines\n- `scripts/migrate-db.ts` - Database migration script\n- `resources/db/spaces.sqlite` - SQLite database file\n\n## Patterns Observed\n- **Clean Architecture**: Strict layered approach with domain/application/infrastructure/presentation separation\n- **Monorepo Structure**: pnpm workspaces with distinct package responsibilities\n- **Test-Driven**: Comprehensive test suites in each package with Vitest\n- **Migration-Focused**: Multiple migration scripts and documentation suggesting active development/refactoring\n- **Phase-Based Implementation**: Structured implementation plan with numbered phases\n- **TypeScript-First**: Full TypeScript adoption across all packages\n\n## Notes for AI Assistants\n- **Tech Stack**: Electron + React + TypeScript + SQLite + Zustand + CSS Modules + Vitest (per AUTHORITATIVE tech decisions)",
+    "structure": "# Codebase Structure\n\n## Project Type\n**Electron-based desktop application** with browser integration capabilities, built as a TypeScript monorepo using clean architecture principles. The app appears to be \"Spayce\" - a space/item management tool with browsing features.\n\n## Key Directories\n- `packages/` - Monorepo packages following clean architecture layers\n- `packages/core/` - Domain and application layers (business logic)\n- `packages/infrastructure/` - Database and services implementation\n- `packages/react-ui/` - Presentation layer hooks and components\n- `packages/shared/` - Reusable React components and theme system\n- `packages/desktop/` - Electron application (main/renderer processes)\n- `scripts/` - Development and migration utilities\n- `docs/` - Technical documentation and setup guides\n- `BROWSER_INTEGRATION_PLAN/` - Phased browser integration strategy\n- `project_ops/` - Project documentation and migration specs\n- `.aasef/` - AASEF framework for project context\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `tsconfig.json` - Root TypeScript configuration\n- `vitest.config.ts` - Testing configuration\n- `resources/db/spaces.sqlite` - SQLite database file\n- `scripts/migrate-db.ts` - Database migration utilities\n- `scripts/seed-db.ts` - Database seeding script\n\n## Patterns Observed\n- **Clean Architecture**: Clear separation of domain, application, infrastructure, and presentation layers\n- **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and build config\n- **Test Organization**: Tests co-located with source code using `__tests__` directories\n- **Migration-First Development**: Extensive migration documentation and verification scripts\n- **Comprehensive Documentation**: Detailed guides for setup, testing, and architecture decisions\n\n## Notes for AI Assistants\n- **Tech Stack**: Electron + React + TypeScript + SQLite + Vite + pnpm workspaces (per Tech Decisions)",
     "components_implemented": [
       "TreeView",
       "TreeItem",
@@ -63,7 +76,7 @@
       "navigation",
       "spaces"
     ],
-    "last_synced": "2026-01-25T08:14:34.880018"
+    "last_synced": "2026-01-30T21:23:31.328690"
   },
   "decisions": [
     "Use WebContentsView (not deprecated BrowserView) for tabs",
@@ -73,7 +86,7 @@
     "Fixed and floating sidebar modes"
   ],
   "created_at": "2026-01-17T22:47:24.865263",
-  "updated_at": "2026-01-25T08:14:34.880082",
+  "updated_at": "2026-01-30T21:23:31.328801",
   "enabled_ides": [
     "windsurf",
     "antigravity"

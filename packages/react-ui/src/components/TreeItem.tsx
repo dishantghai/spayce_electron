@@ -121,11 +121,13 @@ export function TreeItem({
 
         if (isCtrlOrCmd) {
             // F017: Toggle selection (add/remove from multi-selection)
-            useSelectionStore.getState().toggleSelection(spaceId, item.id, dragDropContext);
+            const selectionContext = dragDropContext === 'pins-grid' ? 'spaceCard' : dragDropContext;
+            useSelectionStore.getState().toggleSelection(spaceId, item.id, selectionContext);
             // Don't expand/collapse folders on Ctrl+Click - just toggle selection
         } else if (isShift) {
             // F018: Range selection - select all items between anchor and clicked item
-            useSelectionStore.getState().selectRange(spaceId, item.id, allVisibleIds, dragDropContext);
+            const selectionContext = dragDropContext === 'pins-grid' ? 'spaceCard' : dragDropContext;
+            useSelectionStore.getState().selectRange(spaceId, item.id, allVisibleIds, selectionContext);
             // Don't expand/collapse folders on Shift+Click - just select range
         } else {
             // Regular click - clear multi-selection and select single

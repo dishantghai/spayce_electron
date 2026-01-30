@@ -29,7 +29,7 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
             isDragging: false,
             dragData: null,
             dropIndicator: null,
-            dragExpandedFolderId: null,
+            dragExpandedFolderIds: new Set<string>(),
             flashItemId: null,
             isOverPinsGrid: false,
             pinsDropIndex: null,
@@ -49,7 +49,7 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
             expect(state).toHaveProperty('isDragging');
             expect(state).toHaveProperty('dragData');
             expect(state).toHaveProperty('dropIndicator');
-            expect(state).toHaveProperty('dragExpandedFolderId');
+            expect(state).toHaveProperty('dragExpandedFolderIds');
             expect(state).toHaveProperty('flashItemId');
             expect(state).toHaveProperty('isOverPinsGrid');
             expect(state).toHaveProperty('pinsDropIndex');
@@ -60,7 +60,8 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
             expect(typeof state.startDrag).toBe('function');
             expect(typeof state.setDropIndicator).toBe('function');
             expect(typeof state.endDrag).toBe('function');
-            expect(typeof state.setDragExpandedFolder).toBe('function');
+            expect(typeof state.addDragExpandedFolder).toBe('function');
+            expect(typeof state.clearDragExpandedFolders).toBe('function');
             expect(typeof state.setFlashItem).toBe('function');
             expect(typeof state.setOverPinsGrid).toBe('function');
         });
@@ -327,38 +328,39 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
     });
 
     describe('AC7: dragExpandedFolderId state for auto-expand folders', () => {
-        test('should have null dragExpandedFolderId initially', () => {
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBeNull();
+        test('should have empty dragExpandedFolderIds initially', () => {
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.size).toBe(0);
         });
 
         test('should set dragExpandedFolderId', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBe('folder-1');
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-1')).toBe(true);
         });
 
         test('should clear dragExpandedFolderId', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder(null);
+                useDragDropUiStore.getState().clearDragExpandedFolders();
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBeNull();
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.size).toBe(0);
         });
 
         test('should update dragExpandedFolderId when hovering different folder', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-2');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-2');
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBe('folder-2');
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-1')).toBe(true);
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-2')).toBe(true);
         });
     });
 
@@ -737,13 +739,13 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
 
         test('should clear dragExpandedFolderId', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
             act(() => {
                 useDragDropUiStore.getState().endDrag();
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBeNull();
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.size).toBe(0);
         });
 
         test('should clear validation error', () => {
@@ -786,7 +788,7 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
                     targetIndex: 0,
                     targetParentId: null,
                 });
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
             act(() => {
                 useDragDropUiStore.getState().endDrag();
@@ -796,39 +798,41 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
             expect(state.isDragging).toBe(false);
             expect(state.dragData).toBeNull();
             expect(state.dropIndicator).toBeNull();
-            expect(state.dragExpandedFolderId).toBeNull();
+            expect(state.dragExpandedFolderIds.size).toBe(0);
         });
     });
 
-    describe('AC13: setDragExpandedFolder manages auto-expand state', () => {
-        test('should set expanded folder', () => {
+    describe('AC13: addDragExpandedFolder and clearDragExpandedFolders manage auto-expand state', () => {
+        test('should add expanded folder', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBe('folder-1');
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-1')).toBe(true);
         });
 
-        test('should replace previous expanded folder', () => {
+        test('should support multiple expanded folders', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-2');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-2');
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBe('folder-2');
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-1')).toBe(true);
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-2')).toBe(true);
         });
 
-        test('should clear expanded folder with null', () => {
+        test('should clear all expanded folders', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-2');
             });
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder(null);
+                useDragDropUiStore.getState().clearDragExpandedFolders();
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBeNull();
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.size).toBe(0);
         });
     });
 
@@ -1016,12 +1020,12 @@ describe('Feature: 014 - Enhanced Drag-Drop State Management', () => {
             expect(state.dragData).toBeNull();
         });
 
-        test('setDragExpandedFolder method works correctly', () => {
+        test('addDragExpandedFolder method works correctly', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
 
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBe('folder-1');
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-1')).toBe(true);
         });
 
         test('setFlashItem method works correctly', () => {

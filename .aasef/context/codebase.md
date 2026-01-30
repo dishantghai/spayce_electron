@@ -1,43 +1,43 @@
 # Codebase Structure
 
 ## Project Type
-Electron desktop application called "Spayce" - a spatial browser/workspace manager using clean architecture with a monorepo structure.
+**Electron-based desktop application** with browser integration capabilities, built as a TypeScript monorepo using clean architecture principles. The app appears to be "Spayce" - a space/item management tool with browsing features.
 
 ## Key Directories
-- `packages/core/` - Domain and application layers (business logic, use cases, queries)
-- `packages/infrastructure/` - Database and service implementations (SQLite repositories)
-- `packages/react-ui/` - Presentation layer hooks and React components
-- `packages/shared/` - Reusable UI components and design system
-- `packages/desktop/` - Electron application (main process, renderer, preload)
+- `packages/` - Monorepo packages following clean architecture layers
+- `packages/core/` - Domain and application layers (business logic)
+- `packages/infrastructure/` - Database and services implementation
+- `packages/react-ui/` - Presentation layer hooks and components
+- `packages/shared/` - Reusable React components and theme system
+- `packages/desktop/` - Electron application (main/renderer processes)
 - `scripts/` - Development and migration utilities
-- `IMPLEMENTATION_PLAN/` - Detailed implementation specifications and phases
+- `docs/` - Technical documentation and setup guides
+- `BROWSER_INTEGRATION_PLAN/` - Phased browser integration strategy
 - `project_ops/` - Project documentation and migration specs
-- `.aasef/` - AASEF framework context and specs
-- `resources/db/` - SQLite database files
+- `.aasef/` - AASEF framework for project context
 
 ## Key Files
 - `pnpm-workspace.yaml` - Monorepo workspace configuration
-- `vitest.config.ts` - Test configuration using Vitest
-- `tsconfig.json` - TypeScript configuration
-- `SPACES_MIGRATION_PLAN.md` - Migration documentation
-- `TESTING_GUIDE.md` - Testing procedures and guidelines
-- `scripts/migrate-db.ts` - Database migration script
+- `tsconfig.json` - Root TypeScript configuration
+- `vitest.config.ts` - Testing configuration
 - `resources/db/spaces.sqlite` - SQLite database file
+- `scripts/migrate-db.ts` - Database migration utilities
+- `scripts/seed-db.ts` - Database seeding script
 
 ## Patterns Observed
-- **Clean Architecture**: Strict layered approach with domain/application/infrastructure/presentation separation
-- **Monorepo Structure**: pnpm workspaces with distinct package responsibilities
-- **Test-Driven**: Comprehensive test suites in each package with Vitest
-- **Migration-Focused**: Multiple migration scripts and documentation suggesting active development/refactoring
-- **Phase-Based Implementation**: Structured implementation plan with numbered phases
-- **TypeScript-First**: Full TypeScript adoption across all packages
+- **Clean Architecture**: Clear separation of domain, application, infrastructure, and presentation layers
+- **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and build config
+- **Test Organization**: Tests co-located with source code using `__tests__` directories
+- **Migration-First Development**: Extensive migration documentation and verification scripts
+- **Comprehensive Documentation**: Detailed guides for setup, testing, and architecture decisions
 
 ## Notes for AI Assistants
-- **Tech Stack**: Electron + React + TypeScript + SQLite + Zustand + CSS Modules + Vitest (per AUTHORITATIVE tech decisions)
-- **Architecture**: Follow clean architecture patterns - domain entities are readonly, use repository interfaces, Result<T> pattern for error handling
-- **Database**: SQLite with better-sqlite3 driver, not SurrealDB despite any legacy file references
-- **State Management**: Zustand for UI state, data hooks for business data fetching
-- **Focus Management**: Independent focus contexts for sidebar vs spaces screen
-- **Migration Context**: Project appears to be migrating from Flutter to Electron (see migration plans)
-- **Testing**: Use Vitest for all testing, comprehensive test coverage expected
-- **Styling**: CSS Modules with design tokens, never hardcode styles
+- **Tech Stack**: Electron + React + TypeScript + SQLite + Vite + pnpm workspaces (per Tech Decisions)
+- **Architecture**: Follow clean architecture with readonly domain entities and repository patterns
+- **Database**: Uses SQLite with better-sqlite3, not SurrealDB (despite any legacy files)
+- **Styling**: CSS Modules with design tokens, not Tailwind
+- **State Management**: Zustand for UI state, data hooks for business data
+- **Testing**: Vitest for unit tests, comprehensive test coverage expected
+- **Migration Context**: Project appears to be migrating from Flutter to Electron (see migration specs)
+- **Browser Integration**: Planned multi-phase browser integration using WebContentsView
+- **Focus on Implementation**: Extensive documentation suggests this is an actively developed project with specific architectural requirements

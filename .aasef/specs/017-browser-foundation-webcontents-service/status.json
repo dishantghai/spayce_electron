@@ -1,0 +1,84 @@
+{
+  "id": "017",
+  "name": "browser-foundation-webcontents-service",
+  "status": "completed",
+  "priority": "critical",
+  "dependencies": [
+    "001",
+    "007",
+    "008"
+  ],
+  "blocks": [
+    "018",
+    "019",
+    "020",
+    "021",
+    "022",
+    "023",
+    "024",
+    "025",
+    "026",
+    "027",
+    "028",
+    "029",
+    "030",
+    "031"
+  ],
+  "estimated_days": 3,
+  "created_at": "2026-01-30T01:15:00.000000",
+  "updated_at": "2026-01-30T01:15:00.000000",
+  "tags": [
+    "browser",
+    "electron",
+    "foundation",
+    "webcontents",
+    "security"
+  ],
+  "complexity": "high",
+  "risk_level": "high",
+  "security_review_required": true,
+  "performance_critical": true,
+  "flutter_reference": "frontend/lib/features/browser/presentation/browser_screen.dart",
+  "implementation_started": "2026-01-30T02:21:38.283908",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-01-30T02:21:38.285373",
+    "tests": {
+      "linked_files": [],
+      "last_run": "2026-01-30T03:10:50.180467",
+      "last_result": "passed",
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  },
+  "completed_at": "2026-01-30T21:23:31.334192",
+  "drift_resolved": [
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification defines a complete BrowserService implementation with WebContentsView management, but the actual codebase only contains test files for BrowserErrors and browserHandlers. The core BrowserService.ts implementation file is missing from packages/desktop/src/main/services/."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification requires IPC handlers in packages/desktop/src/main/ipc/browserHandlers.ts with 13 specific handlers (browser:createView, browser:destroyView, etc.), but while tests exist for these handlers, the actual implementation file is not present in the codebase."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification defines browser types in packages/desktop/src/types/browser.ts (ViewBounds, BrowserViewState, CreateViewOptions, etc.), but this type definition file is missing from the actual codebase structure."
+    },
+    {
+      "type": "SPEC_BEHIND",
+      "action": "spec_updated",
+      "description": "The test files show more sophisticated mocking and error handling patterns than specified in the spec. For example, the BrowserService tests include detailed WebContents mocking with lifecycle management that goes beyond the basic error handling outlined in the specification."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The specification requires integration of browser handlers into the main process (packages/desktop/src/main/index.ts should register browser handlers), but based on the codebase structure, this integration is not yet implemented."
+    }
+  ]
+}

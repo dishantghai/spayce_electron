@@ -92,7 +92,7 @@ describe('IPC Handlers - Phase 2: Pin, Metadata, and File System Operations', ()
                 const handler = handlers.get('items:pin')!;
                 const result = await handler({}, itemId);
 
-                expect(mockSpaceItemsFacade.pinItem).toHaveBeenCalledWith(itemId);
+                expect(mockSpaceItemsFacade.pinItem).toHaveBeenCalledWith(itemId, undefined);
                 expect(result.success).toBe(true);
             });
 

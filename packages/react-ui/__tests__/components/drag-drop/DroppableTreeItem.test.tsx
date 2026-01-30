@@ -341,6 +341,7 @@ describe('Feature: Drop Target Hit Zones - DroppableTreeItem Component', () => {
                     level={0}
                     accentColor={mockAccentColor}
                     ancestorIds={[]}
+                    isExpanded={true}
                 >
                     <div>Folder Content</div>
                 </DroppableTreeItem>

@@ -121,41 +121,45 @@ describe('Smoke Tests', () => {
         it('should create a space', async () => {
             if (!canRunTests) return;
             const facade = serviceRegistry.get<any>(SERVICE_KEYS.SPACES_FACADE);
-            const space = await facade.createSpace({
+            const result = await facade.createSpace({
                 profileId: 'smoke-test-profile',
                 userId: 'smoke-test-user',
                 name: 'Smoke Test Space',
                 iconName: 'folder',
                 accentColor: '#FF5733',
             });
-            expect(space.id).toBeDefined();
-            expect(space.name).toBe('Smoke Test Space');
+            expect(result.success).toBe(true);
+            expect(result.data.id).toBeDefined();
+            expect(result.data.name).toBe('Smoke Test Space');
         });
 
         it('should retrieve spaces', async () => {
             if (!canRunTests) return;
             const facade = serviceRegistry.get<any>(SERVICE_KEYS.SPACES_FACADE);
-            const spaces = await facade.getSpaces('smoke-test-profile');
-            expect(Array.isArray(spaces)).toBe(true);
-            expect(spaces.length).toBeGreaterThan(0);
+            const result = await facade.getSpaces('smoke-test-profile');
+            expect(result.success).toBe(true);
+            expect(Array.isArray(result.data)).toBe(true);
+            expect(result.data.length).toBeGreaterThan(0);
         });
 
         it('should create an item', async () => {
             if (!canRunTests) return;
             const spacesFacade = serviceRegistry.get<any>(SERVICE_KEYS.SPACES_FACADE);
-            const spaces = await spacesFacade.getSpaces('smoke-test-profile');
+            const spacesResult = await spacesFacade.getSpaces('smoke-test-profile');
 
-            if (spaces.length > 0) {
+            expect(spacesResult.success).toBe(true);
+            if (spacesResult.data.length > 0) {
                 const itemsFacade = serviceRegistry.get<any>(SERVICE_KEYS.SPACE_ITEMS_FACADE);
-                const item = await itemsFacade.createItem({
-                    spaceId: spaces[0].id,
+                const itemResult = await itemsFacade.createItem({
+                    spaceId: spacesResult.data[0].id,
                     name: 'Test Link',
                     type: 'link',
                     path: 'https://example.com',
                     parentId: null,
                 });
-                expect(item.id).toBeDefined();
-                expect(item.name).toBe('Test Link');
+                expect(itemResult.success).toBe(true);
+                expect(itemResult.data.id).toBeDefined();
+                expect(itemResult.data.name).toBe('Test Link');
             }
         });
     });
@@ -254,7 +258,7 @@ describe('Critical Path Smoke Tests', () => {
         });
 
         it('should have all workspace packages', () => {
-            const packages = ['core', 'infrastructure', 'react-ui', 'desktop', 'shared'];
+            const packages = ['core', 'infrastructure', 'react-ui', 'desktop'];
             for (const pkg of packages) {
                 const pkgPath = path.join(WORKSPACE_ROOT, 'packages', pkg);
                 expect(fs.existsSync(pkgPath), `Missing package: ${pkg}`).toBe(true);

@@ -5,6 +5,12 @@ import { serviceRegistry, SERVICE_KEYS } from '@spayce/infrastructure';
 import type { SpaceItemsFacade } from '@spayce/core/application';
 import { InvalidationProvider } from '../../../src/hooks/common/InvalidationContext';
 
+const mockEventBus = {
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    publish: vi.fn(),
+};
+
 vi.mock('@spayce/infrastructure', async () => {
     const actual = await vi.importActual('@spayce/infrastructure');
     return {
@@ -25,10 +31,13 @@ describe('useUpdateItemMetadata', () => {
             updateItemMetadata: vi.fn(),
         };
 
-        vi.mocked(serviceRegistry.get).mockReturnValue(mockFacade as SpaceItemsFacade);
+        vi.mocked(serviceRegistry.get).mockImplementation((key: string) => {
+            if (key === SERVICE_KEYS.EVENT_BUS) return mockEventBus;
+            return mockFacade as SpaceItemsFacade;
+        });
     });
 
-    const wrapper = ({ children }: { children: React.ReactNode }) => <InvalidationProvider>{ children } </InvalidationProvider>;
+    const wrapper = ({ children }: { children: React.ReactNode }) => <InvalidationProvider>{children} </InvalidationProvider>;
 
     it('should update item metadata successfully', async () => {
         const itemId = 'item-1';

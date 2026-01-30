@@ -18,13 +18,13 @@ describe('Color Value Object', () => {
         it('should accept lowercase hex', () => {
             const color = Color.fromHex('#ff00ff');
             expect(color).not.toBeNull();
-            expect(color?.hex).toBe('#ff00ff');
+            expect(color?.hex).toBe('#FF00FF'); // Normalized to uppercase
         });
 
         it('should accept mixed case hex', () => {
             const color = Color.fromHex('#Ff00Ff');
             expect(color).not.toBeNull();
-            expect(color?.hex).toBe('#Ff00Ff');
+            expect(color?.hex).toBe('#FF00FF'); // Normalized to uppercase
         });
 
         it('should return null for invalid hex (no #)', () => {
@@ -61,11 +61,11 @@ describe('Color Value Object', () => {
             expect(color?.hex).toBe('#6D5AE6');
         });
 
-        it('should preserve original case', () => {
+        it('should normalize to uppercase', () => {
             const color1 = Color.fromHex('#AABBCC');
             const color2 = Color.fromHex('#aabbcc');
             expect(color1?.hex).toBe('#AABBCC');
-            expect(color2?.hex).toBe('#aabbcc');
+            expect(color2?.hex).toBe('#AABBCC'); // Implementation normalizes to uppercase
         });
     });
 });

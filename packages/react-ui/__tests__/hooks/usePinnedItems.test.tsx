@@ -5,12 +5,19 @@ import { serviceRegistry, SERVICE_KEYS } from '@spayce/infrastructure';
 import { SpaceItemType } from '@spayce/core';
 import { InvalidationProvider } from '../../src/hooks/common/InvalidationContext';
 
+const mockEventBus = {
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    publish: vi.fn(),
+};
+
 vi.mock('@spayce/infrastructure', () => ({
     serviceRegistry: {
         get: vi.fn(),
     },
     SERVICE_KEYS: {
-        SPACE_ITEMS_FACADE: 'SPACE_ITEMS_FACADE',
+        SPACE_ITEMS_REPOSITORY: 'SPACE_ITEMS_REPOSITORY',
+        EVENT_BUS: 'EVENT_BUS',
     },
 }));
 
@@ -61,11 +68,9 @@ describe('usePinnedItems', () => {
         },
     ];
 
-    const mockFacade = {
+    const mockRepository = {
         getPinnedItems: vi.fn(),
-        pinItem: vi.fn(),
-        unpinItem: vi.fn(),
-        reorderPins: vi.fn(),
+        refetch: vi.fn(),
     };
 
     const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -73,11 +78,11 @@ describe('usePinnedItems', () => {
     );
 
     beforeEach(() => {
-        vi.mocked(serviceRegistry.get).mockReturnValue(mockFacade);
-        mockFacade.getPinnedItems.mockResolvedValue({
-            success: true,
-            data: mockPinnedItems,
+        vi.mocked(serviceRegistry.get).mockImplementation((key: string) => {
+            if (key === SERVICE_KEYS.EVENT_BUS) return mockEventBus;
+            return mockRepository;
         });
+        mockRepository.getPinnedItems.mockResolvedValue(mockPinnedItems);
     });
 
     afterEach(() => {
@@ -97,14 +102,11 @@ describe('usePinnedItems', () => {
 
             expect(result.current.data).toEqual(mockPinnedItems);
             expect(result.current.error).toBeNull();
-            expect(mockFacade.getPinnedItems).toHaveBeenCalledWith(mockSpaceId);
+            expect(mockRepository.getPinnedItems).toHaveBeenCalledWith(mockSpaceId);
         });
 
         it('should handle empty pinned items', async () => {
-            mockFacade.getPinnedItems.mockResolvedValue({
-                success: true,
-                data: [],
-            });
+            mockRepository.getPinnedItems.mockResolvedValue([]);
 
             const { result } = renderHook(() => usePinnedItems(mockSpaceId), { wrapper });
 
@@ -129,13 +131,7 @@ describe('usePinnedItems', () => {
 
     describe('error handling', () => {
         it('should handle facade error response', async () => {
-            mockFacade.getPinnedItems.mockResolvedValue({
-                success: false,
-                error: {
-                    code: 'FETCH_ERROR',
-                    message: 'Failed to fetch pinned items',
-                },
-            });
+            mockRepository.getPinnedItems.mockRejectedValue(new Error('Failed to fetch pinned items'));
 
             const { result } = renderHook(() => usePinnedItems(mockSpaceId), { wrapper });
 
@@ -148,7 +144,7 @@ describe('usePinnedItems', () => {
         });
 
         it('should handle network errors', async () => {
-            mockFacade.getPinnedItems.mockRejectedValue(new Error('Network error'));
+            mockRepository.getPinnedItems.mockRejectedValue(new Error('Network error'));
 
             const { result } = renderHook(() => usePinnedItems(mockSpaceId), { wrapper });
 
@@ -168,11 +164,11 @@ describe('usePinnedItems', () => {
                 expect(result.current.loading).toBe(false);
             });
 
-            mockFacade.getPinnedItems.mockClear();
+            mockRepository.getPinnedItems.mockClear();
 
             await result.current.refetch();
 
-            expect(mockFacade.getPinnedItems).toHaveBeenCalledWith(mockSpaceId);
+            expect(mockRepository.getPinnedItems).toHaveBeenCalledWith(mockSpaceId);
         });
     });
 
@@ -187,12 +183,12 @@ describe('usePinnedItems', () => {
                 expect(result.current.loading).toBe(false);
             });
 
-            mockFacade.getPinnedItems.mockClear();
+            mockRepository.getPinnedItems.mockClear();
 
             rerender({ spaceId: 'space-2' });
 
             await waitFor(() => {
-                expect(mockFacade.getPinnedItems).toHaveBeenCalledWith('space-2');
+                expect(mockRepository.getPinnedItems).toHaveBeenCalledWith('space-2');
             });
         });
     });
@@ -221,10 +217,7 @@ describe('usePinnedItems', () => {
                 isWatching: false,
             }));
 
-            mockFacade.getPinnedItems.mockResolvedValue({
-                success: true,
-                data: maxPins,
-            });
+            mockRepository.getPinnedItems.mockResolvedValue(maxPins);
 
             const { result } = renderHook(() => usePinnedItems(mockSpaceId), { wrapper });
 

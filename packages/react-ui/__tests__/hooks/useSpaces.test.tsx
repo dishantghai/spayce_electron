@@ -5,12 +5,19 @@ import { serviceRegistry, SERVICE_KEYS } from '@spayce/infrastructure';
 import { SpaceItemType } from '@spayce/core';
 import { InvalidationProvider } from '../../src/hooks/common/InvalidationContext';
 
+const mockEventBus = {
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+    publish: vi.fn(),
+};
+
 vi.mock('@spayce/infrastructure', () => ({
     serviceRegistry: {
         get: vi.fn(),
     },
     SERVICE_KEYS: {
         SPACES_FACADE: 'SPACES_FACADE',
+        EVENT_BUS: 'EVENT_BUS',
     },
 }));
 
@@ -55,7 +62,12 @@ describe('useSpaces', () => {
     );
 
     beforeEach(() => {
-        vi.mocked(serviceRegistry.get).mockReturnValue(mockFacade);
+        vi.mocked(serviceRegistry.get).mockImplementation((key: string) => {
+            if (key === SERVICE_KEYS.EVENT_BUS) {
+                return mockEventBus;
+            }
+            return mockFacade;
+        });
         mockFacade.getSpaces.mockResolvedValue({
             success: true,
             data: mockSpaces,

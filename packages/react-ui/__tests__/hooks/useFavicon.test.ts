@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useFavicon } from '../../src/hooks/useFavicon';
 
 describe('useFavicon Hook', () => {
@@ -8,89 +8,85 @@ describe('useFavicon Hook', () => {
     });
 
     describe('Basic functionality', () => {
-        it('should return default favicon for null URL', () => {
-            const { result } = renderHook(() => useFavicon(null));
+        it('should return null faviconUrl for empty URL', () => {
+            const { result } = renderHook(() => useFavicon('', null));
 
-            expect(result.current).toBe('/default-favicon.svg');
+            expect(result.current.faviconUrl).toBeNull();
+            expect(result.current.isLoading).toBe(false);
         });
 
-        it('should return default favicon for empty URL', () => {
-            const { result } = renderHook(() => useFavicon(''));
+        it('should return DuckDuckGo favicon URL for valid URL', () => {
+            const { result } = renderHook(() => useFavicon('https://example.com', null));
 
-            expect(result.current).toBe('/default-favicon.svg');
-        });
-
-        it('should generate Google favicon URL for valid URL', () => {
-            const { result } = renderHook(() => useFavicon('https://example.com'));
-
-            expect(result.current).toContain('google.com/s2/favicons');
-            expect(result.current).toContain('domain=example.com');
+            expect(result.current.faviconUrl).toContain('icons.duckduckgo.com');
+            expect(result.current.faviconUrl).toContain('example.com');
+            expect(result.current.isLoading).toBe(false);
         });
 
         it('should handle URLs with paths', () => {
-            const { result } = renderHook(() => useFavicon('https://example.com/path/to/page'));
+            const { result } = renderHook(() => useFavicon('https://example.com/path/to/page', null));
 
-            expect(result.current).toContain('domain=example.com');
+            expect(result.current.faviconUrl).toContain('example.com');
         });
 
         it('should handle URLs with query params', () => {
-            const { result } = renderHook(() => useFavicon('https://example.com?query=value'));
+            const { result } = renderHook(() => useFavicon('https://example.com?query=value', null));
 
-            expect(result.current).toContain('domain=example.com');
+            expect(result.current.faviconUrl).toContain('example.com');
         });
     });
 
     describe('Edge cases', () => {
         it('should handle localhost URLs', () => {
-            const { result } = renderHook(() => useFavicon('http://localhost:3000'));
+            const { result } = renderHook(() => useFavicon('http://localhost:3000', null));
 
             expect(result.current).toBeDefined();
         });
 
         it('should handle IP addresses', () => {
-            const { result } = renderHook(() => useFavicon('http://192.168.1.1'));
+            const { result } = renderHook(() => useFavicon('http://192.168.1.1', null));
 
             expect(result.current).toBeDefined();
         });
 
         it('should handle URLs without protocol', () => {
-            const { result } = renderHook(() => useFavicon('example.com'));
+            const { result } = renderHook(() => useFavicon('example.com', null));
 
-            // Should still work or fall back gracefully
             expect(result.current).toBeDefined();
         });
 
         it('should handle invalid URLs gracefully', () => {
-            const { result } = renderHook(() => useFavicon('not-a-valid-url'));
+            const { result } = renderHook(() => useFavicon('not-a-valid-url', null));
 
             expect(result.current).toBeDefined();
+            expect(result.current.isLoading).toBe(false);
         });
     });
 
     describe('URL changes', () => {
         it('should update favicon when URL changes', () => {
             const { result, rerender } = renderHook(
-                ({ url }) => useFavicon(url),
+                ({ url }) => useFavicon(url, null),
                 { initialProps: { url: 'https://example.com' } }
             );
 
-            const firstFavicon = result.current;
+            const firstFavicon = result.current.faviconUrl;
 
             rerender({ url: 'https://different.com' });
 
-            expect(result.current).not.toBe(firstFavicon);
-            expect(result.current).toContain('domain=different.com');
+            expect(result.current.faviconUrl).not.toBe(firstFavicon);
+            expect(result.current.faviconUrl).toContain('different.com');
         });
 
-        it('should handle URL changing to null', () => {
+        it('should handle URL changing to empty string', () => {
             const { result, rerender } = renderHook(
-                ({ url }) => useFavicon(url),
+                ({ url }) => useFavicon(url, null),
                 { initialProps: { url: 'https://example.com' } }
             );
 
-            rerender({ url: null });
+            rerender({ url: '' });
 
-            expect(result.current).toBe('/default-favicon.svg');
+            expect(result.current.faviconUrl).toBeNull();
         });
     });
 
@@ -101,7 +97,7 @@ describe('useFavicon Hook', () => {
             const { rerender } = renderHook(
                 ({ url }) => {
                     renderCount++;
-                    return useFavicon(url);
+                    return useFavicon(url, null);
                 },
                 { initialProps: { url: 'https://example.com' } }
             );

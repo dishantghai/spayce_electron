@@ -8,7 +8,7 @@ describe('Feature: 010 - useDragDropUiStore', () => {
             isDragging: false,
             dragData: null,
             dropIndicator: null,
-            dragExpandedFolderId: null,
+            dragExpandedFolderIds: new Set<string>(),
             flashItemId: null,
             isOverPinsGrid: false,
             pinsDropIndex: null,
@@ -107,23 +107,23 @@ describe('Feature: 010 - useDragDropUiStore', () => {
     });
 
     describe('AC4: manages expanded folder during drag', () => {
-        test('should have null dragExpandedFolderId initially', () => {
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBeNull();
+        test('should have empty dragExpandedFolderIds initially', () => {
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.size).toBe(0);
         });
 
-        test('should set dragExpandedFolderId with setDragExpandedFolder', () => {
+        test('should set dragExpandedFolderId with addDragExpandedFolder', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
             });
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBe('folder-1');
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.has('folder-1')).toBe(true);
         });
 
         test('should clear dragExpandedFolderId when endDrag is called', () => {
             act(() => {
-                useDragDropUiStore.getState().setDragExpandedFolder('folder-1');
+                useDragDropUiStore.getState().addDragExpandedFolder('folder-1');
                 useDragDropUiStore.getState().endDrag();
             });
-            expect(useDragDropUiStore.getState().dragExpandedFolderId).toBeNull();
+            expect(useDragDropUiStore.getState().dragExpandedFolderIds.size).toBe(0);
         });
     });
 

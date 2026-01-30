@@ -66,8 +66,8 @@ describe('TreeView', () => {
             ];
             render(<TreeView {...defaultProps} items={items} />);
 
-            expect(screen.getByText('Test Folder')).toBeTruthy();
-            expect(screen.getByText('Test Link')).toBeTruthy();
+            expect(screen.getByRole('treeitem', { name: /Test Folder/i })).toBeTruthy();
+            expect(screen.getByRole('treeitem', { name: /Test Link/i })).toBeTruthy();
         });
 
         it('renders nested items when expanded', () => {
@@ -83,8 +83,8 @@ describe('TreeView', () => {
                 />
             );
 
-            expect(screen.getByText('Parent Folder')).toBeTruthy();
-            expect(screen.getByText('Child Link')).toBeTruthy();
+            expect(screen.getByRole('treeitem', { name: /Parent Folder/i })).toBeTruthy();
+            expect(screen.getByRole('treeitem', { name: /Child Link/i })).toBeTruthy();
         });
     });
 
@@ -101,7 +101,8 @@ describe('TreeView', () => {
                 />
             );
 
-            fireEvent.click(screen.getByText('Test Folder'));
+            const folderElement = screen.getByRole('treeitem', { name: /Test Folder/i });
+            fireEvent.click(folderElement);
             expect(onExpandedChange).toHaveBeenCalled();
         });
 
@@ -120,7 +121,8 @@ describe('TreeView', () => {
             );
 
             // Click empty folder - should still toggle
-            fireEvent.click(screen.getByText('Empty Folder'));
+            const folderElement = screen.getByRole('treeitem', { name: /Empty Folder/i });
+            fireEvent.click(folderElement);
 
             // onItemExpand should be called with the folder and expanded=true
             expect(onItemExpand).toHaveBeenCalledWith(
@@ -143,7 +145,8 @@ describe('TreeView', () => {
                 />
             );
 
-            fireEvent.click(screen.getByText('Empty Folder'));
+            const folderElement = screen.getByRole('treeitem', { name: /Empty Folder/i });
+            fireEvent.click(folderElement);
 
             // Should collapse (expanded=false)
             expect(onItemExpand).toHaveBeenCalledWith(
@@ -181,7 +184,8 @@ describe('TreeView', () => {
                 />
             );
 
-            fireEvent.click(screen.getByText('Test Link'));
+            const linkElement = screen.getByRole('treeitem', { name: /Test Link/i });
+            fireEvent.click(linkElement);
             expect(onItemClick).toHaveBeenCalledWith(expect.objectContaining({ id: 'link-1' }));
         });
     });
@@ -468,7 +472,8 @@ describe('TreeItem', () => {
                 />
             );
 
-            fireEvent.click(screen.getByText('Empty Folder'));
+            const folderElement = screen.getByRole('treeitem', { name: /Empty Folder/i });
+            fireEvent.click(folderElement);
             expect(onItemExpand).toHaveBeenCalledWith(
                 expect.objectContaining({ id: 'empty-folder' }),
                 true
@@ -488,7 +493,8 @@ describe('TreeItem', () => {
                 />
             );
 
-            fireEvent.click(screen.getByText('Folder'));
+            const folderElement = screen.getByRole('treeitem', { name: /Folder/i });
+            fireEvent.click(folderElement);
             expect(onItemExpand).toHaveBeenCalledWith(
                 expect.objectContaining({ id: 'folder-1' }),
                 true

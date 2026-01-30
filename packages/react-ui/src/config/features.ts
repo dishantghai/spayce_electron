@@ -16,7 +16,7 @@ export const FeatureFlags: FeatureFlagsConfig = {
 };
 
 // Environment override via URL parameters (for testing)
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && window.location?.search) {
     const params = new URLSearchParams(window.location.search);
 
     // ?arborist=true enables React Arborist tree

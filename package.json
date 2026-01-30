@@ -8,9 +8,12 @@
     "type": "module",
     "scripts": {
         "preinstall": "node scripts/check-architecture.js",
-        "postinstall": "cd node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3 && npx --yes electron-rebuild -f -w better-sqlite3 -m . || true",
+        "rebuild:electron": "node scripts/rebuild-for-environment.js electron",
+        "rebuild:node": "node scripts/rebuild-for-environment.js node",
+        "predev": "npm run rebuild:electron",
         "dev": "pnpm --filter @spayce/desktop dev",
         "build": "pnpm --filter @spayce/desktop build",
+        "pretest": "npm run rebuild:node",
         "test": "vitest --run",
         "test:watch": "vitest --watch",
         "test:core": "vitest --run packages/core/__tests__",
@@ -32,6 +35,7 @@
     "devDependencies": {
         "@esbuild/darwin-arm64": "0.27.2",
         "@rollup/rollup-darwin-arm64": "^4.55.3",
+        "@testing-library/jest-dom": "^6.9.1",
         "@types/node": "^20.10.0",
         "@vitest/coverage-v8": "^4.0.18",
         "eslint": "^8.55.0",

@@ -1,0 +1,43 @@
+{
+    "id": "019",
+    "name": "single-tab-browser-mvp",
+    "status": "pending",
+    "priority": "critical",
+    "dependencies": [
+        "002",
+        "010",
+        "017",
+        "018"
+    ],
+    "blocks": [
+        "020",
+        "021",
+        "022",
+        "023",
+        "024",
+        "025",
+        "026",
+        "027",
+        "028",
+        "029",
+        "030",
+        "031"
+    ],
+    "estimated_days": 3,
+    "created_at": "2026-01-30T01:45:00.000000",
+    "updated_at": "2026-01-30T01:45:00.000000",
+    "tags": [
+        "browser",
+        "ui",
+        "mvp",
+        "react",
+        "zustand",
+        "ipc"
+    ],
+    "complexity": "medium",
+    "risk_level": "medium",
+    "security_review_required": false,
+    "performance_critical": true,
+    "hifi_design_reference": "project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png",
+    "flutter_reference": "frontend/lib/features/browser/presentation/browser_screen.dart"
+}

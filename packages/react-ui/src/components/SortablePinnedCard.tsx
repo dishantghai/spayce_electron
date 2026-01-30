@@ -7,7 +7,8 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Link as LinkIcon } from 'lucide-react';
-import type { SpaceItem, DragData } from '../types';
+import type { SpaceItem } from '../types';
+import type { DragData } from '../stores/dragDropUiStore';
 import { extractDomain, getGoogleFaviconUrl } from '../services/FaviconCache';
 import styles from './PinnedLinksGrid.module.css';
 

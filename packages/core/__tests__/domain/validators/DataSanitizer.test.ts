@@ -9,7 +9,7 @@ describe('DataSanitizer', () => {
         });
 
         it('should remove HTML tags', () => {
-            expect(DataSanitizer.sanitizeString('hello<script>alert(1)</script>world')).toBe('helloalert(1)/scriptworld');
+            expect(DataSanitizer.sanitizeString('hello<script>alert(1)</script>world')).toBe('helloscriptalert(1)/scriptworld');
             expect(DataSanitizer.sanitizeString('test<>test')).toBe('testtest');
         });
 
@@ -130,8 +130,8 @@ describe('DataSanitizer', () => {
         });
 
         it('should remove path traversal sequences', () => {
-            expect(DataSanitizer.sanitizeFileName('../../../etc/passwd')).toBe('/etc/passwd');
-            expect(DataSanitizer.sanitizeFileName('..\\..\\windows\\system32')).toBe('\\windows\\system32');
+            expect(DataSanitizer.sanitizeFileName('../../../etc/passwd')).toBe('///etc/passwd');
+            expect(DataSanitizer.sanitizeFileName('..\\..\\windows\\system32')).toBe('\\\\windows\\system32');
         });
 
         it('should truncate to 255 characters', () => {

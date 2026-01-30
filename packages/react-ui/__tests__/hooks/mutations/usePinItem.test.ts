@@ -88,8 +88,9 @@ describe('Feature: F022 - usePinItem Hook', () => {
 
             expect(result.current.loading).toBe(false);
 
-            const promise = act(async () => {
-                await result.current.mutate('item-123', 0);
+            // Start mutation without awaiting to check loading state
+            act(() => {
+                result.current.mutate('item-123', 0);
             });
 
             // Loading should be true during operation
@@ -98,7 +99,6 @@ describe('Feature: F022 - usePinItem Hook', () => {
             await act(async () => {
                 resolvePin!(undefined);
             });
-            await promise;
 
             expect(result.current.loading).toBe(false);
         });

@@ -1,4 +1,6 @@
 import Database from 'better-sqlite3';
+import * as fs from 'fs';
+import * as path from 'path';
 import { serviceRegistry, SERVICE_KEYS } from '../di/ServiceRegistry';
 import { SqliteSpacesRepository } from '../persistence/sqlite/SqliteSpacesRepository';
 import { SqliteSpaceItemsRepository } from '../persistence/sqlite/SqliteSpaceItemsRepository';
@@ -53,6 +55,12 @@ export class ServiceBootstrap {
         });
 
         serviceRegistry.register(SERVICE_KEYS.DATABASE, () => {
+            // Ensure parent directory exists
+            const dbDir = path.dirname(config.databasePath);
+            if (!fs.existsSync(dbDir)) {
+                fs.mkdirSync(dbDir, { recursive: true });
+            }
+
             const db = new Database(config.databasePath);
             const initializer = new DatabaseInitializer(db);
             initializer.initialize();
@@ -63,6 +71,9 @@ export class ServiceBootstrap {
             const logger = serviceRegistry.get<ILogger>(SERVICE_KEYS.LOGGER);
             return new InMemoryEventBus(logger);
         });
+
+        // Eagerly initialize database to ensure it's created immediately
+        serviceRegistry.get<Database.Database>(SERVICE_KEYS.DATABASE);
 
         serviceRegistry.register(SERVICE_KEYS.SPACES_REPOSITORY, () => {
             const db = serviceRegistry.get<Database.Database>(SERVICE_KEYS.DATABASE);

@@ -22,6 +22,9 @@ const electronAPI = {
         move: (itemId: string, targetSpaceId: string, targetParentId?: string, toPosition?: number) =>
             ipcRenderer.invoke('items:move', itemId, targetSpaceId, targetParentId, toPosition),
         rename: (itemId: string, newName: string) => ipcRenderer.invoke('items:rename', itemId, newName),
+        reorder: (spaceId: string, parentId: string | null, orderedItemIds: string[]) =>
+            ipcRenderer.invoke('items:reorder', spaceId, parentId, orderedItemIds),
+        incrementVisit: (itemId: string) => ipcRenderer.invoke('items:incrementVisit', itemId),
         updateMetadata: (itemId: string, metadata: { faviconUrl?: string | null; description?: string | null; isExpanded?: boolean }) =>
             ipcRenderer.invoke('items:updateMetadata', itemId, metadata),
         pin: (itemId: string, position?: number) => ipcRenderer.invoke('items:pin', itemId, position),
@@ -54,6 +57,13 @@ const electronAPI = {
         extractFavicon: (url: string) => ipcRenderer.invoke('metadata:extractFavicon', url),
     },
 
+    // File system operations
+    fs: {
+        selectFolder: () => ipcRenderer.invoke('fs:selectFolder'),
+        selectFile: () => ipcRenderer.invoke('fs:selectFile'),
+        loadFolderChildren: (folderPath: string) => ipcRenderer.invoke('fs:loadFolderChildren', folderPath),
+    },
+
     // Event listeners
     on: (channel: string, callback: (...args: unknown[]) => void) => {
         const subscription = (_: Electron.IpcRendererEvent, ...args: unknown[]) =>
@@ -65,9 +75,5 @@ const electronAPI = {
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
 
-// Type declaration for renderer
-declare global {
-    interface Window {
-        electronAPI: typeof electronAPI;
-    }
-}
+// Export type for use in renderer
+export type ElectronAPI = typeof electronAPI;
