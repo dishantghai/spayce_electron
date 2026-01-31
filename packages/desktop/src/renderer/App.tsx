@@ -7,7 +7,7 @@ import {
     SpacesScreen,
     BrowserArea,
 } from '@spayce/react-ui';
-import { useClipboardStore, useInlineInputStore, useSelectionStore, useDragDropUiStore } from '@spayce/react-ui/stores';
+import { useClipboardStore, useInlineInputStore, useSelectionStore, useDragDropUiStore, useBrowserUiStore } from '@spayce/react-ui/stores';
 import type { DropPosition, DragData } from '@spayce/react-ui/stores';
 import { collectLinksRecursive, hasLinksRecursive, extractUrlsFromText } from '@spayce/react-ui/utils';
 import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } from '@spayce/react-ui';
@@ -252,6 +252,18 @@ export function App(): React.ReactElement {
         setSidebarInput,
         setCardInput,
     } = useInlineInputStore();
+
+    // Browser visibility control - hide WebContentsView when not on browser tab
+    const { setVisibility: setBrowserVisibility } = useBrowserUiStore();
+
+    // Hide/show browser WebContentsView based on active tab and context menu state
+    // WebContentsView is a native Electron view that renders on top of ALL React/HTML elements,
+    // so we need to hide it when context menus are open to prevent clipping
+    // Note: When floating sidebar is visible, we adjust the WebContentsView bounds instead of hiding it
+    useEffect(() => {
+        const shouldShowBrowser = activeTab === 'browser' && !contextMenu && !rootContextMenu;
+        setBrowserVisibility(shouldShowBrowser);
+    }, [activeTab, contextMenu, rootContextMenu, setBrowserVisibility]);
 
     // Handle sidebar visibility changes (Rule 3 & 4)
     const handleSidebarVisibilityChange = (visible: boolean) => {
@@ -1329,19 +1341,20 @@ export function App(): React.ReactElement {
             }}
         >
             {/* Sidebar with F001 component - position absolute when floating to not take space */}
+            {/* When floating and collapsed, pointer-events:none allows clicks through to content behind */}
+            {/* The hover trigger inside Sidebar has position:fixed and pointer-events:all so it still works */}
             <div
-                style={{
-                    boxShadow: sidebarMode === 'floating' && !sidebarVisible
-                        ? 'none'
-                        : '10px 0 30px -5px rgba(0, 0, 0, 0.5)',
-                    ...(sidebarMode === 'floating' ? {
-                        position: 'absolute',
-                        left: 0,
-                        top: 0,
-                        bottom: 0,
-                        zIndex: 100,
-                        pointerEvents: sidebarVisible ? 'auto' : 'none',
-                    } : {}),
+                style={sidebarMode === 'floating' ? {
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    height: '100%',
+                    zIndex: 100,
+                    pointerEvents: sidebarVisible ? 'auto' : 'none',
+                    boxShadow: sidebarVisible ? '10px 0 30px -5px rgba(0, 0, 0, 0.5)' : 'none',
+                } : {
+                    height: '100%',
+                    boxShadow: '10px 0 30px -5px rgba(0, 0, 0, 0.5)',
                 }}
             >
                 <Sidebar
@@ -1429,8 +1442,11 @@ export function App(): React.ReactElement {
                     />
                 ) : activeTab === 'browser' ? (
                     <BrowserArea
-                        sidebarWidth={sidebarMode === 'fixed' && sidebarVisible ? 320 : 0}
-                        topOffset={0}
+                        // In floating mode: offset depends on sidebar visibility
+                        //   - visible: 320 (leave room for sidebar overlay)
+                        //   - hidden: 0 (browser full width)
+                        // In fixed mode: 0 (DOM layout already positions content after sidebar)
+                        sidebarWidth={sidebarMode === 'floating' && sidebarVisible ? 320 : 0}
                     />
                 ) : (
                     <div style={{
@@ -1480,6 +1496,22 @@ export function App(): React.ReactElement {
                     position={rootContextMenu.position}
                     onItemClick={handleRootContextMenuAction}
                     onClose={() => setRootContextMenu(null)}
+                />
+            )}
+
+            {/* Hover trigger for floating sidebar - rendered at App level to avoid pointer-events issues */}
+            {sidebarMode === 'floating' && !sidebarVisible && (
+                <div
+                    style={{
+                        position: 'fixed',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: 10,
+                        zIndex: 1000,
+                        pointerEvents: 'all',
+                    }}
+                    onMouseEnter={() => setSidebarVisible(true)}
                 />
             )}
         </div>

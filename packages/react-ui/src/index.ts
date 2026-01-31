@@ -83,7 +83,7 @@ export type {
     BrowserErrorOverlayProps,
     BrowserToolbarProps,
     BrowserTabBarProps,
-    BrowserTab,
+    // Note: BrowserTab is exported from ./types (domain type), not from ./components
 } from './components';
 
 // Hooks removed from exports - they require Node.js environment (serviceRegistry)

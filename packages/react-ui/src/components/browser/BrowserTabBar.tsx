@@ -50,18 +50,6 @@ export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
 
     return (
         <div className={`${styles.tabBar} ${className || ''}`}>
-            {/* New tab button */}
-            {onNewTab && (
-                <button
-                    className={styles.newTabButton}
-                    onClick={onNewTab}
-                    aria-label="Open new tab"
-                    title="New tab"
-                >
-                    <Plus size={16} />
-                </button>
-            )}
-
             {/* Tabs */}
             <div className={styles.tabsContainer} role="tablist">
                 {tabs.map((tab) => (
@@ -89,7 +77,6 @@ export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
                                     alt=""
                                     className={styles.faviconImage}
                                     onError={(e) => {
-                                        // Hide broken favicon image
                                         (e.target as HTMLImageElement).style.display = 'none';
                                     }}
                                 />
@@ -101,7 +88,7 @@ export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
                         {/* Title */}
                         <span className={styles.tabTitle}>{tab.title || 'New Tab'}</span>
 
-                        {/* Close button (only show if there's a close handler and more than one tab) */}
+                        {/* Close button */}
                         {onTabClose && tabs.length > 1 && (
                             <button
                                 className={styles.tabCloseButton}
@@ -116,7 +103,19 @@ export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
                 ))}
             </div>
 
-            {/* Spacer to allow tabs to scroll if needed */}
+            {/* New tab button */}
+            {onNewTab && (
+                <button
+                    className={styles.newTabButton}
+                    onClick={onNewTab}
+                    aria-label="Open new tab"
+                    title="New tab"
+                >
+                    <Plus size={16} />
+                </button>
+            )}
+
+            {/* Spacer for drag region */}
             <div className={styles.tabBarSpacer} />
         </div>
     );

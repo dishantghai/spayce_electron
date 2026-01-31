@@ -51,6 +51,7 @@ interface BrowserUiState {
     reload: () => Promise<void>;
     stop: () => Promise<void>;
     updateBounds: (bounds: { x: number; y: number; width: number; height: number }) => void;
+    setVisibility: (visible: boolean) => void;
 
     // State updates (called from IPC events)
     handleLoadingEvent: (viewId: string, isLoading: boolean) => void;
@@ -253,6 +254,16 @@ export const useBrowserUiStore = create<BrowserUiState>((set, get) => ({
         // Fire and forget - no need to await
         getBrowserAPI().setBounds(bounds).catch((error) => {
             console.error('[BrowserUiStore] Set bounds error:', error);
+        });
+    },
+
+    setVisibility: (visible) => {
+        const activeViewId = get().activeViewId;
+        if (!activeViewId) return;
+
+        // Fire and forget - no need to await
+        getBrowserAPI().setVisibility(activeViewId, visible).catch((error) => {
+            console.error('[BrowserUiStore] Set visibility error:', error);
         });
     },
 

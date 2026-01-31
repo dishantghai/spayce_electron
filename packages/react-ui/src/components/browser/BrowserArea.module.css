@@ -1,7 +1,8 @@
 /* BrowserArea - Spec 019: Single Tab Browser MVP */
 
 .browserArea {
-    position: absolute;
+    position: relative;
+    flex: 1;
     background-color: var(--color-bg-dark, #0F0B1A);
     overflow: hidden;
     display: flex;

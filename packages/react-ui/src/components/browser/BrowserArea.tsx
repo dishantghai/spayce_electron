@@ -7,7 +7,11 @@ import { BrowserToolbar } from './BrowserToolbar';
 import styles from './BrowserArea.module.css';
 
 export interface BrowserAreaProps {
-    /** Width of the sidebar in pixels */
+    /**
+     * Additional left offset for the WebContentsView.
+     * - In floating mode: Pass sidebar width (e.g., 320) to leave space for sidebar overlay
+     * - In fixed mode: Pass 0 (DOM layout already positions content after sidebar)
+     */
     sidebarWidth: number;
     /** Height of any top chrome (tab bar, nav bar) in pixels */
     topOffset?: number;
@@ -32,6 +36,9 @@ const TOTAL_CHROME_HEIGHT = TAB_BAR_HEIGHT + TOOLBAR_HEIGHT;
  * 4. Shows error overlay when needed
  * 5. Initializes browser on mount
  */
+// Sidebar animation duration (must match CSS transition in Sidebar.module.css)
+const SIDEBAR_ANIMATION_DURATION = 250;
+
 export function BrowserArea({
     sidebarWidth,
     topOffset = 0,
@@ -39,6 +46,9 @@ export function BrowserArea({
 }: BrowserAreaProps) {
     const contentRef = useRef<HTMLDivElement>(null);
     const [isReady, setIsReady] = useState(false);
+    const boundsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const sidebarAnimationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const prevSidebarWidthRef = useRef<number>(sidebarWidth);
 
     const {
         activeViewId,
@@ -71,22 +81,41 @@ export function BrowserArea({
         }));
     }, [views]);
 
-    // Calculate and send bounds to main process
-    const sendBounds = useCallback(() => {
+    // Calculate and send bounds to main process with debouncing to prevent flickering
+    // sidebarWidth is the additional left offset to apply:
+    // - In floating mode: App passes sidebar width (320) so WebContentsView doesn't cover sidebar
+    // - In fixed mode: App passes 0 (DOM layout already positions content after sidebar)
+    const sendBoundsImmediate = useCallback(() => {
         if (!contentRef.current || !activeViewId) return;
 
         const rect = contentRef.current.getBoundingClientRect();
 
         // Only update if we have valid dimensions
         if (rect.width > 0 && rect.height > 0) {
+            // Use rect.x directly (already correct from DOM layout)
+            // Add sidebarWidth offset only when App tells us to (floating mode)
+            const adjustedX = Math.round(rect.x) + sidebarWidth;
+            const adjustedWidth = Math.round(rect.width) - sidebarWidth;
+
             updateBounds({
-                x: Math.round(rect.x),
+                x: adjustedX,
                 y: Math.round(rect.y),
-                width: Math.round(rect.width),
+                width: Math.max(adjustedWidth, 100), // Minimum width to prevent negative/zero
                 height: Math.round(rect.height),
             });
         }
-    }, [activeViewId, updateBounds]);
+    }, [activeViewId, updateBounds, sidebarWidth]);
+
+    // Debounced version to prevent flickering during rapid sidebar toggling
+    const sendBounds = useCallback(() => {
+        if (boundsUpdateTimeoutRef.current) {
+            clearTimeout(boundsUpdateTimeoutRef.current);
+        }
+        // Small debounce to batch rapid updates (e.g., during sidebar animation)
+        boundsUpdateTimeoutRef.current = setTimeout(() => {
+            sendBoundsImmediate();
+        }, 16); // ~1 frame at 60fps
+    }, [sendBoundsImmediate]);
 
     // Initialize browser and event subscriptions on mount
     useEffect(() => {
@@ -106,6 +135,10 @@ export function BrowserArea({
 
         return () => {
             if (cleanup) cleanup();
+            // Clean up debounce timeout
+            if (boundsUpdateTimeoutRef.current) {
+                clearTimeout(boundsUpdateTimeoutRef.current);
+            }
         };
     }, [initialize]);
 
@@ -138,12 +171,41 @@ export function BrowserArea({
         };
     }, [isReady, sendBounds]);
 
-    // Update bounds when sidebar width or top offset changes
+    // Update bounds when sidebar width changes - with animation delay to prevent flicker
+    useEffect(() => {
+        if (!isReady) return;
+
+        const prevWidth = prevSidebarWidthRef.current;
+        const widthChanged = prevWidth !== sidebarWidth;
+        prevSidebarWidthRef.current = sidebarWidth;
+
+        // If sidebar width changed, delay bounds update to let sidebar animation complete
+        // This prevents the WebContentsView from flickering during the 250ms sidebar transition
+        if (widthChanged) {
+            // Clear any pending animation timeout
+            if (sidebarAnimationTimeoutRef.current) {
+                clearTimeout(sidebarAnimationTimeoutRef.current);
+            }
+
+            // Wait for sidebar animation to complete before updating bounds
+            sidebarAnimationTimeoutRef.current = setTimeout(() => {
+                sendBoundsImmediate();
+            }, SIDEBAR_ANIMATION_DURATION);
+        }
+
+        return () => {
+            if (sidebarAnimationTimeoutRef.current) {
+                clearTimeout(sidebarAnimationTimeoutRef.current);
+            }
+        };
+    }, [sidebarWidth, isReady, sendBoundsImmediate]);
+
+    // Update bounds when top offset changes (immediate, no animation needed)
     useEffect(() => {
         if (isReady) {
             sendBounds();
         }
-    }, [sidebarWidth, topOffset, isReady, sendBounds]);
+    }, [topOffset, isReady, sendBounds]);
 
     // Handlers for tab bar
     const handleTabClick = useCallback((tabId: string) => {
@@ -174,23 +236,24 @@ export function BrowserArea({
     }, [activeViewId, loadURL]);
 
     const handleRetry = useCallback(() => {
-        if (activeView?.url) {
-            clearError();
+        if (activeViewId && activeView?.url) {
+            clearError(activeViewId);
             loadURL(activeView.url);
         }
-    }, [activeView?.url, clearError, loadURL]);
+    }, [activeViewId, activeView?.url, clearError, loadURL]);
 
     const handleGoToGoogle = useCallback(() => {
-        clearError();
+        if (activeViewId) {
+            clearError(activeViewId);
+        }
         loadURL('https://www.google.com');
-    }, [clearError, loadURL]);
+    }, [activeViewId, clearError, loadURL]);
 
     // Show initialization error
     if (initError) {
         return (
             <div
                 className={`${styles.browserArea} ${styles.error} ${className ?? ''}`}
-                style={{ left: sidebarWidth, top: topOffset }}
             >
                 <div className={styles.errorContent}>
                     <h3>Failed to initialize browser</h3>
@@ -211,7 +274,6 @@ export function BrowserArea({
         return (
             <div
                 className={`${styles.browserArea} ${styles.loading} ${className ?? ''}`}
-                style={{ left: sidebarWidth, top: topOffset }}
             >
                 <div className={styles.loadingContent}>
                     <div className={styles.spinner} />
@@ -224,12 +286,6 @@ export function BrowserArea({
     return (
         <div
             className={`${styles.browserArea} ${className ?? ''}`}
-            style={{
-                left: sidebarWidth,
-                top: topOffset,
-                right: 0,
-                bottom: 0,
-            }}
             data-testid="browser-area"
         >
             {/* Tab bar */}
