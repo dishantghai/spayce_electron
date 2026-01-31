@@ -1,4 +1,4 @@
-import { BrowserWindow, WebContentsView } from 'electron';
+import { BrowserWindow, WebContentsView, app } from 'electron';
 
 /**
  * View bounds specification for positioning WebContentsView
@@ -75,8 +75,12 @@ export class BrowserService implements IBrowserService {
     private currentBounds: ViewBounds = { x: 0, y: 0, width: 800, height: 600 };
     private isInitialized = false;
 
+    // Use Firefox user agent - Google doesn't block Firefox in embedded browsers
+    // This is the working solution used by Wexond browser, qutebrowser, and nativefier
+    // See: https://github.com/wexond/browser-base/issues/424
+    // See: https://github.com/qutebrowser/qutebrowser/issues/5182
     private readonly DEFAULT_USER_AGENT =
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15';
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:123.0) Gecko/20100101 Firefox/123.0';
 
     /**
      * Initialize the browser service with the main window
@@ -121,11 +125,14 @@ export class BrowserService implements IBrowserService {
                 webSecurity: true,
                 allowRunningInsecureContent: false,
                 autoplayPolicy: 'user-gesture-required',
-                partition: options.partition,
+                partition: options.partition ?? 'persist:spayce-browser',
             },
         });
 
-        view.webContents.setUserAgent(options.userAgent ?? this.DEFAULT_USER_AGENT);
+        // Set Firefox user agent - Google doesn't block Firefox in embedded browsers
+        const userAgent = options.userAgent ?? this.DEFAULT_USER_AGENT;
+        view.webContents.setUserAgent(userAgent);
+        console.log(`[BrowserService] View ${id} user agent:`, userAgent);
 
         this.setupEventListeners(id, view);
 
@@ -508,7 +515,8 @@ export class BrowserService implements IBrowserService {
         });
 
         webContents.setWindowOpenHandler(({ url }) => {
-            console.log(`[BrowserService] Window open blocked, loading in current view: ${url}`);
+            // Load popup URLs in current view (no special handling needed with Firefox UA)
+            console.log(`[BrowserService] Popup URL, loading in current view: ${url}`);
             this.loadURLInternal(view, url).catch((error) => {
                 console.error(`[BrowserService] Failed to load popup URL: ${error.message}`);
             });

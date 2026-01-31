@@ -5,6 +5,11 @@ import { ServiceBootstrap } from '@spayce/infrastructure';
 import { registerIpcHandlers } from './ipc/handlers';
 import { registerBrowserHandlers } from './ipc/browserHandlers';
 
+// Add Chrome-like command line switches to bypass Google's detection
+// These make Electron behave more like a regular Chrome browser
+app.commandLine.appendSwitch('disable-features', 'OutOfBlinkCors');
+app.commandLine.appendSwitch('disable-site-isolation-trials');
+
 let mainWindow: BrowserWindow | null = null;
 
 // Get the project root directory (spayce_electron/)
