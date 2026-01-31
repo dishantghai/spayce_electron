@@ -1,4 +1,14 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
+import type {
+    ViewBounds,
+    CreateViewOptions,
+    BrowserLoadingEvent,
+    BrowserNavigatedEvent,
+    BrowserTitleEvent,
+    BrowserFaviconEvent,
+    BrowserProgressEvent,
+    BrowserErrorEvent,
+} from './types';
 
 const electronAPI = {
     // Spaces operations
@@ -70,6 +80,75 @@ const electronAPI = {
             callback(...args);
         ipcRenderer.on(channel, subscription);
         return () => ipcRenderer.removeListener(channel, subscription);
+    },
+
+    // Browser operations (Spec 019)
+    browser: {
+        // View management
+        createView: (id: string, options?: CreateViewOptions) =>
+            ipcRenderer.invoke('browser:createView', id, options),
+        destroyView: (id: string) =>
+            ipcRenderer.invoke('browser:destroyView', id),
+        setActiveView: (id: string) =>
+            ipcRenderer.invoke('browser:setActiveView', id),
+        getActiveViewId: () =>
+            ipcRenderer.invoke('browser:getActiveViewId'),
+
+        // Bounds
+        setBounds: (bounds: ViewBounds) =>
+            ipcRenderer.invoke('browser:setBounds', bounds),
+
+        // Navigation
+        loadURL: (id: string, url: string) =>
+            ipcRenderer.invoke('browser:loadURL', id, url),
+        goBack: (id: string) =>
+            ipcRenderer.invoke('browser:goBack', id),
+        goForward: (id: string) =>
+            ipcRenderer.invoke('browser:goForward', id),
+        reload: (id: string) =>
+            ipcRenderer.invoke('browser:reload', id),
+        stop: (id: string) =>
+            ipcRenderer.invoke('browser:stop', id),
+
+        // State
+        getViewState: (id: string) =>
+            ipcRenderer.invoke('browser:getViewState', id),
+        setVisibility: (id: string, visible: boolean) =>
+            ipcRenderer.invoke('browser:setVisibility', id, visible),
+        getViewCount: () =>
+            ipcRenderer.invoke('browser:getViewCount'),
+
+        // Event listeners
+        onLoading: (callback: (data: BrowserLoadingEvent) => void) => {
+            const handler = (_: IpcRendererEvent, data: BrowserLoadingEvent) => callback(data);
+            ipcRenderer.on('browser:loading', handler);
+            return () => ipcRenderer.removeListener('browser:loading', handler);
+        },
+        onNavigated: (callback: (data: BrowserNavigatedEvent) => void) => {
+            const handler = (_: IpcRendererEvent, data: BrowserNavigatedEvent) => callback(data);
+            ipcRenderer.on('browser:navigated', handler);
+            return () => ipcRenderer.removeListener('browser:navigated', handler);
+        },
+        onTitle: (callback: (data: BrowserTitleEvent) => void) => {
+            const handler = (_: IpcRendererEvent, data: BrowserTitleEvent) => callback(data);
+            ipcRenderer.on('browser:title', handler);
+            return () => ipcRenderer.removeListener('browser:title', handler);
+        },
+        onFavicon: (callback: (data: BrowserFaviconEvent) => void) => {
+            const handler = (_: IpcRendererEvent, data: BrowserFaviconEvent) => callback(data);
+            ipcRenderer.on('browser:favicon', handler);
+            return () => ipcRenderer.removeListener('browser:favicon', handler);
+        },
+        onProgress: (callback: (data: BrowserProgressEvent) => void) => {
+            const handler = (_: IpcRendererEvent, data: BrowserProgressEvent) => callback(data);
+            ipcRenderer.on('browser:progress', handler);
+            return () => ipcRenderer.removeListener('browser:progress', handler);
+        },
+        onError: (callback: (data: BrowserErrorEvent) => void) => {
+            const handler = (_: IpcRendererEvent, data: BrowserErrorEvent) => callback(data);
+            ipcRenderer.on('browser:error', handler);
+            return () => ipcRenderer.removeListener('browser:error', handler);
+        },
     },
 };
 

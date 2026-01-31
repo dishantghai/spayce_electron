@@ -1,6 +1,7 @@
 export * from './error';
 export * from './common';
 export * from './spaces';
+export * from './browser';
 
 // Tree components
 export { TreeView, TreeItem, TreeItemIcon } from './TreeView';

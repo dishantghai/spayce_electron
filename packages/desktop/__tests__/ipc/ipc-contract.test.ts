@@ -24,10 +24,15 @@ import { ServiceBootstrap, serviceRegistry, SERVICE_KEYS } from '@spayce/infrast
 describe('IPC Contract', () => {
     describe('Channel Definition Consistency', () => {
         const handlersPath = path.join(DESKTOP_ROOT, 'src', 'main', 'ipc', 'handlers.ts');
+        const browserHandlersPath = path.join(DESKTOP_ROOT, 'src', 'main', 'ipc', 'browserHandlers.ts');
         const preloadPath = path.join(DESKTOP_ROOT, 'src', 'preload', 'index.ts');
 
         it('should have handlers file', () => {
             expect(fs.existsSync(handlersPath)).toBe(true);
+        });
+
+        it('should have browser handlers file', () => {
+            expect(fs.existsSync(browserHandlersPath)).toBe(true);
         });
 
         it('should have preload file', () => {
@@ -35,7 +40,11 @@ describe('IPC Contract', () => {
         });
 
         it('should have matching channels in handlers and preload', () => {
-            const handlerChannels = extractIpcChannelsFromSource(handlersPath);
+            const coreHandlerChannels = extractIpcChannelsFromSource(handlersPath);
+            const browserHandlerChannels = fs.existsSync(browserHandlersPath)
+                ? extractIpcChannelsFromSource(browserHandlersPath)
+                : [];
+            const handlerChannels = [...coreHandlerChannels, ...browserHandlerChannels];
             const preloadChannels = extractIpcChannelsFromSource(preloadPath);
 
             // Channels that are temporarily disabled (not implemented in facade yet)
@@ -56,7 +65,11 @@ describe('IPC Contract', () => {
         });
 
         it('should have all expected channels defined', () => {
-            const handlerChannels = extractIpcChannelsFromSource(handlersPath);
+            const coreHandlerChannels = extractIpcChannelsFromSource(handlersPath);
+            const browserHandlerChannels = fs.existsSync(browserHandlersPath)
+                ? extractIpcChannelsFromSource(browserHandlersPath)
+                : [];
+            const handlerChannels = [...coreHandlerChannels, ...browserHandlerChannels];
 
             for (const expected of EXPECTED_IPC_CHANNELS) {
                 expect(handlerChannels, `Missing expected channel: ${expected.name}`).toContain(expected.name);
@@ -96,6 +109,13 @@ describe('IPC Contract', () => {
 
         it('should have app namespace', () => {
             expect(preloadContent).toContain('app:');
+        });
+
+        it('should have browser namespace', () => {
+            expect(preloadContent).toContain('browser:');
+            expect(preloadContent).toContain('createView:');
+            expect(preloadContent).toContain('loadURL:');
+            expect(preloadContent).toContain('onNavigated:');
         });
 
         it('should have event listener support', () => {

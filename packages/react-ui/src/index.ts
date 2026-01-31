@@ -31,7 +31,7 @@ export {
     DomainErrorBoundary,
     GlobalErrorBoundary,
     ErrorFallback,
-    // Common components  
+    // Common components
     Skeleton,
     // Tree components
     TreeView,
@@ -53,6 +53,12 @@ export {
     getSpaceIconComponent,
     SpacesScreen,
     SpacesBottomBar,
+    // Browser components (Spec 019)
+    BrowserArea,
+    BrowserLoadingBar,
+    BrowserErrorOverlay,
+    BrowserToolbar,
+    BrowserTabBar,
 } from './components';
 
 export type {
@@ -71,6 +77,13 @@ export type {
     SpaceCardProps,
     SpacesScreenProps,
     SpacesBottomBarProps,
+    // Browser component types (Spec 019)
+    BrowserAreaProps,
+    BrowserLoadingBarProps,
+    BrowserErrorOverlayProps,
+    BrowserToolbarProps,
+    BrowserTabBarProps,
+    BrowserTab,
 } from './components';
 
 // Hooks removed from exports - they require Node.js environment (serviceRegistry)

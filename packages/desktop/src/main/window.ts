@@ -24,7 +24,14 @@ export function createMainWindow(): BrowserWindow {
         },
     });
 
-    // Load the renderer - in dev, use Vite server; in prod, use built files
+    return mainWindow;
+}
+
+/**
+ * Load the renderer content into the window
+ * Should be called after all IPC handlers are registered
+ */
+export function loadRenderer(mainWindow: BrowserWindow): void {
     const isDev = !app.isPackaged;
 
     if (isDev) {
@@ -36,6 +43,4 @@ export function createMainWindow(): BrowserWindow {
         console.log('[Spayce] Loading renderer from:', rendererPath);
         mainWindow.loadFile(rendererPath);
     }
-
-    return mainWindow;
 }

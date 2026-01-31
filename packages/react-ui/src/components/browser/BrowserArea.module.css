@@ -1,0 +1,124 @@
+/* BrowserArea - Spec 019: Single Tab Browser MVP */
+
+.browserArea {
+    position: absolute;
+    background-color: var(--color-bg-dark, #0F0B1A);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tab bar - fixed at top */
+.tabBar {
+    flex-shrink: 0;
+}
+
+/* Toolbar - below tab bar */
+.toolbar {
+    flex-shrink: 0;
+}
+
+/* Content area - takes remaining space */
+.content {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+/* Loading state */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.loadingContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md, 16px);
+    color: var(--color-text-secondary, #9CA3AF);
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border-subtle, #2D2640);
+    border-top-color: var(--color-primary, #6D5AE6);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error state */
+.error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.errorContent {
+    text-align: center;
+    padding: var(--spacing-xl, 32px);
+    max-width: 400px;
+}
+
+.errorContent h3 {
+    color: var(--color-text-primary, #FFFFFF);
+    margin: 0 0 var(--spacing-sm, 8px) 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.errorContent p {
+    color: var(--color-text-secondary, #9CA3AF);
+    margin: 0 0 var(--spacing-lg, 24px) 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.retryButton {
+    background-color: var(--color-primary, #6D5AE6);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md, 8px);
+    padding: var(--spacing-sm, 8px) var(--spacing-lg, 24px);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.retryButton:hover {
+    background-color: var(--color-primary-hover, #5B4ACC);
+}
+
+.retryButton:focus-visible {
+    outline: 2px solid var(--color-primary, #6D5AE6);
+    outline-offset: 2px;
+}
+
+/* Placeholder */
+.placeholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary, #6B7280);
+    font-size: 14px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .spinner {
+        animation: none;
+        border-top-color: var(--color-primary, #6D5AE6);
+        border-right-color: var(--color-primary, #6D5AE6);
+    }
+}

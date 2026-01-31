@@ -5,6 +5,7 @@ import {
     ContextMenu,
     Sidebar,
     SpacesScreen,
+    BrowserArea,
 } from '@spayce/react-ui';
 import { useClipboardStore, useInlineInputStore, useSelectionStore, useDragDropUiStore } from '@spayce/react-ui/stores';
 import type { DropPosition, DragData } from '@spayce/react-ui/stores';
@@ -1426,6 +1427,11 @@ export function App(): React.ReactElement {
                         onCopySelected={handleCopySelected}
                         onPasteToSelected={handlePasteToSelected}
                     />
+                ) : activeTab === 'browser' ? (
+                    <BrowserArea
+                        sidebarWidth={sidebarMode === 'fixed' && sidebarVisible ? 320 : 0}
+                        topOffset={0}
+                    />
                 ) : (
                     <div style={{
                         flex: 1,
@@ -1441,9 +1447,7 @@ export function App(): React.ReactElement {
                                     color: SpayceColors.textPrimary,
                                 }}
                             >
-                                {activeTab === 'browser' ? 'Browser View' :
-                                    activeTab === 'workspace' ? 'Workspace View' :
-                                        'Settings'}
+                                {activeTab === 'workspace' ? 'Workspace View' : 'Settings'}
                             </h2>
                             <p
                                 style={{
@@ -1452,9 +1456,7 @@ export function App(): React.ReactElement {
                                     marginTop: 8,
                                 }}
                             >
-                                {activeTab === 'browser' ? 'Web browser content will appear here' :
-                                    activeTab === 'workspace' ? 'Code workspace will appear here' :
-                                        'Application settings'}
+                                {activeTab === 'workspace' ? 'Code workspace will appear here' : 'Application settings'}
                             </p>
                         </div>
                     </div>

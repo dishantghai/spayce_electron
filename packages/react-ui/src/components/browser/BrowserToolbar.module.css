@@ -1,0 +1,173 @@
+/**
+ * BrowserToolbar Styles
+ * Spec 019: Single Tab Browser MVP
+ */
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 12px;
+    background: var(--color-surface-elevated, #1a1625);
+    border-bottom: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+}
+
+/* Navigation buttons group */
+.navButtons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.navButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.navButton:hover:not(:disabled) {
+    background: var(--color-surface-hover, rgba(255, 255, 255, 0.08));
+    color: var(--color-text-primary, #fff);
+}
+
+.navButton:active:not(:disabled) {
+    background: var(--color-surface-active, rgba(255, 255, 255, 0.12));
+}
+
+.navButton:disabled {
+    color: var(--color-text-disabled, rgba(255, 255, 255, 0.3));
+    cursor: not-allowed;
+}
+
+.navButton:focus-visible {
+    outline: 2px solid var(--color-primary, #6D5AE6);
+    outline-offset: 2px;
+}
+
+/* URL bar container */
+.urlBarContainer {
+    flex: 1;
+    min-width: 0;
+}
+
+.urlBar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 32px;
+    padding: 0 12px;
+    background: var(--color-surface, #0f0b1a);
+    border: 1px solid var(--color-border, rgba(255, 255, 255, 0.08));
+    border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.urlBar:focus-within {
+    border-color: var(--color-primary, #6D5AE6);
+    box-shadow: 0 0 0 2px rgba(109, 90, 230, 0.2);
+}
+
+.securityIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.secureIcon {
+    color: var(--color-success, #22c55e);
+}
+
+.insecureIcon {
+    color: var(--color-text-secondary, rgba(255, 255, 255, 0.5));
+}
+
+.urlInput {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--color-text-primary, #fff);
+    font-size: 13px;
+    font-family: inherit;
+    line-height: 1;
+}
+
+.urlInput::placeholder {
+    color: var(--color-text-tertiary, rgba(255, 255, 255, 0.4));
+}
+
+.urlInput:focus {
+    outline: none;
+}
+
+/* Selection styling */
+.urlInput::selection {
+    background: var(--color-primary-light, rgba(109, 90, 230, 0.3));
+}
+
+/* New tab button */
+.newTabButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--color-text-secondary, rgba(255, 255, 255, 0.7));
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.newTabButton:hover {
+    background: var(--color-surface-hover, rgba(255, 255, 255, 0.08));
+    color: var(--color-text-primary, #fff);
+}
+
+.newTabButton:active {
+    background: var(--color-surface-active, rgba(255, 255, 255, 0.12));
+}
+
+.newTabButton:focus-visible {
+    outline: 2px solid var(--color-primary, #6D5AE6);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .toolbar {
+        border-bottom-color: #fff;
+    }
+
+    .urlBar {
+        border-color: #fff;
+    }
+
+    .navButton:disabled {
+        color: #666;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .navButton,
+    .urlBar,
+    .newTabButton {
+        transition: none;
+    }
+}

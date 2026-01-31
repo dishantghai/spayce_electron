@@ -1,0 +1,47 @@
+/* BrowserLoadingBar - Spec 019: Single Tab Browser MVP */
+
+.loadingBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background-color: transparent;
+    z-index: 100;
+    overflow: hidden;
+}
+
+.progress {
+    height: 100%;
+    background-color: var(--color-primary, #6D5AE6);
+    border-radius: 0 1px 1px 0;
+    transition: width 200ms ease-out;
+}
+
+/* Indeterminate animation */
+.indeterminate {
+    animation: indeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes indeterminate {
+    0% {
+        transform: translateX(-100%);
+    }
+    50% {
+        transform: translateX(200%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+/* Reduced motion support - from accessibility-review.md */
+@media (prefers-reduced-motion: reduce) {
+    .progress {
+        transition: none;
+    }
+    .indeterminate {
+        animation: none;
+        width: 100%;
+        opacity: 0.5;
+    }
+}

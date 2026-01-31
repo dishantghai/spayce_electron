@@ -1,8 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { createMainWindow } from './window';
+import { createMainWindow, loadRenderer } from './window';
 import { ServiceBootstrap } from '@spayce/infrastructure';
 import { registerIpcHandlers } from './ipc/handlers';
+import { registerBrowserHandlers } from './ipc/browserHandlers';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -40,8 +41,14 @@ async function initialize() {
         // Register IPC handlers
         registerIpcHandlers();
 
-        // Create main window
+        // Create main window (but don't load content yet)
         mainWindow = createMainWindow();
+
+        // Register browser IPC handlers (requires mainWindow)
+        registerBrowserHandlers(mainWindow);
+
+        // Now load the renderer - after all IPC handlers are registered
+        loadRenderer(mainWindow);
     } catch (error) {
         console.error('Failed to initialize app:', error);
         app.quit();
@@ -59,6 +66,8 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         mainWindow = createMainWindow();
+        registerBrowserHandlers(mainWindow);
+        loadRenderer(mainWindow);
     }
 });
 
