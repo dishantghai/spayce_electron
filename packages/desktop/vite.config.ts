@@ -10,6 +10,10 @@ export default defineConfig({
         outDir: '../../dist/renderer',
         emptyOutDir: true,
         rollupOptions: {
+            input: {
+                main: path.resolve(__dirname, 'src/renderer/index.html'),
+                sidebar: path.resolve(__dirname, 'src/renderer/sidebar.html'),
+            },
             external: [
                 'better-sqlite3',
                 'electron',

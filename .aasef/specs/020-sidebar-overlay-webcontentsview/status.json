@@ -1,0 +1,13 @@
+{
+  "id": "020",
+  "title": "Sidebar Overlay WebContentsView",
+  "status": "draft",
+  "priority": "high",
+  "created": "2026-01-31T00:00:00Z",
+  "updated": "2026-01-31T00:00:00Z",
+  "dependencies": ["017", "019", "002"],
+  "blocks": [],
+  "estimated_duration": "3-4 days",
+  "tags": ["browser", "sidebar", "overlay", "webcontentsview", "electron"],
+  "notes": "Implements true sidebar overlay using multiple WebContentsViews with z-ordering. Solves fundamental Electron constraint where WebContentsView renders above HTML content."
+}

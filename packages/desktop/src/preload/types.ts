@@ -133,3 +133,69 @@ export interface BrowserAPI {
     onProgress: (callback: (data: BrowserProgressEvent) => void) => () => void;
     onError: (callback: (data: BrowserErrorEvent) => void) => () => void;
 }
+
+/**
+ * Sidebar Overlay API Types
+ * Spec 020: Sidebar Overlay WebContentsView
+ */
+
+/**
+ * State synced to sidebar overlay
+ * Contains full Space objects with all items for complete UI rendering
+ */
+export interface SidebarStatePayload {
+    spaces: unknown[]; // Full Space[] objects with rootItems
+    activeSpaceId: string | null;
+    activeSpaceIndex: number;
+    selectedItemId: string | null;
+    expandedIds: string[];
+    sidebarMode: 'floating' | 'fixed';
+    activeTab: string;
+    userName?: string;
+}
+
+/**
+ * Action from sidebar overlay
+ */
+export interface SidebarActionPayload {
+    type:
+        | 'SELECT_SPACE'
+        | 'TAB_CHANGE'
+        | 'MODE_TOGGLE'
+        | 'ITEM_CLICK'
+        | 'ITEM_CONTEXT_MENU'
+        | 'PINNED_ITEM_CONTEXT_MENU'
+        | 'CREATE_SPACE'
+        | 'ADD_FOLDER'
+        | 'ADD_LINK'
+        | 'CREATE_ITEM'
+        | 'RENAME_ITEM'
+        | 'EDIT_SPACE'
+        | 'SETTINGS_CLICK'
+        | 'FOCUS_CHANGE'
+        | 'COPY_SELECTED'
+        | 'PASTE_TO_SELECTED'
+        | 'ITEM_DROP'
+        | 'ITEM_MOVE_ARBORIST'
+        | 'ROOT_CONTEXT_MENU'
+        | 'REORDER_SPACES'
+        | 'PIN_ITEM'
+        | 'REORDER_PINS'
+        | 'EXPANDED_IDS_CHANGE';
+    payload: unknown;
+}
+
+/**
+ * Sidebar overlay API exposed to renderer
+ */
+export interface SidebarOverlayAPI {
+    show: () => Promise<{ success: boolean; isVisible: boolean; error?: string }>;
+    hide: () => Promise<{ success: boolean; isVisible: boolean; error?: string }>;
+    hideInstant: () => Promise<{ success: boolean; isVisible: boolean; error?: string }>;
+    toggle: () => Promise<{ success: boolean; isVisible: boolean; error?: string }>;
+    getVisibility: () => Promise<{ success: boolean; isVisible: boolean }>;
+    syncState: (state: SidebarStatePayload) => void;
+    sendAction: (action: SidebarActionPayload) => void;
+    onStateUpdate: (callback: (state: SidebarStatePayload) => void) => () => void;
+    onAction: (callback: (action: SidebarActionPayload) => void) => () => void;
+}

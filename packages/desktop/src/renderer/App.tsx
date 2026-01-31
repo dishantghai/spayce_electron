@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
     SpayceColors,
     SpaceItemType,
@@ -221,6 +221,17 @@ export function App(): React.ReactElement {
     const [sidebarMode, setSidebarMode] = useState<SidebarMode>('fixed');
     const [sidebarVisible, setSidebarVisible] = useState(true);
     const [activeTab, setActiveTab] = useState<SidebarTabId>('spaces');
+
+    // Sidebar overlay state (Spec 020)
+    // When in floating mode with browser tab, use WebContentsView overlay instead of React sidebar
+    const useOverlayMode = sidebarMode === 'floating' && activeTab === 'browser';
+    const prevUseOverlayMode = useRef(useOverlayMode);
+
+    // Track overlay transition state to prevent double sidebar
+    const [isOverlayTransitioning, setIsOverlayTransitioning] = useState(false);
+    const [overlayActuallyVisible, setOverlayActuallyVisible] = useState(false);
+    const [isModeSwitch, setIsModeSwitch] = useState(false);
+
     // Focus context: 'sidebar' or 'spacesScreen'
     // Rule 0: Default to 'sidebar' on app open
     const [focusContext, setFocusContext] = useState<'sidebar' | 'spacesScreen'>('sidebar');
@@ -266,8 +277,11 @@ export function App(): React.ReactElement {
     }, [activeTab, contextMenu, rootContextMenu, setBrowserVisibility]);
 
     // Handle sidebar visibility changes (Rule 3 & 4)
-    const handleSidebarVisibilityChange = (visible: boolean) => {
+    // Note: Overlay show/hide is handled automatically by the overlay visibility useEffect
+    const handleSidebarVisibilityChange = useCallback((visible: boolean) => {
         setSidebarVisible(visible);
+
+        // Update focus context when sidebar visibility changes
         if (sidebarMode === 'floating') {
             if (visible) {
                 setFocusContext('sidebar');
@@ -277,7 +291,123 @@ export function App(): React.ReactElement {
                 }
             }
         }
-    };
+    }, [sidebarMode, activeTab]);
+
+    // Handle overlay visibility based on useOverlayMode (Spec 020)
+    // Hide overlay when not in overlay mode (fixed mode or non-browser tab)
+    useEffect(() => {
+        if (!window.electronAPI?.sidebarOverlay) return;
+
+        const handleOverlayVisibility = async () => {
+            // Detect if this is a transition OUT of overlay mode (to fixed or other tabs)
+            const wasOverlayMode = prevUseOverlayMode.current;
+            const isTransitioningOut = wasOverlayMode === true && useOverlayMode === false;
+
+            try {
+                // CRITICAL: Sync state FIRST before show/hide to ensure mouse tracking state is correct
+                // This prevents the race condition where hide() restarts tracking before mode is updated
+                const expandedIdsForSpace = Array.from(
+                    sidebarExpandedIdsMap.get(spaces[sidebarActiveSpaceIndex]?.id) || []
+                );
+
+                window.electronAPI.sidebarOverlay.syncState({
+                    spaces: spaces as unknown[],
+                    activeSpaceId: spaces[sidebarActiveSpaceIndex]?.id || null,
+                    activeSpaceIndex: sidebarActiveSpaceIndex,
+                    selectedItemId: sidebarSelectedId,
+                    expandedIds: expandedIdsForSpace,
+                    sidebarMode,
+                    activeTab,
+                    userName: 'dishant ghai',
+                });
+
+                // Now show/hide after state is synced
+                if (useOverlayMode && sidebarVisible) {
+                    // In overlay mode and sidebar should be visible - show it
+                    setIsOverlayTransitioning(true);
+                    await window.electronAPI.sidebarOverlay.show();
+                    setOverlayActuallyVisible(true);
+                    setIsOverlayTransitioning(false);
+                    console.log('[App] Overlay shown (mode active, sidebar visible)');
+                } else if (isTransitioningOut && sidebarVisible) {
+                    // Transitioning out with sidebar still visible: hide instantly FIRST, then show React sidebar
+                    console.log('[App] Transitioning out of overlay mode - hiding overlay instantly');
+                    await window.electronAPI.sidebarOverlay.hideInstant();
+                    setOverlayActuallyVisible(false);
+                    // Now allow React sidebar to show
+                    setIsModeSwitch(true);
+                    setIsOverlayTransitioning(false);
+                    console.log('[App] Overlay hidden instantly, React sidebar can now show');
+                } else {
+                    // Normal hide with animation (user closed sidebar with X or Cmd+B)
+                    setIsOverlayTransitioning(true);
+                    await window.electronAPI.sidebarOverlay.hide();
+                    setOverlayActuallyVisible(false);
+                    setIsOverlayTransitioning(false);
+                    console.log('[App] Overlay hidden with animation');
+                }
+            } catch (error) {
+                console.error('[App] Failed to toggle overlay visibility:', error);
+                setOverlayActuallyVisible(false);
+                setIsOverlayTransitioning(false);
+            } finally {
+                // Keep isModeSwitch true briefly to allow React sidebar to render
+                if (isTransitioningOut) {
+                    setTimeout(() => {
+                        setIsModeSwitch(false);
+                    }, 50);
+                }
+
+                // Update previous state
+                prevUseOverlayMode.current = useOverlayMode;
+            }
+        };
+
+        handleOverlayVisibility();
+    }, [useOverlayMode, sidebarVisible, sidebarMode, activeTab, spaces, sidebarActiveSpaceIndex, sidebarSelectedId, sidebarExpandedIdsMap]);
+
+    // Sync state changes to sidebar overlay (Spec 020)
+    // This runs whenever content changes (spaces, selections, expanded state, etc.)
+    useEffect(() => {
+        if (!window.electronAPI?.sidebarOverlay || !useOverlayMode) return;
+
+        const expandedIdsForSpace = Array.from(
+            sidebarExpandedIdsMap.get(spaces[sidebarActiveSpaceIndex]?.id) || []
+        );
+
+        window.electronAPI.sidebarOverlay.syncState({
+            spaces: spaces as unknown[],
+            activeSpaceId: spaces[sidebarActiveSpaceIndex]?.id || null,
+            activeSpaceIndex: sidebarActiveSpaceIndex,
+            selectedItemId: sidebarSelectedId,
+            expandedIds: expandedIdsForSpace,
+            sidebarMode,
+            activeTab,
+            userName: 'dishant ghai',
+        });
+    }, [
+        useOverlayMode,
+        spaces,
+        sidebarActiveSpaceIndex,
+        sidebarSelectedId,
+        sidebarExpandedIdsMap,
+        sidebarMode,
+        activeTab,
+    ]);
+
+    // Keyboard shortcut: Cmd+B to toggle sidebar (Spec 020)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Cmd+B (Mac) or Ctrl+B (Windows/Linux) to toggle sidebar
+            if ((e.metaKey || e.ctrlKey) && e.key === 'b') {
+                e.preventDefault();
+                handleSidebarVisibilityChange(!sidebarVisible);
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [sidebarVisible, handleSidebarVisibilityChange]);
 
     const handleItemClick = (item: SpaceItem, spaceId: string) => {
         console.log('Item clicked:', item.name, 'in space:', spaceId);
@@ -523,9 +653,10 @@ export function App(): React.ReactElement {
         setContextMenu(null);
     };
 
-    const handleModeToggle = () => {
+    const handleModeToggle = useCallback(() => {
         setSidebarMode((prev: SidebarMode) => (prev === 'fixed' ? 'floating' : 'fixed'));
-    };
+        // Note: Overlay visibility is handled automatically by the useEffect watching useOverlayMode
+    }, []);
 
     const handleAddFolder = async (spaceId: string, parentId?: string | null) => {
         // Use inline input store - determine context based on focus
@@ -1301,6 +1432,213 @@ export function App(): React.ReactElement {
         }
     }, [refetch]);
 
+    // Handle actions from sidebar overlay (Spec 020)
+    // This must be AFTER all handler functions are defined
+    useEffect(() => {
+        if (!window.electronAPI?.sidebarOverlay) return;
+
+        const unsubscribe = window.electronAPI.sidebarOverlay.onAction((action: any) => {
+            console.log('[App] Overlay action received:', action.type, action.payload);
+
+            switch (action.type) {
+                case 'SELECT_SPACE':
+                    setSidebarActiveSpaceIndex(action.payload.index);
+                    setFocusContext('sidebar');
+                    break;
+
+                case 'TAB_CHANGE':
+                    setActiveTab(action.payload.tab);
+                    break;
+
+                case 'MODE_TOGGLE':
+                    handleModeToggle();
+                    break;
+
+                case 'ITEM_CLICK':
+                    setSidebarSelectedId(action.payload.itemId);
+                    setFocusContext('sidebar');
+                    break;
+
+                case 'ITEM_CONTEXT_MENU':
+                    // Find item and trigger context menu
+                    {
+                        const space = spaces.find((s) => s.id === action.payload.spaceId);
+                        if (space) {
+                            const findItem = (items: SpaceItem[]): SpaceItem | null => {
+                                for (const item of items) {
+                                    if (item.id === action.payload.itemId) return item;
+                                    if (item.children) {
+                                        const found = findItem(item.children);
+                                        if (found) return found;
+                                    }
+                                }
+                                return null;
+                            };
+                            const item = findItem(space.rootItems);
+                            if (item) {
+                                setSidebarSelectedId(item.id);
+                                setContextMenu({
+                                    item,
+                                    spaceId: action.payload.spaceId,
+                                    position: { x: action.payload.x, y: action.payload.y },
+                                    context: 'sidebar',
+                                });
+                            }
+                        }
+                    }
+                    break;
+
+                case 'PINNED_ITEM_CONTEXT_MENU':
+                    // Same as ITEM_CONTEXT_MENU but with pins-grid context
+                    {
+                        const space = spaces.find((s) => s.id === action.payload.spaceId);
+                        if (space) {
+                            const findItem = (items: SpaceItem[]): SpaceItem | null => {
+                                for (const item of items) {
+                                    if (item.id === action.payload.itemId) return item;
+                                    if (item.children) {
+                                        const found = findItem(item.children);
+                                        if (found) return found;
+                                    }
+                                }
+                                return null;
+                            };
+                            const item = findItem(space.rootItems);
+                            if (item) {
+                                setSidebarSelectedId(item.id);
+                                setContextMenu({
+                                    item,
+                                    spaceId: action.payload.spaceId,
+                                    position: { x: action.payload.x, y: action.payload.y },
+                                    context: 'pins-grid',
+                                });
+                            }
+                        }
+                    }
+                    break;
+
+                case 'CREATE_SPACE':
+                    handleCreateSpace(action.payload);
+                    break;
+
+                case 'ADD_FOLDER':
+                    handleAddFolder(action.payload.spaceId);
+                    break;
+
+                case 'ADD_LINK':
+                    handleAddLink(action.payload.spaceId);
+                    break;
+
+                case 'CREATE_ITEM':
+                    handleCreateItem(action.payload);
+                    break;
+
+                case 'RENAME_ITEM':
+                    handleRenameItem(action.payload.itemId, action.payload.newName);
+                    break;
+
+                case 'EDIT_SPACE':
+                    {
+                        const space = spaces.find((s) => s.id === action.payload.spaceId);
+                        if (space) {
+                            handleUpdateSpace(space, {
+                                name: action.payload.name,
+                                iconName: action.payload.iconName,
+                                accentColor: action.payload.accentColor,
+                            });
+                        }
+                    }
+                    break;
+
+                case 'SETTINGS_CLICK':
+                    handleSettingsClick();
+                    break;
+
+                case 'COPY_SELECTED':
+                    handleCopySelected(action.payload.focusedItemId);
+                    break;
+
+                case 'PASTE_TO_SELECTED':
+                    handlePasteToSelected(action.payload.focusedItemId);
+                    break;
+
+                case 'ITEM_DROP':
+                    handleItemDrop(
+                        action.payload.itemId,
+                        action.payload.targetId,
+                        action.payload.position,
+                        action.payload.spaceId
+                    );
+                    break;
+
+                case 'ITEM_MOVE_ARBORIST':
+                    handleItemMoveArborist(
+                        action.payload.draggedItemId,
+                        action.payload.newParentId,
+                        action.payload.newIndex,
+                        action.payload.spaceId
+                    );
+                    break;
+
+                case 'ROOT_CONTEXT_MENU':
+                    setRootContextMenu({
+                        spaceId: action.payload.spaceId,
+                        position: { x: action.payload.x, y: action.payload.y },
+                    });
+                    break;
+
+                case 'REORDER_SPACES':
+                    handleReorderSpaces(action.payload.oldIndex, action.payload.newIndex);
+                    break;
+
+                case 'PIN_ITEM':
+                    handlePinItem(action.payload.itemId, action.payload.position, action.payload.spaceId);
+                    break;
+
+                case 'REORDER_PINS':
+                    handleReorderPins(action.payload.oldIndex, action.payload.newIndex, action.payload.spaceId);
+                    break;
+
+                case 'EXPANDED_IDS_CHANGE':
+                    // Update expanded IDs from overlay
+                    {
+                        const activeSpaceId = spaces[sidebarActiveSpaceIndex]?.id;
+                        if (activeSpaceId) {
+                            setSidebarExpandedIdsMap((prev) => {
+                                const newMap = new Map(prev);
+                                newMap.set(activeSpaceId, new Set(action.payload.expandedIds));
+                                return newMap;
+                            });
+                        }
+                    }
+                    break;
+
+                default:
+                    console.warn('[App] Unknown overlay action:', action.type);
+            }
+        });
+
+        return unsubscribe;
+    }, [
+        spaces,
+        sidebarActiveSpaceIndex,
+        handleModeToggle,
+        handleCreateSpace,
+        handleAddFolder,
+        handleAddLink,
+        handleCreateItem,
+        handleRenameItem,
+        handleUpdateSpace,
+        handleSettingsClick,
+        handleCopySelected,
+        handlePasteToSelected,
+        handleItemDrop,
+        handleItemMoveArborist,
+        handleReorderSpaces,
+        handlePinItem,
+        handleReorderPins,
+    ]);
+
     // Show loading state only on initial load (not during refetch)
     // This prevents Sidebar from unmounting/remounting during refetch
     // The useSpaces hook now uses isRefetching flag for refetches, keeping loading=false
@@ -1343,6 +1681,10 @@ export function App(): React.ReactElement {
             {/* Sidebar with F001 component - position absolute when floating to not take space */}
             {/* When floating and collapsed, pointer-events:none allows clicks through to content behind */}
             {/* The hover trigger inside Sidebar has position:fixed and pointer-events:all so it still works */}
+            {/* Spec 020: In overlay mode (floating + browser tab), React sidebar is hidden - WebContentsView overlay is used */}
+            {/* CRITICAL: Wait for overlay to fully hide before showing React sidebar to prevent double sidebar */}
+            {/* EXCEPTION: During mode switch (overlay → fixed), show immediately for seamless transition */}
+            {!useOverlayMode && (isModeSwitch || (!isOverlayTransitioning && !overlayActuallyVisible)) && (
             <div
                 style={sidebarMode === 'floating' ? {
                     position: 'absolute',
@@ -1396,6 +1738,7 @@ export function App(): React.ReactElement {
                     onExpandedIdsMapChange={setSidebarExpandedIdsMap}
                 />
             </div>
+            )}
 
             {/* Main content area */}
             <main
@@ -1442,11 +1785,11 @@ export function App(): React.ReactElement {
                     />
                 ) : activeTab === 'browser' ? (
                     <BrowserArea
-                        // In floating mode: offset depends on sidebar visibility
-                        //   - visible: 320 (leave room for sidebar overlay)
-                        //   - hidden: 0 (browser full width)
+                        // Spec 020: In overlay mode, sidebar is a WebContentsView on top of browser
+                        // Browser NEVER moves - always full width (sidebarWidth=0)
                         // In fixed mode: 0 (DOM layout already positions content after sidebar)
-                        sidebarWidth={sidebarMode === 'floating' && sidebarVisible ? 320 : 0}
+                        // The useOverlayMode ensures browser stays stable when sidebar opens/closes
+                        sidebarWidth={0}
                     />
                 ) : (
                     <div style={{
@@ -1500,7 +1843,8 @@ export function App(): React.ReactElement {
             )}
 
             {/* Hover trigger for floating sidebar - rendered at App level to avoid pointer-events issues */}
-            {sidebarMode === 'floating' && !sidebarVisible && (
+            {/* Only for React sidebar (non-overlay mode) - overlay mode uses native mouse tracking */}
+            {sidebarMode === 'floating' && !sidebarVisible && !useOverlayMode && (
                 <div
                     style={{
                         position: 'fixed',
@@ -1511,7 +1855,7 @@ export function App(): React.ReactElement {
                         zIndex: 1000,
                         pointerEvents: 'all',
                     }}
-                    onMouseEnter={() => setSidebarVisible(true)}
+                    onMouseEnter={() => handleSidebarVisibilityChange(true)}
                 />
             )}
         </div>

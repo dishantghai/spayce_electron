@@ -4,6 +4,7 @@ import { createMainWindow, loadRenderer } from './window';
 import { ServiceBootstrap } from '@spayce/infrastructure';
 import { registerIpcHandlers } from './ipc/handlers';
 import { registerBrowserHandlers } from './ipc/browserHandlers';
+import { registerSidebarOverlayHandlers } from './ipc/sidebarOverlayHandlers';
 
 // Add Chrome-like command line switches to bypass Google's detection
 // These make Electron behave more like a regular Chrome browser
@@ -52,6 +53,9 @@ async function initialize() {
         // Register browser IPC handlers (requires mainWindow)
         registerBrowserHandlers(mainWindow);
 
+        // Register sidebar overlay IPC handlers (Spec 020)
+        registerSidebarOverlayHandlers(mainWindow);
+
         // Now load the renderer - after all IPC handlers are registered
         loadRenderer(mainWindow);
     } catch (error) {
@@ -72,6 +76,7 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         mainWindow = createMainWindow();
         registerBrowserHandlers(mainWindow);
+        registerSidebarOverlayHandlers(mainWindow);
         loadRenderer(mainWindow);
     }
 });

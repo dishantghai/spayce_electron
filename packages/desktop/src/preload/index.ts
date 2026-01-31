@@ -8,6 +8,8 @@ import type {
     BrowserFaviconEvent,
     BrowserProgressEvent,
     BrowserErrorEvent,
+    SidebarStatePayload,
+    SidebarActionPayload,
 } from './types';
 
 const electronAPI = {
@@ -148,6 +150,39 @@ const electronAPI = {
             const handler = (_: IpcRendererEvent, data: BrowserErrorEvent) => callback(data);
             ipcRenderer.on('browser:error', handler);
             return () => ipcRenderer.removeListener('browser:error', handler);
+        },
+    },
+
+    // Sidebar overlay operations (Spec 020)
+    sidebarOverlay: {
+        show: () => ipcRenderer.invoke('sidebar-overlay:show'),
+        hide: () => ipcRenderer.invoke('sidebar-overlay:hide'),
+        hideInstant: () => ipcRenderer.invoke('sidebar-overlay:hideInstant'),
+        toggle: () => ipcRenderer.invoke('sidebar-overlay:toggle'),
+        getVisibility: () => ipcRenderer.invoke('sidebar-overlay:getVisibility'),
+
+        // Sync state from main renderer to sidebar overlay
+        syncState: (state: SidebarStatePayload) => {
+            ipcRenderer.send('sidebar-overlay:sync-state', state);
+        },
+
+        // Forward action from sidebar overlay to main renderer
+        sendAction: (action: SidebarActionPayload) => {
+            ipcRenderer.send('sidebar-overlay:action', action);
+        },
+
+        // Listen for state updates (sidebar overlay only)
+        onStateUpdate: (callback: (state: SidebarStatePayload) => void) => {
+            const handler = (_: IpcRendererEvent, state: SidebarStatePayload) => callback(state);
+            ipcRenderer.on('sidebar:state-update', handler);
+            return () => ipcRenderer.removeListener('sidebar:state-update', handler);
+        },
+
+        // Listen for actions (main renderer only)
+        onAction: (callback: (action: SidebarActionPayload) => void) => {
+            const handler = (_: IpcRendererEvent, action: SidebarActionPayload) => callback(action);
+            ipcRenderer.on('sidebar:action', handler);
+            return () => ipcRenderer.removeListener('sidebar:action', handler);
         },
     },
 };
