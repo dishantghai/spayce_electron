@@ -85,15 +85,19 @@ function SidebarOverlayApp() {
     }, [sendAction]);
 
     const handleModeToggle = useCallback(() => {
+        console.log('[SidebarOverlay] Mode toggle clicked');
         sendAction('MODE_TOGGLE', {});
     }, [sendAction]);
 
     const handleVisibilityChange = useCallback((visible: boolean) => {
-        if (!visible) {
-            // Hide sidebar overlay
-            window.electronAPI?.sidebarOverlay.hide();
-        }
-    }, []);
+        console.log('[SidebarOverlay] Visibility change requested:', visible, 'mode:', sidebarMode);
+
+        // In overlay context, we DON'T manage visibility via mouseleave
+        // because the overlay is managed by the main App's overlay visibility effect
+        // Only handle explicit close button clicks (which go through handleClose instead)
+        // This prevents spurious visibility changes during mode transitions
+        // NO-OP: visibility is managed externally
+    }, [sidebarMode]);
 
     const handleItemClick = useCallback((item: SpaceItem, spaceId: string) => {
         sendAction('ITEM_CLICK', { itemId: item.id, spaceId });

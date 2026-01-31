@@ -226,11 +226,15 @@ export function App(): React.ReactElement {
     // When in floating mode with browser tab, use WebContentsView overlay instead of React sidebar
     const useOverlayMode = sidebarMode === 'floating' && activeTab === 'browser';
     const prevUseOverlayMode = useRef(useOverlayMode);
+    const prevSidebarMode = useRef(sidebarMode);
 
     // Track overlay transition state to prevent double sidebar
     const [isOverlayTransitioning, setIsOverlayTransitioning] = useState(false);
     const [overlayActuallyVisible, setOverlayActuallyVisible] = useState(false);
     const [isModeSwitch, setIsModeSwitch] = useState(false);
+
+    // Track what the React sidebar visibility should be during mode switches
+    const [reactSidebarVisible, setReactSidebarVisible] = useState(sidebarVisible);
 
     // Focus context: 'sidebar' or 'spacesScreen'
     // Rule 0: Default to 'sidebar' on app open
@@ -293,6 +297,14 @@ export function App(): React.ReactElement {
         }
     }, [sidebarMode, activeTab]);
 
+    // Sync reactSidebarVisible with sidebarVisible, except during mode switches
+    useEffect(() => {
+        // When NOT transitioning between modes, just mirror sidebarVisible
+        if (!isModeSwitch) {
+            setReactSidebarVisible(sidebarVisible);
+        }
+    }, [sidebarVisible, isModeSwitch]);
+
     // Handle overlay visibility based on useOverlayMode (Spec 020)
     // Hide overlay when not in overlay mode (fixed mode or non-browser tab)
     useEffect(() => {
@@ -301,16 +313,36 @@ export function App(): React.ReactElement {
         const handleOverlayVisibility = async () => {
             // Detect if this is a transition OUT of overlay mode (to fixed or other tabs)
             const wasOverlayMode = prevUseOverlayMode.current;
+            const wasSidebarMode = prevSidebarMode.current;
             const isTransitioningOut = wasOverlayMode === true && useOverlayMode === false;
+            const isFloatingToFixed = wasSidebarMode === 'floating' && sidebarMode === 'fixed';
+
+            // When transitioning from floating to fixed with sidebar visible, keep React sidebar visible
+            console.log('[App] Overlay visibility check:', {
+                wasOverlayMode,
+                useOverlayMode,
+                wasSidebarMode,
+                sidebarMode,
+                isTransitioningOut,
+                isFloatingToFixed,
+                sidebarVisible,
+                reactSidebarVisible,
+            });
+
+            // CRITICAL: Set React sidebar visibility BEFORE hiding overlay
+            if (isFloatingToFixed) {
+                // When switching to fixed mode, preserve current sidebar visibility
+                setReactSidebarVisible(sidebarVisible);
+                console.log('[App] Floating→Fixed: setting React sidebar visible=', sidebarVisible);
+            }
 
             try {
-                // CRITICAL: Sync state FIRST before show/hide to ensure mouse tracking state is correct
-                // This prevents the race condition where hide() restarts tracking before mode is updated
+                // Build state payload
                 const expandedIdsForSpace = Array.from(
                     sidebarExpandedIdsMap.get(spaces[sidebarActiveSpaceIndex]?.id) || []
                 );
 
-                window.electronAPI.sidebarOverlay.syncState({
+                const statePayload = {
                     spaces: spaces as unknown[],
                     activeSpaceId: spaces[sidebarActiveSpaceIndex]?.id || null,
                     activeSpaceIndex: sidebarActiveSpaceIndex,
@@ -319,27 +351,42 @@ export function App(): React.ReactElement {
                     sidebarMode,
                     activeTab,
                     userName: 'dishant ghai',
-                });
+                };
 
-                // Now show/hide after state is synced
+                // Handle different visibility scenarios
                 if (useOverlayMode && sidebarVisible) {
                     // In overlay mode and sidebar should be visible - show it
+                    // Sync state and show overlay
+                    window.electronAPI.sidebarOverlay.syncState(statePayload);
                     setIsOverlayTransitioning(true);
                     await window.electronAPI.sidebarOverlay.show();
                     setOverlayActuallyVisible(true);
                     setIsOverlayTransitioning(false);
                     console.log('[App] Overlay shown (mode active, sidebar visible)');
-                } else if (isTransitioningOut && sidebarVisible) {
-                    // Transitioning out with sidebar still visible: hide instantly FIRST, then show React sidebar
-                    console.log('[App] Transitioning out of overlay mode - hiding overlay instantly');
+                } else if (isTransitioningOut) {
+                    // Transitioning out: hide overlay instantly WITHOUT syncing the mode change first
+                    // This prevents the overlay's Sidebar from re-rendering with mode='fixed' causing visual glitches
+                    console.log('[App] Transitioning out - hiding overlay instantly WITHOUT state sync');
+
+                    // Hide overlay first
                     await window.electronAPI.sidebarOverlay.hideInstant();
                     setOverlayActuallyVisible(false);
-                    // Now allow React sidebar to show
+
+                    // NOW sync state to disable mouse tracking (after overlay is hidden)
+                    window.electronAPI.sidebarOverlay.syncState(statePayload);
+                    console.log('[App] State synced AFTER hide to disable mouse tracking');
+
+                    // Now allow React sidebar to show (with proper visibility)
+                    if (sidebarVisible) {
+                        setReactSidebarVisible(true);
+                    }
                     setIsModeSwitch(true);
                     setIsOverlayTransitioning(false);
-                    console.log('[App] Overlay hidden instantly, React sidebar can now show');
+                    console.log('[App] React sidebar will show with visible=', sidebarVisible);
                 } else {
                     // Normal hide with animation (user closed sidebar with X or Cmd+B)
+                    // Sync state for mouse tracking, then hide with animation
+                    window.electronAPI.sidebarOverlay.syncState(statePayload);
                     setIsOverlayTransitioning(true);
                     await window.electronAPI.sidebarOverlay.hide();
                     setOverlayActuallyVisible(false);
@@ -360,6 +407,7 @@ export function App(): React.ReactElement {
 
                 // Update previous state
                 prevUseOverlayMode.current = useOverlayMode;
+                prevSidebarMode.current = sidebarMode;
             }
         };
 
@@ -654,9 +702,27 @@ export function App(): React.ReactElement {
     };
 
     const handleModeToggle = useCallback(() => {
-        setSidebarMode((prev: SidebarMode) => (prev === 'fixed' ? 'floating' : 'fixed'));
-        // Note: Overlay visibility is handled automatically by the useEffect watching useOverlayMode
-    }, []);
+        console.log('[App] handleModeToggle called, current mode:', sidebarMode, 'visible:', sidebarVisible);
+
+        setSidebarMode((prev: SidebarMode) => {
+            const newMode = prev === 'fixed' ? 'floating' : 'fixed';
+            console.log('[App] Mode toggle:', prev, '→', newMode);
+
+            // When switching FROM fixed TO floating, collapse the sidebar
+            // This matches Arc browser behavior: unpinning collapses the sidebar
+            if (prev === 'fixed' && newMode === 'floating') {
+                setSidebarVisible(false);
+                console.log('[App] Fixed→Floating: collapsing sidebar');
+            }
+
+            // When switching FROM floating TO fixed, keep current visibility
+            if (prev === 'floating' && newMode === 'fixed') {
+                console.log('[App] Floating→Fixed: sidebarVisible=', sidebarVisible);
+            }
+
+            return newMode;
+        });
+    }, [sidebarMode, sidebarVisible]);
 
     const handleAddFolder = async (spaceId: string, parentId?: string | null) => {
         // Use inline input store - determine context based on focus
@@ -1692,8 +1758,8 @@ export function App(): React.ReactElement {
                     top: 0,
                     height: '100%',
                     zIndex: 100,
-                    pointerEvents: sidebarVisible ? 'auto' : 'none',
-                    boxShadow: sidebarVisible ? '10px 0 30px -5px rgba(0, 0, 0, 0.5)' : 'none',
+                    pointerEvents: reactSidebarVisible ? 'auto' : 'none',
+                    boxShadow: reactSidebarVisible ? '10px 0 30px -5px rgba(0, 0, 0, 0.5)' : 'none',
                 } : {
                     height: '100%',
                     boxShadow: '10px 0 30px -5px rgba(0, 0, 0, 0.5)',
@@ -1707,7 +1773,7 @@ export function App(): React.ReactElement {
                     mode={sidebarMode}
                     activeTab={activeTab}
                     userName="dishant ghai"
-                    isVisible={sidebarVisible}
+                    isVisible={reactSidebarVisible}
                     hasFocus={focusContext === 'sidebar'}
                     onSpaceSelect={setSidebarActiveSpaceIndex}
                     onTabChange={setActiveTab}
