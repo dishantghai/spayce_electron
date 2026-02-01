@@ -117,6 +117,13 @@ export class SidebarOverlayService {
                     // If cursor is within trigger zone on the left edge
                     if (relativeX <= this.config.hoverTriggerWidth) {
                         console.log('[SidebarOverlayService] Mouse near left edge - auto-showing sidebar');
+
+                        // Notify main renderer BEFORE showing so it can update sidebarVisible
+                        // This ensures state sync happens before overlay appears
+                        if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+                            this.mainWindow.webContents.send('sidebar-overlay:auto-show-triggered');
+                        }
+
                         this.show();
                     }
                 }

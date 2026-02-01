@@ -184,6 +184,13 @@ const electronAPI = {
             ipcRenderer.on('sidebar:action', handler);
             return () => ipcRenderer.removeListener('sidebar:action', handler);
         },
+
+        // Listen for auto-show triggered by mouse tracking (main renderer only)
+        onAutoShowTriggered: (callback: () => void) => {
+            const handler = () => callback();
+            ipcRenderer.on('sidebar-overlay:auto-show-triggered', handler);
+            return () => ipcRenderer.removeListener('sidebar-overlay:auto-show-triggered', handler);
+        },
     },
 };
 

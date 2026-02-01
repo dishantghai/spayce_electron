@@ -1693,6 +1693,22 @@ export function App(): React.ReactElement {
         setFocusContext,
     ]);
 
+    // Handle auto-show notification from mouse tracking (Spec 020)
+    // When overlay auto-shows via left edge hover, update sidebarVisible to trigger state sync
+    // This ensures expandedIdsMap is synced before user interacts with overlay
+    useEffect(() => {
+        if (!window.electronAPI?.sidebarOverlay) return;
+
+        const handleAutoShow = () => {
+            console.log('[App] Overlay auto-shown via mouse tracking - updating sidebarVisible');
+            setSidebarVisible(true);
+        };
+
+        const unsubscribe = window.electronAPI.sidebarOverlay.onAutoShowTriggered(handleAutoShow);
+
+        return unsubscribe;
+    }, []);
+
     // Show loading state only on initial load (not during refetch)
     // This prevents Sidebar from unmounting/remounting during refetch
     // The useSpaces hook now uses isRefetching flag for refetches, keeping loading=false

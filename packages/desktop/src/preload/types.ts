@@ -198,4 +198,5 @@ export interface SidebarOverlayAPI {
     sendAction: (action: SidebarActionPayload) => void;
     onStateUpdate: (callback: (state: SidebarStatePayload) => void) => () => void;
     onAction: (callback: (action: SidebarActionPayload) => void) => () => void;
+    onAutoShowTriggered: (callback: () => void) => () => void;
 }
