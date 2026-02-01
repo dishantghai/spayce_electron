@@ -1659,6 +1659,13 @@ export function App(): React.ReactElement {
                     }
                     break;
 
+                case 'FOCUS_CHANGE':
+                    // Update focus context when sidebar overlay gains focus
+                    if (action.payload.hasFocus) {
+                        setFocusContext('sidebar');
+                    }
+                    break;
+
                 default:
                     console.warn('[App] Unknown overlay action:', action.type);
             }
@@ -1683,6 +1690,7 @@ export function App(): React.ReactElement {
         handleReorderSpaces,
         handlePinItem,
         handleReorderPins,
+        setFocusContext,
     ]);
 
     // Show loading state only on initial load (not during refetch)

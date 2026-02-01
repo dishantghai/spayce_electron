@@ -54,13 +54,14 @@ function SidebarOverlayApp() {
             setActiveTab(state.activeTab as SidebarTabId);
             if (state.userName) setUserName(state.userName);
 
-            // Convert expandedIds array to Map
-            if (state.spaces && state.expandedIds) {
-                const newMap = new Map<string, Set<string>>();
-                state.spaces.forEach((space: any) => {
-                    newMap.set(space.id, new Set(state.expandedIds));
+            // Convert expandedIds array to Map for active space only
+            // Preserve expanded state for other spaces to avoid unwanted collapses
+            if (state.activeSpaceId && state.expandedIds) {
+                setExpandedIdsMap((prevMap) => {
+                    const newMap = new Map(prevMap);
+                    newMap.set(state.activeSpaceId, new Set(state.expandedIds));
+                    return newMap;
                 });
-                setExpandedIdsMap(newMap);
             }
         });
 
@@ -218,13 +219,13 @@ function SidebarOverlayApp() {
 
     const handleExpandedIdsMapChange = useCallback((map: Map<string, Set<string>>) => {
         setExpandedIdsMap(map);
-        // Convert map to serializable format and sync
-        const expandedArray: string[] = [];
-        map.forEach((ids) => {
-            expandedArray.push(...Array.from(ids));
-        });
-        sendAction('EXPANDED_IDS_CHANGE', { expandedIds: expandedArray });
-    }, [sendAction]);
+        // Send only the active space's expanded IDs, not all spaces combined
+        const activeSpaceId = spaces[activeSpaceIndex]?.id;
+        if (activeSpaceId) {
+            const expandedArray = Array.from(map.get(activeSpaceId) || []);
+            sendAction('EXPANDED_IDS_CHANGE', { expandedIds: expandedArray });
+        }
+    }, [sendAction, spaces, activeSpaceIndex]);
 
     // Render loading state
     if (connectionStatus === 'connecting') {
