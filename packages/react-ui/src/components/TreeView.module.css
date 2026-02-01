@@ -66,13 +66,19 @@
     min-width: 0;
 }
 
-/* Children container with vertical line */
+/* Children container with vertical line - uses CSS Grid for smooth height animation */
 .children {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-rows: 1fr;
     overflow: hidden;
-    transition: opacity 200ms ease-out;
+    transition: grid-template-rows 200ms ease-out, opacity 200ms ease-out;
     position: relative;
+    opacity: 1;
+}
+
+/* Inner wrapper needed for grid animation to work smoothly */
+.children > * {
+    min-height: 0;
 }
 
 /* Vertical line for folder span */
@@ -85,11 +91,24 @@
     width: 1px;
     background-color: var(--folder-line-color, #374151);
     opacity: 0.5;
+    transition: opacity 200ms ease-out;
 }
 
 .childrenCollapsed {
+    grid-template-rows: 0fr;
     opacity: 0;
-    height: 0;
+}
+
+.childrenCollapsed::before {
+    opacity: 0;
+}
+
+/* Inner wrapper required for CSS grid height animation */
+.childrenInner {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 /* Context icons container */

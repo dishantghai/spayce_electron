@@ -21,6 +21,12 @@
         width: 100vw;
         height: 100vh;
       }
+      /* Disable all transitions during mode switches for instant transition */
+      .no-transitions,
+      .no-transitions * {
+        transition: none !important;
+        animation: none !important;
+      }
     </style>
   </head>
   <body>

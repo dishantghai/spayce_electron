@@ -319,20 +319,22 @@ export function TreeItem({
                     } as React.CSSProperties}
                     role="group"
                 >
-                    {/* Inline input inside this folder */}
-                    {showInlineInputInside && (
-                        <InlineInput
-                            type={inlineInput!.type}
-                            spaceId={spaceId}
-                            parentId={item.id}
-                            level={depth + 1}
-                            accentColor={accentColor}
-                            onSubmit={(value) => onInlineInputSubmit?.(value, inlineInput!.type, item.id)}
-                            onCancel={() => onInlineInputCancel?.()}
-                        />
-                    )}
-                    {(isExpanded || showInlineInputInside) &&
-                        item.children.map((child) => (
+                    {/* Inner wrapper for CSS grid height animation */}
+                    <div className={styles.childrenInner}>
+                        {/* Inline input inside this folder */}
+                        {showInlineInputInside && (
+                            <InlineInput
+                                type={inlineInput!.type}
+                                spaceId={spaceId}
+                                parentId={item.id}
+                                level={depth + 1}
+                                accentColor={accentColor}
+                                onSubmit={(value) => onInlineInputSubmit?.(value, inlineInput!.type, item.id)}
+                                onCancel={() => onInlineInputCancel?.()}
+                            />
+                        )}
+                        {(isExpanded || showInlineInputInside) &&
+                            item.children.map((child) => (
                             <TreeItem
                                 key={child.id}
                                 item={child}
@@ -359,6 +361,7 @@ export function TreeItem({
                                 onItemDrop={onItemDrop}
                             />
                         ))}
+                    </div>
                 </div>
             )}
         </>

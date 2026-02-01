@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Sidebar, type SidebarMode } from '@spayce/react-ui';
 import type { Space, SpaceItem, SidebarTabId } from '@spayce/react-ui';
@@ -24,6 +24,11 @@ function SidebarOverlayApp() {
 
     const [expandedIdsMap, setExpandedIdsMap] = useState<Map<string, Set<string>>>(new Map());
     const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error'>('connecting');
+
+    // Track last user interaction time to prevent spurious mouseleave from hiding sidebar
+    // When clicking tree items, DOM changes can trigger false mouseleave events
+    const lastInteractionTimeRef = useRef<number>(0);
+    const INTERACTION_GRACE_PERIOD = 300; // ms to ignore mouseleave after interaction
 
     // Initialize IPC subscriptions
     useEffect(() => {
@@ -68,8 +73,10 @@ function SidebarOverlayApp() {
         };
     }, []);
 
-    // Send action to main renderer
+    // Send action to main renderer and track interaction time
     const sendAction = useCallback((type: string, payload: any) => {
+        // Track interaction time to prevent spurious mouseleave events from hiding sidebar
+        lastInteractionTimeRef.current = Date.now();
         if (window.electronAPI?.sidebarOverlay) {
             window.electronAPI.sidebarOverlay.sendAction({ type, payload });
         }
@@ -85,18 +92,38 @@ function SidebarOverlayApp() {
     }, [sendAction]);
 
     const handleModeToggle = useCallback(() => {
-        console.log('[SidebarOverlay] Mode toggle clicked');
+        // Send mode toggle action to main renderer
+        // App.tsx will update state first (making React sidebar visible)
+        // Then hide the overlay in the visibility effect - this ordering prevents flicker
         sendAction('MODE_TOGGLE', {});
     }, [sendAction]);
 
-    const handleVisibilityChange = useCallback((visible: boolean) => {
+    const handleVisibilityChange = useCallback(async (visible: boolean) => {
         console.log('[SidebarOverlay] Visibility change requested:', visible, 'mode:', sidebarMode);
 
-        // In overlay context, we DON'T manage visibility via mouseleave
-        // because the overlay is managed by the main App's overlay visibility effect
-        // Only handle explicit close button clicks (which go through handleClose instead)
-        // This prevents spurious visibility changes during mode transitions
-        // NO-OP: visibility is managed externally
+        // In overlay context, we need to communicate visibility changes to main process
+        // When visible=false (mouse leave), hide the overlay with animation
+        // When visible=true, the main process handles showing via mouse tracking
+        if (!visible && window.electronAPI?.sidebarOverlay) {
+            // Check if user interacted recently - if so, ignore spurious mouseleave
+            // DOM changes from tree expansion/collapse can trigger false mouseleave events
+            const timeSinceInteraction = Date.now() - lastInteractionTimeRef.current;
+            if (timeSinceInteraction < INTERACTION_GRACE_PERIOD) {
+                console.log('[SidebarOverlay] Ignoring mouseleave during grace period:', timeSinceInteraction, 'ms');
+                return;
+            }
+
+            try {
+                // Hide overlay with animation when mouse leaves
+                await window.electronAPI.sidebarOverlay.hide();
+                console.log('[SidebarOverlay] Hidden via mouse leave');
+            } catch (error) {
+                console.error('[SidebarOverlay] Failed to hide:', error);
+            }
+        }
+        // Note: We don't call show() here because showing is handled by:
+        // 1. Mouse tracking in SidebarOverlayService (auto-show on left edge hover)
+        // 2. Main App's overlay visibility effect
     }, [sidebarMode]);
 
     const handleItemClick = useCallback((item: SpaceItem, spaceId: string) => {

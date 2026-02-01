@@ -27,10 +27,13 @@
     border: 2px solid transparent;
     cursor: pointer;
     transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1),
-        opacity 200ms ease,
-        box-shadow 150ms ease;
+        opacity 150ms ease-out,
+        box-shadow 150ms ease,
+        border-color 150ms ease;
     padding: 0;
     background: none;
+    /* Ensure smooth opacity changes */
+    will-change: transform, opacity;
 }
 
 .spaceIcon.active {
@@ -43,8 +46,10 @@
 }
 
 .spaceIcon.dragging {
-    opacity: 0;
+    opacity: 0.3;
     cursor: grabbing;
+    /* Keep a faint ghost to show original position */
+    pointer-events: none;
 }
 
 @keyframes focusPulse {

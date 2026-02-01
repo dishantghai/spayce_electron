@@ -24,8 +24,14 @@
     border: 1px solid #1F2937;
     border-radius: 10px;
     cursor: pointer;
-    transition: all 150ms ease;
+    transition: transform 150ms ease,
+        opacity 150ms ease-out,
+        background-color 150ms ease,
+        border-color 150ms ease,
+        box-shadow 150ms ease;
     padding: 0;
+    /* Ensure smooth opacity changes */
+    will-change: transform, opacity;
 }
 
 .card:hover {
@@ -34,8 +40,10 @@
 }
 
 .card.dragging {
-    opacity: 0;
+    opacity: 0.3;
     cursor: grabbing;
+    /* Keep a faint ghost to show original position */
+    pointer-events: none;
 }
 
 .favicon {

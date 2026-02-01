@@ -163,6 +163,9 @@ export class SidebarOverlayService {
             },
         });
 
+        // Set background color to match sidebar theme - prevents white flash before React renders
+        this.sidebarView.setBackgroundColor('#131020');
+
         // Load sidebar entry point
         if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
             // In development, load from Vite dev server
@@ -275,12 +278,10 @@ export class SidebarOverlayService {
     }
 
     /**
-     * Update sidebar bounds
+     * Update sidebar bounds with cached height to avoid expensive getSize() calls
      */
-    private updateBounds(x: number): void {
+    private updateBoundsWithHeight(x: number, height: number): void {
         if (!this.sidebarView || !this.mainWindow) return;
-
-        const [, height] = this.mainWindow.getSize();
 
         this.sidebarView.setBounds({
             x: x,
@@ -291,13 +292,38 @@ export class SidebarOverlayService {
     }
 
     /**
+     * Update sidebar bounds (fetches current window height)
+     */
+    private updateBounds(x: number): void {
+        if (!this.sidebarView || !this.mainWindow) return;
+
+        const [, height] = this.mainWindow.getSize();
+        this.updateBoundsWithHeight(x, height);
+    }
+
+    /**
      * Animate bounds from start to end x position
+     * Optimized to:
+     * 1. Cache window height at animation start (avoid repeated getSize calls)
+     * 2. Use setImmediate for more precise timing when possible
+     * 3. Skip intermediate frames if animation is behind schedule
      */
     private animateBounds(startX: number, endX: number): Promise<void> {
         return new Promise((resolve) => {
+            if (!this.mainWindow) {
+                resolve();
+                return;
+            }
+
             const duration = this.config.animationDuration;
             const startTime = Date.now();
-            const frameInterval = 1000 / 60; // 60fps
+            const frameInterval = 1000 / 60; // ~16.67ms for 60fps
+
+            // Cache height at animation start to avoid expensive getSize() calls during animation
+            const [, windowHeight] = this.mainWindow.getSize();
+
+            // Track last rendered position to avoid redundant setBounds calls
+            let lastRenderedX = startX;
 
             const animate = () => {
                 const elapsed = Date.now() - startTime;
@@ -306,12 +332,37 @@ export class SidebarOverlayService {
                 // Ease-out cubic for smooth deceleration
                 const eased = 1 - Math.pow(1 - progress, 3);
 
-                const currentX = startX + (endX - startX) * eased;
-                this.updateBounds(Math.round(currentX));
+                // Calculate target position - use floor for consistency (avoids sub-pixel jitter)
+                const targetX = Math.floor(startX + (endX - startX) * eased);
+
+                // Only update bounds if position actually changed (reduces compositor load)
+                if (targetX !== lastRenderedX) {
+                    this.updateBoundsWithHeight(targetX, windowHeight);
+                    lastRenderedX = targetX;
+                }
 
                 if (progress < 1) {
-                    setTimeout(animate, frameInterval);
+                    // Use setImmediate when available for better timing, fall back to setTimeout
+                    if (typeof setImmediate !== 'undefined') {
+                        // For frames that are on schedule, use setTimeout
+                        // For frames that are behind, use setImmediate to catch up
+                        const expectedElapsed = (Date.now() - startTime);
+                        const framesBehind = Math.floor(expectedElapsed / frameInterval) - Math.floor(elapsed / frameInterval);
+
+                        if (framesBehind > 1) {
+                            // We're behind schedule, catch up immediately
+                            setImmediate(animate);
+                        } else {
+                            setTimeout(animate, frameInterval);
+                        }
+                    } else {
+                        setTimeout(animate, frameInterval);
+                    }
                 } else {
+                    // Ensure final position is exact
+                    if (lastRenderedX !== endX) {
+                        this.updateBoundsWithHeight(endX, windowHeight);
+                    }
                     resolve();
                 }
             };

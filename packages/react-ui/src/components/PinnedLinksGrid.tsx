@@ -206,11 +206,21 @@ export function PinnedLinksGrid({
             return;
         }
 
+        // Use requestAnimationFrame for smoother cleanup - prevents visible state flash
+        // while still allowing brief hover-over-gap scenarios
+        if (cleanupTimerRef.current) {
+            clearTimeout(cleanupTimerRef.current);
+        }
         cleanupTimerRef.current = setTimeout(() => {
-            setIsDropTarget(false);
-            setDropIndex(null);
-            setOverPinsGrid(false);
-        }, 100);
+            // Double RAF ensures cleanup happens after any pending re-entry events
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setIsDropTarget(false);
+                    setDropIndex(null);
+                    setOverPinsGrid(false);
+                });
+            });
+        }, 16); // ~1 frame delay, much shorter than 100ms
     }, [activeId, setOverPinsGrid]);
 
     const handleExternalDrop = useCallback((e: React.DragEvent) => {

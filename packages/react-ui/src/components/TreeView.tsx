@@ -159,17 +159,14 @@ export function TreeView({
 
     // Effect to commit pending expanded folders after render stabilizes
     // This runs AFTER all state updates from refetch() are applied
+    // Uses a ref check pattern to avoid running on every render while still catching state stabilization
     useEffect(() => {
         if (pendingExpandedFoldersRef.current && pendingExpandedFoldersRef.current.size > 0) {
             const foldersToCommit = pendingExpandedFoldersRef.current;
             pendingExpandedFoldersRef.current = null; // Clear ref first to prevent loops
 
-            console.log(`[TreeView useEffect] ========== COMMITTING PENDING FOLDERS ==========`);
-            console.log(`[TreeView useEffect] Folders to commit:`, Array.from(foldersToCommit));
-
             // Get current base expandedIds
             const baseExpandedIds = controlledExpandedIds ?? internalExpandedIds;
-            console.log(`[TreeView useEffect] Current base expandedIds:`, Array.from(baseExpandedIds));
 
             // Check if folders are already in the base set
             const needsCommit = Array.from(foldersToCommit).some(id => !baseExpandedIds.has(id));
@@ -177,22 +174,17 @@ export function TreeView({
             if (needsCommit) {
                 const newExpandedIds = new Set(baseExpandedIds);
                 foldersToCommit.forEach(id => newExpandedIds.add(id));
-                console.log(`[TreeView useEffect] Merged expandedIds:`, Array.from(newExpandedIds));
 
                 // Update internal state if uncontrolled
                 if (!controlledExpandedIds) {
-                    console.log(`[TreeView useEffect] Updating internal state`);
                     setInternalExpandedIds(newExpandedIds);
                 }
 
                 // Notify parent to persist
-                console.log(`[TreeView useEffect] Notifying parent of expanded state change`);
                 onExpandedChange?.(newExpandedIds);
-            } else {
-                console.log(`[TreeView useEffect] Folders already committed, skipping`);
             }
         }
-    }); // Run after every render to catch when state stabilizes
+    }, [controlledExpandedIds, internalExpandedIds, onExpandedChange]); // Proper dependencies to run only when state changes
 
     // Handle drop: store folders to commit and let useEffect handle the actual commit
     const handleDrop = useCallback(

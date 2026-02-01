@@ -49,6 +49,10 @@ export function BrowserArea({
     const boundsUpdateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const sidebarAnimationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const prevSidebarWidthRef = useRef<number>(sidebarWidth);
+    // Track if sidebar animation is in progress to suppress intermediate updates
+    const isAnimatingRef = useRef<boolean>(false);
+    // Track last sent bounds to avoid redundant updates
+    const lastBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
 
     const {
         activeViewId,
@@ -88,6 +92,9 @@ export function BrowserArea({
     const sendBoundsImmediate = useCallback(() => {
         if (!contentRef.current || !activeViewId) return;
 
+        // Skip intermediate updates during sidebar animation to prevent flickering
+        if (isAnimatingRef.current) return;
+
         const rect = contentRef.current.getBoundingClientRect();
 
         // Only update if we have valid dimensions
@@ -97,12 +104,25 @@ export function BrowserArea({
             const adjustedX = Math.round(rect.x) + sidebarWidth;
             const adjustedWidth = Math.round(rect.width) - sidebarWidth;
 
-            updateBounds({
+            const newBounds = {
                 x: adjustedX,
                 y: Math.round(rect.y),
                 width: Math.max(adjustedWidth, 100), // Minimum width to prevent negative/zero
                 height: Math.round(rect.height),
-            });
+            };
+
+            // Only update if bounds actually changed (prevents redundant IPC calls)
+            const lastBounds = lastBoundsRef.current;
+            if (
+                !lastBounds ||
+                lastBounds.x !== newBounds.x ||
+                lastBounds.y !== newBounds.y ||
+                lastBounds.width !== newBounds.width ||
+                lastBounds.height !== newBounds.height
+            ) {
+                lastBoundsRef.current = newBounds;
+                updateBounds(newBounds);
+            }
         }
     }, [activeViewId, updateBounds, sidebarWidth]);
 
@@ -182,6 +202,9 @@ export function BrowserArea({
         // If sidebar width changed, delay bounds update to let sidebar animation complete
         // This prevents the WebContentsView from flickering during the 250ms sidebar transition
         if (widthChanged) {
+            // Mark animation as in progress to suppress intermediate updates from resize events
+            isAnimatingRef.current = true;
+
             // Clear any pending animation timeout
             if (sidebarAnimationTimeoutRef.current) {
                 clearTimeout(sidebarAnimationTimeoutRef.current);
@@ -189,6 +212,10 @@ export function BrowserArea({
 
             // Wait for sidebar animation to complete before updating bounds
             sidebarAnimationTimeoutRef.current = setTimeout(() => {
+                // Animation complete, allow normal updates again
+                isAnimatingRef.current = false;
+                // Force update bounds after animation
+                lastBoundsRef.current = null; // Reset to ensure update happens
                 sendBoundsImmediate();
             }, SIDEBAR_ANIMATION_DURATION);
         }
@@ -196,6 +223,7 @@ export function BrowserArea({
         return () => {
             if (sidebarAnimationTimeoutRef.current) {
                 clearTimeout(sidebarAnimationTimeoutRef.current);
+                isAnimatingRef.current = false;
             }
         };
     }, [sidebarWidth, isReady, sendBoundsImmediate]);
