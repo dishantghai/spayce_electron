@@ -1259,8 +1259,9 @@ export function App(): React.ReactElement {
     // Handle drag-drop item movement (supports multi-select F020)
     const dragDropStore = useDragDropUiStore();
     const selectionStore = useSelectionStore();
-    const handleItemDrop = useCallback(async (targetId: string, _targetId2: string, position: DropPosition, spaceId: string) => {
-        const dragData = dragDropStore.dragData;
+    const handleItemDrop = useCallback(async (targetId: string, _targetId2: string, position: DropPosition, spaceId: string, externalDragData?: any) => {
+        // Story B002: Use dragData from overlay if provided, otherwise use main renderer's store
+        const dragData = externalDragData || dragDropStore.dragData;
         if (!dragData) {
             console.error('[Drop] No drag data available');
             return;
@@ -1501,6 +1502,9 @@ export function App(): React.ReactElement {
                     break;
 
                 case 'ITEM_CLICK':
+                    // Story B002: Clear inline input state before selection
+                    clearSidebarInput();
+                    setSidebarRenameItemId(null);
                     setSidebarSelectedId(action.payload.itemId);
                     setFocusContext('sidebar');
                     break;
@@ -1508,6 +1512,10 @@ export function App(): React.ReactElement {
                 case 'ITEM_CONTEXT_MENU':
                     // Find item and trigger context menu
                     {
+                        // Story B002: Clear inline input state before opening context menu
+                        clearSidebarInput();
+                        setSidebarRenameItemId(null);
+
                         const space = spaces.find((s) => s.id === action.payload.spaceId);
                         if (space) {
                             const findItem = (items: SpaceItem[]): SpaceItem | null => {
@@ -1537,6 +1545,10 @@ export function App(): React.ReactElement {
                 case 'PINNED_ITEM_CONTEXT_MENU':
                     // Same as ITEM_CONTEXT_MENU but with pins-grid context
                     {
+                        // Story B002: Clear inline input state before opening context menu
+                        clearSidebarInput();
+                        setSidebarRenameItemId(null);
+
                         const space = spaces.find((s) => s.id === action.payload.spaceId);
                         if (space) {
                             const findItem = (items: SpaceItem[]): SpaceItem | null => {
@@ -1609,11 +1621,13 @@ export function App(): React.ReactElement {
                     break;
 
                 case 'ITEM_DROP':
+                    // Story B002: Pass dragData from overlay if provided
                     handleItemDrop(
                         action.payload.itemId,
                         action.payload.targetId,
                         action.payload.position,
-                        action.payload.spaceId
+                        action.payload.spaceId,
+                        action.payload.dragData
                     );
                     break;
 
@@ -1627,6 +1641,10 @@ export function App(): React.ReactElement {
                     break;
 
                 case 'ROOT_CONTEXT_MENU':
+                    // Story B002: Clear inline input state before opening root context menu
+                    clearSidebarInput();
+                    setSidebarRenameItemId(null);
+
                     setRootContextMenu({
                         spaceId: action.payload.spaceId,
                         position: { x: action.payload.x, y: action.payload.y },
@@ -1663,6 +1681,234 @@ export function App(): React.ReactElement {
                     // Update focus context when sidebar overlay gains focus
                     if (action.payload.hasFocus) {
                         setFocusContext('sidebar');
+                    }
+                    break;
+
+                case 'CLEAR_INLINE_STATE':
+                    // Clear inline input state when requested by overlay (Story B002)
+                    console.log('[App] Clearing inline input state');
+                    clearSidebarInput();
+                    setSidebarRenameItemId(null);
+                    break;
+
+                case 'CONTEXT_MENU_ACTION':
+                    // Handle context menu actions forwarded from overlay (Story B002)
+                    {
+                        const { actionId, itemId, spaceId, context } = action.payload;
+                        console.log('[App] CONTEXT_MENU_ACTION received:', { actionId, itemId, spaceId, context });
+
+                        // Find the item
+                        const space = spaces.find((s) => s.id === spaceId);
+                        if (space) {
+                            const findItem = (items: SpaceItem[]): SpaceItem | null => {
+                                for (const item of items) {
+                                    if (item.id === itemId) return item;
+                                    if (item.children) {
+                                        const found = findItem(item.children);
+                                        if (found) return found;
+                                    }
+                                }
+                                return null;
+                            };
+                            const item = findItem(space.rootItems);
+
+                            if (item) {
+                                console.log('[App] 🎯 Executing action:', actionId, 'on item:', item.name);
+
+                                switch (actionId) {
+                                    case 'delete': {
+                                        const needsConfirmation = item.type === SpaceItemType.folder ||
+                                            item.type === SpaceItemType.localFolder;
+                                        const shouldDelete = needsConfirmation
+                                            ? confirm(`Delete "${item.name}"?`)
+                                            : true;
+                                        if (shouldDelete) {
+                                            (window as any).electronAPI?.items?.delete(item.id)
+                                                .then((result: any) => {
+                                                    if (result?.success) {
+                                                        refetch();
+                                                        console.log('[App] ✅ Action completed: delete');
+                                                    }
+                                                });
+                                        }
+                                        break;
+                                    }
+                                    case 'copy-folder': {
+                                        clipboardStore.copyItems([item], spaceId);
+                                        console.log('[App] ✅ Action completed: copy-folder');
+                                        break;
+                                    }
+                                    case 'copy-all-links': {
+                                        const collectLinksRecursive = (item: SpaceItem): SpaceItem[] => {
+                                            let links: SpaceItem[] = [];
+                                            if (item.type === SpaceItemType.link) {
+                                                links.push(item);
+                                            }
+                                            if (item.children) {
+                                                for (const child of item.children) {
+                                                    links = links.concat(collectLinksRecursive(child));
+                                                }
+                                            }
+                                            return links;
+                                        };
+                                        const links = collectLinksRecursive(item);
+                                        if (links.length > 0) {
+                                            const urls = links.map((link) => link.path).join('\n');
+                                            window.electronAPI.clipboard.writeText(urls)
+                                                .then(() => {
+                                                    clipboardStore.copyItems(links, spaceId);
+                                                    console.log(`[App] ✅ Copied ${links.length} link(s) to clipboard`);
+                                                });
+                                        }
+                                        break;
+                                    }
+                                    case 'copy-link': {
+                                        window.electronAPI.clipboard.writeText(item.path)
+                                            .then(() => {
+                                                clipboardStore.copyItems([item], spaceId);
+                                                console.log('[App] ✅ Action completed: copy-link');
+                                            });
+                                        break;
+                                    }
+                                    case 'paste': {
+                                        if (clipboardStore.hasItems()) {
+                                            const clipboardItems = clipboardStore.getItems();
+                                            const pasteItem = async (targetSpaceId: string, targetParentId: string | null, sourceItem: SpaceItem): Promise<void> => {
+                                                const result = await (window as any).electronAPI?.items?.create({
+                                                    spaceId: targetSpaceId,
+                                                    parentId: targetParentId || undefined,
+                                                    name: sourceItem.name,
+                                                    path: sourceItem.path,
+                                                    type: sourceItem.type,
+                                                    faviconUrl: sourceItem.faviconUrl,
+                                                });
+                                                if (result?.success && result.data && sourceItem.children) {
+                                                    for (const child of sourceItem.children) {
+                                                        await pasteItem(targetSpaceId, result.data.id, child);
+                                                    }
+                                                }
+                                            };
+                                            Promise.all(clipboardItems.map(sourceItem => pasteItem(spaceId, item.id, sourceItem)))
+                                                .then(() => {
+                                                    clipboardStore.clear();
+                                                    refetch();
+                                                    console.log('[App] ✅ Action completed: paste');
+                                                });
+                                        } else {
+                                            window.electronAPI.clipboard.readText().then(async (text: string) => {
+                                                const extractUrlsFromText = (text: string): string[] => {
+                                                    const urlRegex = /https?:\/\/[^\s]+/g;
+                                                    return text.match(urlRegex) || [];
+                                                };
+                                                const urls = extractUrlsFromText(text);
+                                                if (urls.length > 0) {
+                                                    for (const url of urls) {
+                                                        await (window as any).electronAPI?.items?.create({
+                                                            spaceId,
+                                                            parentId: item.id,
+                                                            name: url,
+                                                            path: url,
+                                                            type: SpaceItemType.link,
+                                                        });
+                                                    }
+                                                    await refetch();
+                                                    console.log('[App] ✅ Action completed: paste from system clipboard');
+                                                }
+                                            });
+                                        }
+                                        break;
+                                    }
+                                    case 'refresh-folder': {
+                                        if (item.type === SpaceItemType.localFolder) {
+                                            (window as any).electronAPI?.items?.refreshLocalFolder(item.id)
+                                                .then(() => {
+                                                    refetch();
+                                                    console.log('[App] ✅ Action completed: refresh-folder');
+                                                });
+                                        }
+                                        break;
+                                    }
+                                    case 'pin-to-top': {
+                                        const apiMethod = item.isPinned ? 'unpin' : 'pin';
+                                        (window as any).electronAPI?.items?.[apiMethod](item.id)
+                                            .then((result: any) => {
+                                                if (result?.success) {
+                                                    refetch();
+                                                    console.log('[App] ✅ Action completed: pin-to-top');
+                                                }
+                                            });
+                                        break;
+                                    }
+                                    default:
+                                        console.log('[App] ❌ UNKNOWN ACTION:', actionId);
+                                }
+                            } else {
+                                console.error('[App] Item not found:', itemId);
+                            }
+                        } else {
+                            console.error('[App] Space not found:', spaceId);
+                        }
+                    }
+                    break;
+
+                case 'ROOT_CONTEXT_MENU_ACTION':
+                    // Handle root context menu actions forwarded from overlay (Story B002)
+                    {
+                        const { actionId, spaceId } = action.payload;
+                        console.log('[App] ROOT_CONTEXT_MENU_ACTION received:', { actionId, spaceId });
+
+                        switch (actionId) {
+                            case 'paste': {
+                                if (clipboardStore.hasItems()) {
+                                    const clipboardItems = clipboardStore.getItems();
+                                    const pasteItem = async (targetSpaceId: string, targetParentId: string | null, sourceItem: SpaceItem): Promise<void> => {
+                                        const result = await (window as any).electronAPI?.items?.create({
+                                            spaceId: targetSpaceId,
+                                            parentId: targetParentId || undefined,
+                                            name: sourceItem.name,
+                                            path: sourceItem.path,
+                                            type: sourceItem.type,
+                                            faviconUrl: sourceItem.faviconUrl,
+                                        });
+                                        if (result?.success && result.data && sourceItem.children) {
+                                            for (const child of sourceItem.children) {
+                                                await pasteItem(targetSpaceId, result.data.id, child);
+                                            }
+                                        }
+                                    };
+                                    Promise.all(clipboardItems.map(sourceItem => pasteItem(spaceId, null, sourceItem)))
+                                        .then(() => {
+                                            clipboardStore.clear();
+                                            refetch();
+                                            console.log('[App] ✅ Root action completed: paste');
+                                        });
+                                } else {
+                                    window.electronAPI.clipboard.readText().then(async (text: string) => {
+                                        const extractUrlsFromText = (text: string): string[] => {
+                                            const urlRegex = /https?:\/\/[^\s]+/g;
+                                            return text.match(urlRegex) || [];
+                                        };
+                                        const urls = extractUrlsFromText(text);
+                                        if (urls.length > 0) {
+                                            for (const url of urls) {
+                                                await (window as any).electronAPI?.items?.create({
+                                                    spaceId,
+                                                    parentId: null,
+                                                    name: url,
+                                                    path: url,
+                                                    type: SpaceItemType.link,
+                                                });
+                                            }
+                                            await refetch();
+                                            console.log('[App] ✅ Root action completed: paste from system clipboard');
+                                        }
+                                    });
+                                }
+                                break;
+                            }
+                            default:
+                                console.log('[App] ❌ UNKNOWN ROOT ACTION:', actionId);
+                        }
                     }
                     break;
 
