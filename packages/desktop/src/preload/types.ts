@@ -152,6 +152,15 @@ export interface SidebarStatePayload {
     sidebarMode: 'floating' | 'fixed';
     activeTab: string;
     userName?: string;
+    hasClipboard?: boolean; // For context menu paste option
+    // Inline input state (for create folder/link)
+    sidebarInput?: {
+        spaceId: string;
+        parentId: string | null;
+        type: 'folder' | 'link';
+    } | null;
+    // Rename state
+    sidebarRenameItemId?: string | null;
 }
 
 /**
@@ -163,8 +172,9 @@ export interface SidebarActionPayload {
         | 'TAB_CHANGE'
         | 'MODE_TOGGLE'
         | 'ITEM_CLICK'
-        | 'ITEM_CONTEXT_MENU'
-        | 'PINNED_ITEM_CONTEXT_MENU'
+        | 'CLEAR_INLINE_STATE'         // NEW: Clear inline input state when context menu opens
+        | 'CONTEXT_MENU_ACTION'        // NEW: Context menu action from overlay
+        | 'ROOT_CONTEXT_MENU_ACTION'   // NEW: Root context menu action from overlay
         | 'CREATE_SPACE'
         | 'ADD_FOLDER'
         | 'ADD_LINK'
@@ -177,7 +187,6 @@ export interface SidebarActionPayload {
         | 'PASTE_TO_SELECTED'
         | 'ITEM_DROP'
         | 'ITEM_MOVE_ARBORIST'
-        | 'ROOT_CONTEXT_MENU'
         | 'REORDER_SPACES'
         | 'PIN_ITEM'
         | 'REORDER_PINS'

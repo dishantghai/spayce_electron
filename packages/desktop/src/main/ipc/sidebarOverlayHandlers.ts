@@ -17,6 +17,7 @@ export interface SidebarStatePayload {
     expandedIds: string[];
     sidebarMode: 'floating' | 'fixed';
     activeTab: string;
+    hasClipboard?: boolean; // For context menu paste option
 }
 
 /**
@@ -114,7 +115,7 @@ export function registerSidebarOverlayHandlers(mainWindow: BrowserWindow): void 
 
         // Update floating mode state for mouse tracking
         // Mouse tracking is only active when in floating mode with browser tab active
-        // (when WebContentsView overlay is used and covers the HTML hover trigger)
+        // Spec 020: Context menus now render in overlay, so they don't interfere with mouse tracking
         const isOverlayMode = state.sidebarMode === 'floating' && state.activeTab === 'browser';
         service.setFloatingMode(isOverlayMode);
     });

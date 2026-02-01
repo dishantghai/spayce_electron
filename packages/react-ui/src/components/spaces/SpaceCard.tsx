@@ -66,7 +66,7 @@ export function SpaceCard({
     const expandedIds = controlledExpandedIds ?? internalExpandedIds;
 
     // Get card-specific inline input state from store
-    const { cardInput, setCardInput, clearCardInput } = useInlineInputStore();
+    const { cardInput, setCardInput, clearCardInput, setCardRenameItemId } = useInlineInputStore();
 
     // Filter cardInput to only show for this space
     const inlineInputForThisCard: InlineInputState | null =
@@ -84,6 +84,11 @@ export function SpaceCard({
 
     // Adapter callback for TreeView's onAddSubfolder (adds spaceId and sets inline input)
     const handleAddSubfolder = useCallback((parentItem: SpaceItem) => {
+        // CRITICAL FIX: Clear stale inline states before setting new input
+        console.log('[SpaceCard] Hover action: Add Subfolder - clearing stale states');
+        clearCardInput();
+        setCardRenameItemId(null);
+
         // Expand the parent folder first
         const newExpandedIds = new Set(expandedIds);
         newExpandedIds.add(parentItem.id);
@@ -95,10 +100,15 @@ export function SpaceCard({
         // Set card inline input state
         setCardInput({ spaceId: space.id, parentId: parentItem.id, type: 'folder' });
         onAddFolder?.(space.id, parentItem.id);
-    }, [space.id, expandedIds, controlledExpandedIds, onExpandedChange, setCardInput, onAddFolder]);
+    }, [space.id, expandedIds, controlledExpandedIds, onExpandedChange, setCardInput, clearCardInput, setCardRenameItemId, onAddFolder]);
 
     // Adapter callback for TreeView's onAddLink (adds spaceId and sets inline input)
     const handleAddLink = useCallback((parentItem: SpaceItem) => {
+        // CRITICAL FIX: Clear stale inline states before setting new input
+        console.log('[SpaceCard] Hover action: Add Link - clearing stale states');
+        clearCardInput();
+        setCardRenameItemId(null);
+
         // Expand the parent folder first
         const newExpandedIds = new Set(expandedIds);
         newExpandedIds.add(parentItem.id);
@@ -110,7 +120,7 @@ export function SpaceCard({
         // Set card inline input state
         setCardInput({ spaceId: space.id, parentId: parentItem.id, type: 'link' });
         onAddLink?.(space.id, parentItem.id);
-    }, [space.id, expandedIds, controlledExpandedIds, onExpandedChange, setCardInput, onAddLink]);
+    }, [space.id, expandedIds, controlledExpandedIds, onExpandedChange, setCardInput, clearCardInput, setCardRenameItemId, onAddLink]);
 
     // Handle inline input submission
     const handleInlineInputSubmit = useCallback((value: string, type: 'folder' | 'link', parentId: string | null) => {

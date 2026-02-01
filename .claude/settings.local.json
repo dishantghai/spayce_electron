@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd:*)",
+      "Bash(npx vite build)",
+      "Bash(pnpm build:main:*)",
+      "Bash(cd /Users/Shared/ALL WORKSPACE/projects/spayce_electron && pnpm --filter @spayce/desktop run typecheck:*)",
+      "Bash(pnpm run build:main:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(pnpm run typecheck:*)",
+      "Bash(npm test:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}

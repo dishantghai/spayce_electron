@@ -137,6 +137,11 @@ export function Sidebar({
         setSidebarRenameItemId,
     } = useInlineInputStore();
 
+    console.log('[Sidebar] Inline input store state:', {
+        sidebarInput,
+        sidebarRenameItemId,
+    });
+
     // Track expandedIds per space - use controlled mode if provided, otherwise internal state
     const [internalExpandedIdsMap, setInternalExpandedIdsMap] = useState<Map<string, Set<string>>>(new Map());
     const expandedIdsMap = controlledExpandedIdsMap ?? internalExpandedIdsMap;
@@ -554,15 +559,39 @@ export function Sidebar({
 
     const handleAddSubfolder = useCallback((parentItem: SpaceItem) => {
         if (!activeSpace) return;
+
+        // CRITICAL FIX: Clear stale inline states before setting new input
+        console.log('[Sidebar] Hover action: Add Subfolder - clearing stale states');
+        clearSidebarInput();
+        setSidebarRenameItemId(null);
+
         setExpandedIds(prev => new Set([...prev, parentItem.id]));
-        setSidebarInput({ spaceId: activeSpace.id, parentId: parentItem.id, type: 'folder' });
-    }, [activeSpace, setSidebarInput]);
+
+        // Force state toggle for reliable update
+        clearSidebarInput();
+        setTimeout(() => {
+            setSidebarInput({ spaceId: activeSpace.id, parentId: parentItem.id, type: 'folder' });
+            console.log('[Sidebar] ✅ Folder input set for parent:', parentItem.id);
+        }, 0);
+    }, [activeSpace, setSidebarInput, clearSidebarInput, setSidebarRenameItemId]);
 
     const handleAddLinkToFolder = useCallback((parentItem: SpaceItem) => {
         if (!activeSpace) return;
+
+        // CRITICAL FIX: Clear stale inline states before setting new input
+        console.log('[Sidebar] Hover action: Add Link - clearing stale states');
+        clearSidebarInput();
+        setSidebarRenameItemId(null);
+
         setExpandedIds(prev => new Set([...prev, parentItem.id]));
-        setSidebarInput({ spaceId: activeSpace.id, parentId: parentItem.id, type: 'link' });
-    }, [activeSpace, setSidebarInput]);
+
+        // Force state toggle for reliable update
+        clearSidebarInput();
+        setTimeout(() => {
+            setSidebarInput({ spaceId: activeSpace.id, parentId: parentItem.id, type: 'link' });
+            console.log('[Sidebar] ✅ Link input set for parent:', parentItem.id);
+        }, 0);
+    }, [activeSpace, setSidebarInput, clearSidebarInput, setSidebarRenameItemId]);
 
     const handleInlineInputSubmit = useCallback(async (
         value: string,
