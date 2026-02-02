@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import {
     SpayceColors,
     SpaceItemType,
@@ -14,6 +14,11 @@ import type { SpaceItem, ContextMenuItem, Space, SidebarMode, SidebarTabId } fro
 import * as LucideIcons from 'lucide-react';
 import { useSpacesData } from './hooks/useSpacesData';
 import { itemsApi } from './ipc/spacesApi';
+import {
+    usePersistedState,
+    usePersistedExpandedIdsMap,
+    STORAGE_KEYS,
+} from '@spayce/react-ui';
 
 // Helper to recursively find all pinned items from the entire tree
 const findAllPinnedItems = (items: SpaceItem[]): SpaceItem[] => {
@@ -212,15 +217,27 @@ export function App(): React.ReactElement {
         reorderSpaces,
     } = useSpacesData();
 
-    // Independent selection states for sidebar and space cards
+    // Independent selection states for sidebar and space cards (transient - not persisted)
     const [sidebarSelectedId, setSidebarSelectedId] = useState<string | null>(null);
     const [cardSelectedId, setCardSelectedId] = useState<string | null>(null);
+
+    // B003: Persisted UI state - survives page refresh
     // Sidebar and SpacesScreen have independent active space indices
-    const [sidebarActiveSpaceIndex, setSidebarActiveSpaceIndex] = useState(0);
-    const [spacesScreenActiveSpaceIndex, setSpacesScreenActiveSpaceIndex] = useState(0);
-    const [sidebarMode, setSidebarMode] = useState<SidebarMode>('fixed');
-    const [sidebarVisible, setSidebarVisible] = useState(true);
-    const [activeTab, setActiveTab] = useState<SidebarTabId>('spaces');
+    const [sidebarActiveSpaceIndex, setSidebarActiveSpaceIndex] = usePersistedState<number>(
+        STORAGE_KEYS.SIDEBAR_ACTIVE_SPACE_INDEX, 0
+    );
+    const [spacesScreenActiveSpaceIndex, setSpacesScreenActiveSpaceIndex] = usePersistedState<number>(
+        STORAGE_KEYS.SPACES_SCREEN_ACTIVE_SPACE_INDEX, 0
+    );
+    const [sidebarMode, setSidebarMode] = usePersistedState<SidebarMode>(
+        STORAGE_KEYS.SIDEBAR_MODE, 'fixed'
+    );
+    const [sidebarVisible, setSidebarVisible] = usePersistedState<boolean>(
+        STORAGE_KEYS.SIDEBAR_VISIBLE, true
+    );
+    const [activeTab, setActiveTab] = usePersistedState<SidebarTabId>(
+        STORAGE_KEYS.ACTIVE_TAB, 'spaces'
+    );
 
     // Sidebar overlay state (Spec 020)
     // When in floating mode with browser tab, use WebContentsView overlay instead of React sidebar
@@ -233,15 +250,29 @@ export function App(): React.ReactElement {
     const [overlayActuallyVisible, setOverlayActuallyVisible] = useState(false);
     const [isModeSwitch, setIsModeSwitch] = useState(false);
 
+    // B003-FIX: Track if initial overlay sync has completed (STATE not ref for proper effect ordering)
+    const [hasCompletedInitialSync, setHasCompletedInitialSync] = useState(false);
+
     // Track what the React sidebar visibility should be during mode switches
-    const [reactSidebarVisible, setReactSidebarVisible] = useState(sidebarVisible);
+    // B003-FIX: When in overlay mode on mount, React sidebar should be hidden
+    // (the overlay WebContentsView will show the sidebar instead)
+    const [reactSidebarVisible, setReactSidebarVisible] = useState(() => {
+        // On initial mount, if we're in overlay mode, React sidebar should be hidden
+        const initialUseOverlayMode = sidebarMode === 'floating' && activeTab === 'browser';
+        return initialUseOverlayMode ? false : sidebarVisible;
+    });
 
-    // Focus context: 'sidebar' or 'spacesScreen'
+    // B003: Focus context - persisted to maintain user's navigation context
     // Rule 0: Default to 'sidebar' on app open
-    const [focusContext, setFocusContext] = useState<'sidebar' | 'spacesScreen'>('sidebar');
+    const [focusContext, setFocusContext] = usePersistedState<'sidebar' | 'spacesScreen'>(
+        STORAGE_KEYS.FOCUS_CONTEXT, 'sidebar'
+    );
 
-    // Sidebar expanded IDs map - lifted to App level to persist across Sidebar remounts (caused by refetch)
-    const [sidebarExpandedIdsMap, setSidebarExpandedIdsMap] = useState<Map<string, Set<string>>>(new Map());
+    // B003: Sidebar expanded IDs map - persisted to maintain folder expansion state
+    // Lifted to App level to persist across Sidebar remounts (caused by refetch)
+    const [sidebarExpandedIdsMap, setSidebarExpandedIdsMap] = usePersistedExpandedIdsMap(
+        STORAGE_KEYS.SIDEBAR_EXPANDED_IDS, new Map()
+    );
 
     const [contextMenu, setContextMenu] = useState<{
         item: SpaceItem;
@@ -271,6 +302,19 @@ export function App(): React.ReactElement {
     // Browser visibility control - hide WebContentsView when not on browser tab
     const { setVisibility: setBrowserVisibility } = useBrowserUiStore();
 
+    // B003: Validate persisted space indices when spaces change
+    // Clamp indices to valid range if spaces were deleted
+    useEffect(() => {
+        if (spaces.length > 0) {
+            if (sidebarActiveSpaceIndex >= spaces.length) {
+                setSidebarActiveSpaceIndex(Math.max(0, spaces.length - 1));
+            }
+            if (spacesScreenActiveSpaceIndex >= spaces.length) {
+                setSpacesScreenActiveSpaceIndex(Math.max(0, spaces.length - 1));
+            }
+        }
+    }, [spaces.length, sidebarActiveSpaceIndex, spacesScreenActiveSpaceIndex, setSidebarActiveSpaceIndex, setSpacesScreenActiveSpaceIndex]);
+
     // Hide/show browser WebContentsView based on active tab and context menu state
     // WebContentsView is a native Electron view that renders on top of ALL React/HTML elements,
     // so we need to hide it when context menus are open to prevent clipping
@@ -297,18 +341,70 @@ export function App(): React.ReactElement {
         }
     }, [sidebarMode, activeTab]);
 
-    // Sync reactSidebarVisible with sidebarVisible, except during mode switches
+    // Sync reactSidebarVisible with sidebarVisible, except during mode switches or overlay mode
     useEffect(() => {
+        // B003-FIX: When in overlay mode, React sidebar should stay hidden
+        if (useOverlayMode) {
+            setReactSidebarVisible(false);
+            return;
+        }
         // When NOT transitioning between modes, just mirror sidebarVisible
         if (!isModeSwitch) {
             setReactSidebarVisible(sidebarVisible);
         }
-    }, [sidebarVisible, isModeSwitch]);
+    }, [sidebarVisible, isModeSwitch, useOverlayMode]);
+
+    // B003-FIX: On initial mount, reset main process overlay state to ensure sync
+    // This handles the case where renderer refreshes but main process overlay state is stale
+    useEffect(() => {
+        if (!window.electronAPI?.sidebarOverlay) return;
+        if (hasCompletedInitialSync) return; // Only run once
+
+        const syncOverlayOnMount = async () => {
+            console.log('[App] Initial mount - syncing overlay state with main process');
+            console.log('[App] useOverlayMode:', useOverlayMode, 'sidebarVisible:', sidebarVisible);
+
+            try {
+                // Check main process overlay state
+                const { isVisible: mainProcessVisible } = await window.electronAPI.sidebarOverlay.getVisibility();
+                console.log('[App] Main process overlay visible:', mainProcessVisible);
+
+                // If we're in overlay mode and sidebar should be visible
+                if (useOverlayMode && sidebarVisible) {
+                    // Ensure overlay is shown (handles case where main process already has it visible)
+                    if (!mainProcessVisible) {
+                        console.log('[App] Showing overlay (was hidden)');
+                        await window.electronAPI.sidebarOverlay.show();
+                    } else {
+                        console.log('[App] Overlay already visible, no action needed');
+                    }
+                    setOverlayActuallyVisible(true);
+                } else {
+                    // If overlay is visible but shouldn't be, hide it
+                    if (mainProcessVisible) {
+                        console.log('[App] Hiding overlay (should not be visible)');
+                        await window.electronAPI.sidebarOverlay.hideInstant();
+                    }
+                    setOverlayActuallyVisible(false);
+                }
+
+                // Mark initial sync as complete - triggers overlay visibility effect
+                setHasCompletedInitialSync(true);
+            } catch (error) {
+                console.error('[App] Initial overlay sync error:', error);
+                setHasCompletedInitialSync(true); // Still mark as complete to unblock
+            }
+        };
+
+        syncOverlayOnMount();
+    }, [useOverlayMode, sidebarVisible, hasCompletedInitialSync]);
 
     // Handle overlay visibility based on useOverlayMode (Spec 020)
     // Hide overlay when not in overlay mode (fixed mode or non-browser tab)
     useEffect(() => {
         if (!window.electronAPI?.sidebarOverlay) return;
+        // B003-FIX: Skip until initial sync is complete
+        if (!hasCompletedInitialSync) return;
 
         const handleOverlayVisibility = async () => {
             // Detect if this is a transition OUT of overlay mode (to fixed or other tabs)
@@ -382,7 +478,7 @@ export function App(): React.ReactElement {
         };
 
         handleOverlayVisibility();
-    }, [useOverlayMode, sidebarVisible, sidebarMode, activeTab, spaces, sidebarActiveSpaceIndex, sidebarSelectedId, sidebarExpandedIdsMap]);
+    }, [hasCompletedInitialSync, useOverlayMode, sidebarVisible, sidebarMode, activeTab, spaces, sidebarActiveSpaceIndex, sidebarSelectedId, sidebarExpandedIdsMap]);
 
     // Sync state changes to sidebar overlay (Spec 020)
     // This runs whenever content changes (spaces, selections, expanded state, etc.)

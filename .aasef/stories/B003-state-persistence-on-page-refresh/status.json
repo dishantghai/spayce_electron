@@ -1,0 +1,25 @@
+{
+    "id": "B003",
+    "type": "bug",
+    "title": "State Persistence on Page Refresh",
+    "status": "completed",
+    "priority": "high",
+    "created_at": "2026-02-02T05:46:00Z",
+    "updated_at": "2026-02-02T05:46:00Z",
+    "related_specs": [],
+    "related_stories": [],
+    "affected_files": [
+        "packages/react-ui/src/hooks/usePersistedState.ts",
+        "packages/react-ui/src/hooks/index.ts",
+        "packages/desktop/src/renderer/App.tsx",
+        "packages/react-ui/src/stores/navigationUiStore.ts",
+        "packages/react-ui/__tests__/hooks/usePersistedState.test.ts"
+    ],
+    "tags": [
+        "state-management",
+        "persistence",
+        "localStorage",
+        "zustand",
+        "ux"
+    ]
+}

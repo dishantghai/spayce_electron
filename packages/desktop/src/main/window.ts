@@ -1,5 +1,7 @@
 import { BrowserWindow, screen, app } from 'electron';
 import path from 'path';
+import { getSidebarOverlayService } from './services/SidebarOverlayService';
+import { getBrowserService } from './services/BrowserService';
 
 export function createMainWindow(): BrowserWindow {
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
@@ -22,6 +24,38 @@ export function createMainWindow(): BrowserWindow {
             nodeIntegration: false,
             sandbox: false, // Need to disable sandbox for better-sqlite3 IPC
         },
+    });
+
+    // Handle renderer reload (CMD+R / CMD+SHIFT+R)
+    // This ensures WebContentsViews are properly reset after reload
+    let isFirstLoad = true;
+    mainWindow.webContents.on('did-finish-load', () => {
+        if (isFirstLoad) {
+            isFirstLoad = false;
+            console.log('[Spayce] Initial load complete');
+            return;
+        }
+
+        // Renderer has reloaded - reset WebContentsView state
+        console.log('[Spayce] Renderer reloaded - resetting WebContentsView state');
+
+        // Small delay to ensure renderer is ready
+        setTimeout(() => {
+            try {
+                const sidebarService = getSidebarOverlayService();
+                const browserService = getBrowserService();
+
+                // Reset browser view first (z-index 0)
+                browserService.handleRendererReload();
+
+                // Then reset sidebar view (z-index 1)
+                sidebarService.handleRendererReload();
+
+                console.log('[Spayce] WebContentsView state reset complete');
+            } catch (error) {
+                console.error('[Spayce] Error resetting views after reload:', error);
+            }
+        }, 100); // 100ms delay to let renderer initialize
     });
 
     return mainWindow;

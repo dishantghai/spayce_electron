@@ -1,10 +1,19 @@
 // React UI Integration - Presentation Layer
 // Hooks, components, and stores for connecting React to Clean Architecture
 
-// NOTE: Hooks are NOT exported from main index because they import @spayce/infrastructure
+// NOTE: Data fetching hooks are NOT exported from main index because they import @spayce/infrastructure
 // which includes better-sqlite3 (Node.js native module that cannot run in browser/Electron renderer)
 // For Electron apps, use IPC-based hooks from packages/desktop/src/renderer/hooks instead
 // export * from './hooks';
+
+// B003: Browser-safe hooks (no Node.js dependencies)
+export {
+    usePersistedState,
+    usePersistedExpandedIdsMap,
+    serializeExpandedIdsMap,
+    deserializeExpandedIdsMap,
+    STORAGE_KEYS,
+} from './hooks/usePersistedState';
 
 export * from './stores';
 export * from './theme';

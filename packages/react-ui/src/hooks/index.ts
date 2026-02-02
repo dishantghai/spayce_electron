@@ -5,6 +5,9 @@ export * from './usePinnedItems';
 export * from './useRecentItems';
 export * from './useFormValidation';
 
+// State persistence (B003)
+export * from './usePersistedState';
+
 // Common utilities
 export * from './common';
 

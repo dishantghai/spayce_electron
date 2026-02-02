@@ -434,6 +434,46 @@ export class BrowserService implements IBrowserService {
     }
 
     /**
+     * Handle renderer reload (CMD+R)
+     * Re-attaches the active browser view with correct bounds
+     */
+    handleRendererReload(): void {
+        if (!this.mainWindow || !this.isInitialized) {
+            console.log('[BrowserService] Not initialized, skipping reload handler');
+            return;
+        }
+
+        console.log('[BrowserService] Handling renderer reload...');
+        console.log('[BrowserService] Active view:', this.activeViewId);
+        console.log('[BrowserService] Current bounds:', this.currentBounds);
+
+        // Re-attach the active view if one exists
+        if (this.activeViewId) {
+            const view = this.views.get(this.activeViewId);
+            if (view) {
+                try {
+                    // Remove and re-add to reset z-order and ensure correct positioning
+                    try {
+                        this.mainWindow.contentView.removeChildView(view);
+                    } catch (error) {
+                        console.warn('[BrowserService] View was not attached:', error);
+                    }
+
+                    // Add at index 0 (below sidebar at index 1)
+                    this.mainWindow.contentView.addChildView(view);
+
+                    // Set bounds to current bounds (will be updated by renderer shortly)
+                    view.setBounds(this.currentBounds);
+
+                    console.log('[BrowserService] Re-attached browser view after reload');
+                } catch (error) {
+                    console.error('[BrowserService] Error re-attaching view:', error);
+                }
+            }
+        }
+    }
+
+    /**
      * Ensure service is initialized
      */
     private ensureInitialized(): void {

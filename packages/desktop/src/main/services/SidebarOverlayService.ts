@@ -39,6 +39,7 @@ export class SidebarOverlayService {
     private isInitialized = false;
     private mouseTrackingInterval: NodeJS.Timeout | null = null;
     private isFloatingMode = false;
+    private isSidebarContentReady = false; // Track if sidebar.html has loaded
 
     constructor(config: Partial<SidebarOverlayConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -184,8 +185,26 @@ export class SidebarOverlayService {
             );
         }
 
-        // Set initial bounds (off-screen to the left)
-        this.updateBounds(-this.config.width);
+        // Set initial bounds (off-screen AND invisible)
+        // Use explicit values to ensure view is truly hidden
+        if (this.mainWindow) {
+            const [, windowHeight] = this.mainWindow.getSize();
+            this.sidebarView.setBounds({
+                x: -this.config.width, // Off-screen to the left
+                y: 0,
+                width: this.config.width,
+                height: windowHeight > 0 ? windowHeight : 800, // Fallback height if window not ready
+            });
+        }
+
+        // Make view invisible until explicitly shown
+        this.sidebarView.setVisible(false);
+
+        // Wait for sidebar content to load before allowing it to be shown
+        this.sidebarView.webContents.on('did-finish-load', () => {
+            console.log('[SidebarOverlayService] Sidebar content loaded and ready');
+            this.isSidebarContentReady = true;
+        });
 
         // Open DevTools in development for debugging (optional)
         if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
@@ -204,12 +223,28 @@ export class SidebarOverlayService {
             return;
         }
 
+        // Don't show sidebar until content has loaded
+        if (!this.isSidebarContentReady) {
+            console.log('[SidebarOverlayService] Waiting for sidebar content to load before showing...');
+            // Wait up to 3 seconds for content to load
+            const startTime = Date.now();
+            while (!this.isSidebarContentReady && Date.now() - startTime < 3000) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            if (!this.isSidebarContentReady) {
+                console.warn('[SidebarOverlayService] Sidebar content not ready after 3s, showing anyway');
+            }
+        }
+
         this.isAnimating = true;
 
         // Stop mouse tracking while sidebar is visible
         this.stopMouseTracking();
 
         try {
+            // Make view visible
+            this.sidebarView.setVisible(true);
+
             // Add to window at index 1 (above browser at index 0)
             this.mainWindow.contentView.addChildView(this.sidebarView, 1);
 
@@ -239,6 +274,9 @@ export class SidebarOverlayService {
 
             // Remove from window
             this.mainWindow.contentView.removeChildView(this.sidebarView);
+
+            // Make view invisible
+            this.sidebarView.setVisible(false);
 
             this.isVisible = false;
             console.log('[SidebarOverlayService] Sidebar hidden');
@@ -277,6 +315,8 @@ export class SidebarOverlayService {
         try {
             // Remove from window immediately without animation
             this.mainWindow.contentView.removeChildView(this.sidebarView);
+            // Make view invisible
+            this.sidebarView.setVisible(false);
             this.isVisible = false;
             console.log('[SidebarOverlayService] Sidebar hidden instantly (mode switch)');
         } catch (error) {
@@ -408,6 +448,70 @@ export class SidebarOverlayService {
         const webContents = this.getWebContents();
         if (webContents && !webContents.isDestroyed()) {
             webContents.send('sidebar:state-update', state);
+        }
+    }
+
+    /**
+     * Handle renderer reload (CMD+R)
+     * Resets view state and re-attaches views if they were visible
+     */
+    handleRendererReload(): void {
+        if (!this.sidebarView || !this.mainWindow) {
+            console.log('[SidebarOverlayService] No view to reset on reload');
+            return;
+        }
+
+        console.log('[SidebarOverlayService] Handling renderer reload...');
+        console.log('[SidebarOverlayService] Sidebar was visible:', this.isVisible);
+
+        // Stop any ongoing animations
+        this.isAnimating = false;
+
+        // Stop mouse tracking temporarily
+        this.stopMouseTracking();
+
+        try {
+            // Remove the view if it's attached (to reset z-order)
+            if (this.isVisible) {
+                try {
+                    this.mainWindow.contentView.removeChildView(this.sidebarView);
+                } catch (error) {
+                    console.warn('[SidebarOverlayService] View was not attached:', error);
+                }
+
+                // Make view visible
+                this.sidebarView.setVisible(true);
+
+                // Re-add the view at correct z-index and bounds
+                this.mainWindow.contentView.addChildView(this.sidebarView, 1);
+
+                // Update bounds to correct position
+                this.updateBounds(0);
+
+                console.log('[SidebarOverlayService] Re-attached visible sidebar after reload');
+            } else {
+                // Sidebar was hidden - ensure it's removed and positioned off-screen
+                try {
+                    this.mainWindow.contentView.removeChildView(this.sidebarView);
+                } catch {
+                    // Already removed
+                }
+
+                // Make view invisible
+                this.sidebarView.setVisible(false);
+
+                // Set off-screen bounds
+                this.updateBounds(-this.config.width);
+
+                console.log('[SidebarOverlayService] Reset hidden sidebar after reload');
+
+                // Restart mouse tracking if in floating mode
+                if (this.isFloatingMode) {
+                    this.startMouseTracking();
+                }
+            }
+        } catch (error) {
+            console.error('[SidebarOverlayService] Error handling reload:', error);
         }
     }
 
