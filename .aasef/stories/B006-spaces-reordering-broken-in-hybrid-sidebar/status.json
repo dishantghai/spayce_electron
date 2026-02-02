@@ -1,0 +1,23 @@
+{
+  "id": "B006",
+  "title": "Spaces Reordering Broken in Hybrid Sidebar",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-02T14:30:00",
+  "related_specs": [
+    "020"
+  ],
+  "related_stories": [
+    "F036"
+  ],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/renderer/App.tsx",
+    "packages/react-ui/src/components/BottomBar.tsx",
+    "packages/react-ui/src/components/spaces/SpacesBottomBar.tsx",
+    "packages/react-ui/src/components/Sidebar.tsx"
+  ],
+  "last_working_commit": "2a0a3ef99e35e79b15f8efdf11a61544855adec0",
+  "fix_notes": "Removed isModeSwitch gating in reactSidebarVisible sync useEffect. The gating was causing stale state after tab switches, which left pointer-events: none on the sidebar wrapper.",
+  "completed": "2026-02-02T22:23:52.956888"
+}

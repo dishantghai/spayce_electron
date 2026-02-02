@@ -27,6 +27,24 @@ export function BottomBar({
     const [hoverIndex, setHoverIndex] = useState<number | null>(null);
     const [justDropped, setJustDropped] = useState(false);
 
+    // B006: Local optimistic state for immediate visual feedback
+    const [optimisticSpaces, setOptimisticSpaces] = useState<Space[] | null>(null);
+
+    // Use optimistic spaces during drop transition, otherwise use props
+    const displayedSpaces = optimisticSpaces ?? spaces;
+
+    // B006: Compute correct active index for displayed spaces (find by ID to handle reorder)
+    const displayedActiveIndex = optimisticSpaces
+        ? optimisticSpaces.findIndex(s => s.id === spaces[activeSpaceIndex]?.id)
+        : activeSpaceIndex;
+
+    // Sync back to props when parent updates (clears optimistic state)
+    React.useEffect(() => {
+        if (optimisticSpaces !== null) {
+            setOptimisticSpaces(null);
+        }
+    }, [spaces]);
+
     // F036: Calculate translateX offset for each icon to create gap animation
     const getTranslateOffset = (index: number): number => {
         if (draggedIndex === null || hoverIndex === null || draggedIndex === hoverIndex) {
@@ -71,25 +89,25 @@ export function BottomBar({
                     e.preventDefault();
                 }}
                 onDrop={(e) => {
-                    console.log('[F036] spacesRow DROP detected');
                     e.preventDefault();
                     e.stopPropagation();
 
                     if (!onReorderSpaces) {
-                        console.log('[F036] No onReorderSpaces handler');
                         return;
                     }
 
                     try {
-                        const data = JSON.parse(e.dataTransfer.getData('application/json'));
-                        console.log('[F036] Drop data:', data);
+                        // B006: Try application/json first, fallback to text/plain for Electron
+                        let rawData = e.dataTransfer.getData('application/json');
+                        if (!rawData) {
+                            rawData = e.dataTransfer.getData('text/plain');
+                        }
+                        const data = JSON.parse(rawData);
 
                         // Calculate which icon was dropped on based on hoverIndex
                         const targetIndex = hoverIndex !== null ? hoverIndex : data.sourceIndex;
-                        console.log('[F036] Target index from hoverIndex:', targetIndex);
 
                         if (data.sourceIndex === targetIndex) {
-                            console.log('[F036] Same position, no reorder needed');
                             setDraggedIndex(null);
                             setHoverIndex(null);
                             return;
@@ -98,23 +116,34 @@ export function BottomBar({
                         // F036: Mark that drop just happened - no hover until mouse moves
                         setJustDropped(true);
 
-                        console.log('[F036] Calling onReorderSpaces:', data.sourceIndex, '->', targetIndex);
+                        // B006: Optimistic update - reorder locally FIRST for instant visual feedback
+                        const newSpaces = [...spaces];
+                        const [movedSpace] = newSpaces.splice(data.sourceIndex, 1);
+                        newSpaces.splice(targetIndex, 0, movedSpace);
+                        setOptimisticSpaces(newSpaces);
+
+                        // Reset drag state - items are now in correct positions via optimistic update
+                        setDraggedIndex(null);
+                        setHoverIndex(null);
+
+                        // Call parent handler async - will update props which clears optimistic state
                         onReorderSpaces(data.sourceIndex, targetIndex);
                     } catch (err) {
                         console.error('[F036] Failed to handle drop:', err);
-                    } finally {
                         setDraggedIndex(null);
                         setHoverIndex(null);
+                        setOptimisticSpaces(null);
                     }
                 }}
             >
-                {spaces.map((space, index) => (
+                {displayedSpaces.map((space, index) => (
                     <SpaceIcon
                         key={space.id}
                         space={space}
                         index={index}
-                        isActive={index === activeSpaceIndex}
+                        isActive={index === displayedActiveIndex}
                         isDragging={draggedIndex === index}
+                        isAnyDragging={draggedIndex !== null}
                         translateOffset={getTranslateOffset(index)}
                         disableHover={justDropped}
                         onClick={() => onSpaceSelect(index)}
@@ -164,6 +193,7 @@ interface SpaceIconProps {
     index: number;
     isActive: boolean;
     isDragging?: boolean;
+    isAnyDragging?: boolean;
     translateOffset?: number;
     disableHover?: boolean;
     isFocused?: boolean;
@@ -172,7 +202,7 @@ interface SpaceIconProps {
     onDragStateChange?: (draggedIndex: number | undefined, hoverIndex: number | undefined, reset?: boolean) => void;
 }
 
-function SpaceIcon({ space, index, isActive, isDragging = false, translateOffset = 0, disableHover = false, isFocused = false, onClick, onReorder, onDragStateChange }: SpaceIconProps): React.ReactElement {
+function SpaceIcon({ space, index, isActive, isDragging = false, isAnyDragging = false, translateOffset = 0, disableHover = false, isFocused = false, onClick, onReorder, onDragStateChange }: SpaceIconProps): React.ReactElement {
     const [isHovered, setIsHovered] = useState(false);
 
     // F036: Clear hover when dragging or when hover is disabled
@@ -236,34 +266,36 @@ function SpaceIcon({ space, index, isActive, isDragging = false, translateOffset
 
     const IconComponent = getIconComponent(space.iconName);
 
-    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-        // Blur the button immediately to prevent lingering focus state
+    const handleClick = (e: React.MouseEvent<HTMLElement>) => {
+        // Blur the element immediately to prevent lingering focus state
         e.currentTarget.blur();
         onClick();
     };
 
     // F036: Arc-style drag handlers - real-time reordering with gap
     const handleDragStart = (e: React.DragEvent) => {
-        console.log('[F036] handleDragStart - index:', index, 'space:', space.name);
-        console.log('[F036] onReorder exists:', !!onReorder, 'onDragStateChange exists:', !!onDragStateChange);
-
         if (!onReorder || !onDragStateChange) {
-            console.log('[F036] Missing handlers, aborting drag');
             return;
         }
 
+        // B006: Set multiple data formats for compatibility
+        const dragData = JSON.stringify({ spaceId: space.id, sourceIndex: index });
         e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('application/json', JSON.stringify({ spaceId: space.id, sourceIndex: index }));
-        // Set dragged index, don't touch hover yet
+        e.dataTransfer.setData('application/json', dragData);
+        e.dataTransfer.setData('text/plain', dragData); // Fallback for Electron compatibility
+
+        // B006: Set a custom drag image to ensure drag works in Electron
+        const target = e.currentTarget as HTMLElement;
+        if (target && typeof e.dataTransfer.setDragImage === 'function') {
+            e.dataTransfer.setDragImage(target, 14, 14); // Center of 28x28 icon
+        }
+
+        // Set dragged index synchronously - React 18 batching handles this correctly
         onDragStateChange(index, undefined, false);
-        console.log('[F036] Drag started successfully');
     };
 
     const handleDragOver = (e: React.DragEvent) => {
-        console.log('[F036] handleDragOver - index:', index);
-
         if (!onReorder || !onDragStateChange) {
-            console.log('[F036] Missing handlers in dragOver');
             return;
         }
 
@@ -271,7 +303,6 @@ function SpaceIcon({ space, index, isActive, isDragging = false, translateOffset
         e.stopPropagation();
         e.dataTransfer.dropEffect = 'move';
 
-        console.log('[F036] dragOver - calling onDragStateChange with index:', index);
         // Update hover index to trigger translateX animation
         onDragStateChange(undefined, index, false);
     };
@@ -281,46 +312,45 @@ function SpaceIcon({ space, index, isActive, isDragging = false, translateOffset
     };
 
     const handleDrop = (e: React.DragEvent) => {
-        console.log('[F036] handleDrop ENTERED - index:', index);
-
         if (!onReorder || !onDragStateChange) {
-            console.log('[F036] Missing handlers in drop');
             return;
         }
 
         e.preventDefault();
         e.stopPropagation();
-        console.log('[F036] handleDrop called on index:', index);
 
         try {
-            const data = JSON.parse(e.dataTransfer.getData('application/json'));
-            console.log('[F036] Drop data:', data);
+            // B006: Try application/json first, fallback to text/plain for Electron
+            let rawData = e.dataTransfer.getData('application/json');
+            if (!rawData) {
+                rawData = e.dataTransfer.getData('text/plain');
+            }
+            const data = JSON.parse(rawData);
 
             if (data.spaceId === space.id) {
-                console.log('[F036] Cannot drop on self');
                 return;
             }
 
-            console.log('[F036] Calling onReorder:', data.sourceIndex, '->', index);
             onReorder(data.sourceIndex, index);
         } catch (err) {
             console.error('[F036] Failed to parse drag data:', err);
         } finally {
-            console.log('[F036] Resetting drag state');
             onDragStateChange(undefined, undefined, true);
         }
     };
 
     const handleDragEnd = () => {
-        console.log('[F036] handleDragEnd - index:', index);
         if (onDragStateChange) {
             onDragStateChange(undefined, undefined, true);
         }
     };
 
+    // B006: Use <div> instead of <button> for better drag-drop compatibility in Electron
     return (
-        <button
-            className={`${styles.spaceIcon} ${isActive ? styles.active : ''} ${isDragging ? styles.dragging : ''}`}
+        <div
+            role="button"
+            tabIndex={0}
+            className={`${styles.spaceIcon} ${isActive ? styles.active : ''} ${isDragging ? styles.dragging : ''} ${isAnyDragging ? styles.shifting : ''}`}
             style={{
                 backgroundColor: `${space.accentColor}26`,
                 borderColor: isActive ? space.accentColor : (isHovered ? space.accentColor : 'transparent'),
@@ -333,6 +363,12 @@ function SpaceIcon({ space, index, isActive, isDragging = false, translateOffset
             onDrop={handleDrop}
             onDragEnd={handleDragEnd}
             onClick={handleClick}
+            onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleClick(e as unknown as React.MouseEvent<HTMLDivElement>);
+                }
+            }}
             onMouseEnter={() => !disableHover && setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             title={space.name}
@@ -341,6 +377,6 @@ function SpaceIcon({ space, index, isActive, isDragging = false, translateOffset
                 size={14}
                 style={{ color: space.accentColor }}
             />
-        </button>
+        </div>
     );
 }

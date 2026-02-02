@@ -32,7 +32,9 @@
       "Bash(pkill:*)",
       "Bash(timeout 30 pnpm dev:*)",
       "Bash(pnpm -F @spayce/desktop build:main:*)",
-      "Bash(pnpm -F @spayce/desktop test:*)"
+      "Bash(pnpm -F @spayce/desktop test:*)",
+      "Bash(pnpm exec vitest run:*)",
+      "Bash(pnpm --filter @spayce/react-ui test -- --run B006)"
     ]
   }
 }

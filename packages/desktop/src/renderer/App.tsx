@@ -410,17 +410,18 @@ export function App(): React.ReactElement {
         }
     }, [sidebarMode, activeTab]);
 
-    // Sync reactSidebarVisible with sidebarVisible, except during mode switches or overlay mode
+    // Sync reactSidebarVisible with sidebarVisible, except during overlay mode
+    // B006-FIX: Always sync when not in overlay mode to fix drag-drop being blocked
     useEffect(() => {
         // B003-FIX: When in overlay mode, React sidebar should stay hidden
         if (useOverlayMode) {
             setReactSidebarVisible(false);
             return;
         }
-        // When NOT transitioning between modes, just mirror sidebarVisible
-        if (!isModeSwitch) {
-            setReactSidebarVisible(sidebarVisible);
-        }
+        // B006-FIX: Always sync with sidebarVisible when not in overlay mode
+        // Previously this was gated by !isModeSwitch, which could leave reactSidebarVisible
+        // stale after tab switches, causing drag-drop events to be blocked
+        setReactSidebarVisible(sidebarVisible);
     }, [sidebarVisible, isModeSwitch, useOverlayMode]);
 
     // B003-FIX: On initial mount, reset main process overlay state to ensure sync
