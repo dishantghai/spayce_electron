@@ -53,6 +53,18 @@
       "title": "Page Title Extraction Failing for Paste Link Trajectories",
       "type": "bug",
       "dir": "B002-page-title-extraction-failing-for-paste-link-traje"
+    },
+    {
+      "id": "B005",
+      "title": "Browser content goes blank when context menu opens in fixed sidebar mode",
+      "type": "bug",
+      "dir": "B005-browser-content-goes-blank-when-context-menu-opens"
+    },
+    {
+      "id": "F035",
+      "title": "Browser content goes blank when context menu opens in Fixed Sidebar Mode",
+      "type": "feature",
+      "dir": "F035-browser-content-goes-blank-when-context-menu-opens"
     }
   ],
   "codebase": {
@@ -86,7 +98,7 @@
     "Fixed and floating sidebar modes"
   ],
   "created_at": "2026-01-17T22:47:24.865263",
-  "updated_at": "2026-01-30T22:06:28.659287",
+  "updated_at": "2026-02-02T18:50:52.596816",
   "enabled_ides": [
     "windsurf",
     "antigravity",

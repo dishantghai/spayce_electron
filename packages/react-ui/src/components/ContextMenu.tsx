@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { LucideIcon } from 'lucide-react';
 import { SpayceColors } from '../theme';
 import styles from './ContextMenu.module.css';
@@ -32,7 +33,9 @@ export function ContextMenu({
     const menuRef = useRef<HTMLDivElement>(null);
     const [focusedIndex, setFocusedIndex] = React.useState<number>(-1);
 
-    // Position menu and adjust if it overflows viewport
+    // Position menu and adjust if it overflows viewport or sidebar bounds
+    // B005 FIX: In fixed sidebar mode, WebContentsView renders on top of HTML,
+    // so we must keep context menu within sidebar bounds (left 320px)
     useEffect(() => {
         if (!menuRef.current) return;
 
@@ -46,9 +49,24 @@ export function ContextMenu({
         let x = position.x;
         let y = position.y;
 
-        // Flip horizontal if overflows right
-        if (x + rect.width > viewport.width) {
-            x = Math.max(0, viewport.width - rect.width - 8);
+        // B005 FIX: Detect if we're in a constrained sidebar area
+        // If click is within sidebar bounds (x < 320) and menu would overflow,
+        // flip menu to open LEFT of cursor instead of right
+        const SIDEBAR_WIDTH = 320;
+        const isInSidebarArea = position.x < SIDEBAR_WIDTH;
+
+        if (isInSidebarArea) {
+            // In sidebar area - keep menu within sidebar bounds
+            // If menu would extend past sidebar edge, flip to left of cursor
+            if (x + rect.width > SIDEBAR_WIDTH - 8) {
+                // Position menu to the LEFT of cursor
+                x = Math.max(8, position.x - rect.width);
+            }
+        } else {
+            // Normal viewport-based overflow handling
+            if (x + rect.width > viewport.width) {
+                x = Math.max(0, viewport.width - rect.width - 8);
+            }
         }
 
         // Flip vertical if overflows bottom
@@ -117,7 +135,9 @@ export function ContextMenu({
 
     const selectableItems = items.filter((item) => !item.isDivider && !item.isDisabled);
 
-    return (
+    // B005 FIX: Use Portal to render at document.body level
+    // This prevents clipping by parent containers with overflow:hidden (like fixed sidebar)
+    const menuContent = (
         <div ref={menuRef} className={styles.contextMenu} role="menu">
             {items.map((item, index) => {
                 if (item.isDivider) {
@@ -152,4 +172,7 @@ export function ContextMenu({
             })}
         </div>
     );
+
+    // Render via portal to escape overflow:hidden containers
+    return createPortal(menuContent, document.body);
 }

@@ -41,20 +41,25 @@ describe('TDD: Overlay Context Menu Z-Index Fix', () => {
             expect(shouldShowBrowser).toBe(true);
         });
 
-        it('should hide browser when context menu opens in non-overlay mode (fixed/spaces)', () => {
+        it('should keep browser visible when context menu opens in fixed sidebar mode (B005 fix)', () => {
+            // B005 FIX: In fixed mode, sidebar is on LEFT, browser on RIGHT
+            // Context menus appear in sidebar area - no overlap with browser WebContentsView
             const activeTab = 'browser';
             const sidebarMode = 'fixed';
             const useOverlayMode = false;
+            const isFixedSidebarMode = sidebarMode === 'fixed';
             const contextMenu = {
                 item: { id: 'item-1', name: 'Test Item' },
                 spaceId: 'space-1',
                 position: { x: 100, y: 200 },
             };
+            const rootContextMenu = null;
 
-            // In non-overlay mode, hide browser to show context menu
-            const shouldShowBrowser = activeTab === 'browser' && (!contextMenu || useOverlayMode);
+            // B005: Browser stays visible in fixed mode (context menu in sidebar area doesn't overlap)
+            const shouldShowBrowser = activeTab === 'browser' &&
+                ((!contextMenu && !rootContextMenu) || useOverlayMode || isFixedSidebarMode);
 
-            expect(shouldShowBrowser).toBe(false);
+            expect(shouldShowBrowser).toBe(true);
         });
 
         it('should show browser when no context menu in any mode', () => {

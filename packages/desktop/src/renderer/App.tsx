@@ -372,11 +372,26 @@ export function App(): React.ReactElement {
     // Hide/show browser WebContentsView based on active tab and context menu state
     // WebContentsView is a native Electron view that renders on top of ALL React/HTML elements,
     // so we need to hide it when context menus are open to prevent clipping
-    // Note: When floating sidebar is visible, we adjust the WebContentsView bounds instead of hiding it
+    // 
+    // B005 FIX: In fixed sidebar mode, context menus appear in the sidebar area (LEFT side)
+    // which does NOT overlap with browser WebContentsView (RIGHT side). So we keep browser visible.
+    // In floating/overlay mode, browser also stays visible (overlay handles z-index separately).
+    // Only hide browser when context menu would actually overlap with browser area.
     useEffect(() => {
-        const shouldShowBrowser = activeTab === 'browser' && !contextMenu && !rootContextMenu;
+        // In fixed mode, sidebar is on LEFT, browser on RIGHT - no overlap with context menus
+        const isFixedSidebarMode = sidebarMode === 'fixed';
+
+        // In overlay mode (floating + browser tab), browser stays visible as backdrop
+        // Context menus in overlay don't conflict with browser WebContentsView
+
+        // B005: Keep browser visible in fixed mode (context menus don't overlap browser area)
+        // Also keep visible in overlay mode (existing fix)
+        const shouldShowBrowser =
+            activeTab === 'browser' &&
+            ((!contextMenu && !rootContextMenu) || useOverlayMode || isFixedSidebarMode);
+
         setBrowserVisibility(shouldShowBrowser);
-    }, [activeTab, contextMenu, rootContextMenu, setBrowserVisibility]);
+    }, [activeTab, contextMenu, rootContextMenu, sidebarMode, useOverlayMode, setBrowserVisibility]);
 
     // Handle sidebar visibility changes (Rule 3 & 4)
     // Note: Overlay show/hide is handled automatically by the overlay visibility useEffect

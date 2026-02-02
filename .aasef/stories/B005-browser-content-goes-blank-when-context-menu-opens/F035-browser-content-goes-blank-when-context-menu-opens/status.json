@@ -1,0 +1,10 @@
+{
+  "id": "B005",
+  "title": "Browser content goes blank when context menu opens in Fixed Sidebar Mode",
+  "type": "bug",
+  "status": "draft",
+  "created": "2026-02-02T18:50:52.596179",
+  "related_specs": [],
+  "related_epic": null,
+  "affected_files": []
+}

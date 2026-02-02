@@ -1,0 +1,33 @@
+{
+  "id": "B005",
+  "title": "Browser content goes blank when context menu opens in fixed sidebar mode",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-02T18:30:59.233146",
+  "related_specs": [],
+  "related_epic": null,
+  "affected_files": [
+    "packages/desktop/src/renderer/App.tsx",
+    "packages/react-ui/src/components/ContextMenu.tsx",
+    "packages/react-ui/package.json",
+    "packages/desktop/__tests__/spec-020/B005-fixed-sidebar-context-menu.test.ts",
+    "packages/desktop/__tests__/spec-020/overlay-context-menu-zindex.test.tsx",
+    "packages/desktop/__tests__/spec-020/overlay-context-menu-integration.test.tsx",
+    "packages/react-ui/__tests__/components/ContextMenu-positioning.test.tsx"
+  ],
+  "completed": "2026-02-02T19:00:00.000000",
+  "implementation_started": "2026-02-02T18:54:55.168774",
+  "tdd": {
+    "enabled": true,
+    "state": "tests_generated",
+    "started_at": "2026-02-02T18:54:55.170408",
+    "tests": {
+      "linked_files": [],
+      "last_run": null,
+      "last_result": null,
+      "passed": 0,
+      "failed": 0,
+      "total": 0
+    }
+  }
+}
