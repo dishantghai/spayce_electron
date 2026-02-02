@@ -11,7 +11,28 @@
       "Bash(npm test:*)",
       "Bash(grep:*)",
       "Bash(find:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(pnpm test:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm --filter desktop test -- --run --reporter=verbose)",
+      "Bash(source:*)",
+      "Bash(nvm use:*)",
+      "Bash(pnpm --filter desktop test -- --run)",
+      "Bash(pnpm --filter desktop test:*)",
+      "Bash(timeout 120 npx vitest:*)",
+      "Bash(timeout 60 npx vitest run:*)",
+      "Bash(timeout 90 npx vitest run:*)",
+      "Bash(cd /Users/Shared/ALL WORKSPACE/projects/spayce_electron/packages/desktop && npx vitest:*)",
+      "Bash(pnpm --filter @spayce/desktop test:*)",
+      "Bash(npx vitest run:*)",
+      "Bash(node:*)",
+      "Bash(pnpm build:*)",
+      "Bash(timeout 50 pnpm dev:*)",
+      "Bash(pkill:*)",
+      "Bash(timeout 30 pnpm dev:*)",
+      "Bash(pnpm -F @spayce/desktop build:main:*)",
+      "Bash(pnpm -F @spayce/desktop test:*)"
     ]
   }
 }

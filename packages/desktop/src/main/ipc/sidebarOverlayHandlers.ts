@@ -18,6 +18,7 @@ export interface SidebarStatePayload {
     sidebarMode: 'floating' | 'fixed';
     activeTab: string;
     hasClipboard?: boolean; // For context menu paste option
+    enableAutoShow?: boolean; // FRESH START FIX: Disable auto-show on fresh app start
 }
 
 /**
@@ -47,7 +48,10 @@ export interface SidebarActionPayload {
         | 'REORDER_SPACES'
         | 'PIN_ITEM'
         | 'REORDER_PINS'
-        | 'EXPANDED_IDS_CHANGE';
+        | 'EXPANDED_IDS_CHANGE'
+        | 'REQUEST_STATE_SYNC' // Added: Sidebar overlay requests state refresh after loading
+        | 'SIDEBAR_READY' // Added: Sidebar overlay signals React has rendered with correct dimensions
+        | 'VISIBILITY_CHANGE'; // Added: Sidebar overlay notifies visibility change (for persisting collapsed state)
     payload: unknown;
 }
 
@@ -62,11 +66,15 @@ export function registerSidebarOverlayHandlers(mainWindow: BrowserWindow): void 
 
     // Show sidebar overlay
     ipcMain.handle('sidebar-overlay:show', async () => {
+        console.log('[SidebarOverlayHandlers] show() IPC called');
         try {
             await service.show();
-            return { success: true, isVisible: service.getIsVisible() };
+            const isVisible = service.getIsVisible();
+            console.log('[SidebarOverlayHandlers] show() completed, isVisible:', isVisible);
+            return { success: true, isVisible };
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
+            console.error('[SidebarOverlayHandlers] show() error:', message);
             return { success: false, error: message };
         }
     });
@@ -95,7 +103,9 @@ export function registerSidebarOverlayHandlers(mainWindow: BrowserWindow): void 
 
     // Get visibility state
     ipcMain.handle('sidebar-overlay:getVisibility', () => {
-        return { success: true, isVisible: service.getIsVisible() };
+        const isVisible = service.getIsVisible();
+        console.log('[SidebarOverlayHandlers] getVisibility called, returning:', isVisible);
+        return { success: true, isVisible };
     });
 
     // Hide instantly (for mode switches)
@@ -111,17 +121,35 @@ export function registerSidebarOverlayHandlers(mainWindow: BrowserWindow): void 
 
     // Sync state from main renderer to sidebar overlay
     ipcMain.on('sidebar-overlay:sync-state', (_event, state: SidebarStatePayload) => {
+        console.log('[SidebarOverlayHandlers] sync-state called with:', {
+            sidebarMode: state.sidebarMode,
+            activeTab: state.activeTab,
+            enableAutoShow: state.enableAutoShow,
+        });
+
         service.sendStateUpdate(state);
 
         // Update floating mode state for mouse tracking
-        // Mouse tracking is only active when in floating mode with browser tab active
-        // Spec 020: Context menus now render in overlay, so they don't interfere with mouse tracking
+        // Mouse tracking is only active when:
+        // 1. In floating mode with browser tab active
+        // 2. Auto-show is enabled (NOT on fresh app start)
+        // FRESH START FIX: enableAutoShow is false on fresh app start to prevent
+        // sidebar from appearing when user's mouse is near left edge during startup
         const isOverlayMode = state.sidebarMode === 'floating' && state.activeTab === 'browser';
-        service.setFloatingMode(isOverlayMode);
+        const shouldEnableTracking = isOverlayMode && state.enableAutoShow !== false;
+        console.log('[SidebarOverlayHandlers] Setting floating mode:', shouldEnableTracking, '(overlay:', isOverlayMode, ', autoShow:', state.enableAutoShow, ')');
+        service.setFloatingMode(shouldEnableTracking);
     });
 
     // Forward action from sidebar overlay to main renderer
+    // Special handling for SIDEBAR_READY - route to service instead of renderer
     ipcMain.on('sidebar-overlay:action', (_event, action: SidebarActionPayload) => {
+        if (action.type === 'SIDEBAR_READY') {
+            // SIDEBAR_READY is handled by the service to unblock show() animation
+            console.log('[SidebarOverlayHandlers] SIDEBAR_READY received, routing to service');
+            service.handleSidebarReady();
+            return;
+        }
         mainWindow.webContents.send('sidebar:action', action);
     });
 

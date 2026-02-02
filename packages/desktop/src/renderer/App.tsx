@@ -232,12 +232,66 @@ export function App(): React.ReactElement {
     const [sidebarMode, setSidebarMode] = usePersistedState<SidebarMode>(
         STORAGE_KEYS.SIDEBAR_MODE, 'fixed'
     );
-    const [sidebarVisible, setSidebarVisible] = usePersistedState<boolean>(
-        STORAGE_KEYS.SIDEBAR_VISIBLE, true
-    );
     const [activeTab, setActiveTab] = usePersistedState<SidebarTabId>(
         STORAGE_KEYS.ACTIVE_TAB, 'spaces'
     );
+
+    // FRESH APP START FIX: Start with sidebar collapsed in floating mode on fresh app start
+    // Uses sessionStorage with timestamp to distinguish between fresh app start and page refresh.
+    // In Electron dev mode, sessionStorage can persist across app restarts, so we use
+    // a timestamp to detect stale sessions (> 5 seconds old = fresh start)
+    const [freshStartOverrideActive, setFreshStartOverrideActive] = useState(() => {
+        const SESSION_FLAG_KEY = 'spayce_session_started';
+        const SESSION_TIMESTAMP_KEY = 'spayce_session_timestamp';
+        const STALE_SESSION_THRESHOLD_MS = 5000; // 5 seconds - if session is older than this, treat as fresh start
+
+        const storedTimestamp = sessionStorage.getItem(SESSION_TIMESTAMP_KEY);
+        const currentTimestamp = Date.now();
+
+        // Check if this is a fresh start:
+        // 1. No timestamp stored (first ever load)
+        // 2. Timestamp is stale (app was restarted in Electron dev mode)
+        const isFreshStart = !storedTimestamp ||
+            (currentTimestamp - parseInt(storedTimestamp, 10)) > STALE_SESSION_THRESHOLD_MS;
+
+        // Always update the timestamp to current time
+        sessionStorage.setItem(SESSION_TIMESTAMP_KEY, String(currentTimestamp));
+        sessionStorage.setItem(SESSION_FLAG_KEY, 'true');
+
+        if (isFreshStart) {
+            console.log('[App] Fresh app start detected - sidebar will start collapsed in floating mode');
+            console.log('[App] (storedTimestamp:', storedTimestamp, ', age:', storedTimestamp ? currentTimestamp - parseInt(storedTimestamp, 10) : 'N/A', 'ms)');
+            return true; // Override is active until user shows sidebar
+        }
+        console.log('[App] Page refresh detected - respecting persisted sidebar state');
+        console.log('[App] (session age:', currentTimestamp - parseInt(storedTimestamp!, 10), 'ms)');
+        return false; // No override on refresh
+    });
+
+    // Persisted sidebar visibility (stores user preference)
+    const [persistedSidebarVisible, setPersistedSidebarVisible] = usePersistedState<boolean>(
+        STORAGE_KEYS.SIDEBAR_VISIBLE, true
+    );
+
+    // Effective sidebar visibility: respects fresh start override
+    // On fresh start + floating mode: start collapsed, override deactivates when user shows sidebar
+    // On refresh or fixed mode: use persisted value
+    const shouldOverrideToCollapsed = freshStartOverrideActive && sidebarMode === 'floating';
+    const sidebarVisible = shouldOverrideToCollapsed ? false : persistedSidebarVisible;
+
+    // Wrapper to update both the effective and persisted values
+    // Also deactivates the fresh start override when user explicitly shows sidebar
+    const setSidebarVisible = useCallback((visible: boolean | ((prev: boolean) => boolean)) => {
+        const newValue = typeof visible === 'function' ? visible(persistedSidebarVisible) : visible;
+
+        // Deactivate fresh start override when user shows sidebar
+        if (newValue && freshStartOverrideActive) {
+            console.log('[App] User showed sidebar - deactivating fresh start override');
+            setFreshStartOverrideActive(false);
+        }
+
+        setPersistedSidebarVisible(newValue);
+    }, [persistedSidebarVisible, setPersistedSidebarVisible, freshStartOverrideActive]);
 
     // Sidebar overlay state (Spec 020)
     // When in floating mode with browser tab, use WebContentsView overlay instead of React sidebar
@@ -356,21 +410,26 @@ export function App(): React.ReactElement {
 
     // B003-FIX: On initial mount, reset main process overlay state to ensure sync
     // This handles the case where renderer refreshes but main process overlay state is stale
+    // FRESH START FIX: Also check freshStartOverrideActive to prevent showing on app start
     useEffect(() => {
         if (!window.electronAPI?.sidebarOverlay) return;
         if (hasCompletedInitialSync) return; // Only run once
 
         const syncOverlayOnMount = async () => {
             console.log('[App] Initial mount - syncing overlay state with main process');
-            console.log('[App] useOverlayMode:', useOverlayMode, 'sidebarVisible:', sidebarVisible);
+            console.log('[App] useOverlayMode:', useOverlayMode, 'sidebarVisible:', sidebarVisible, 'freshStartOverrideActive:', freshStartOverrideActive);
 
             try {
                 // Check main process overlay state
                 const { isVisible: mainProcessVisible } = await window.electronAPI.sidebarOverlay.getVisibility();
                 console.log('[App] Main process overlay visible:', mainProcessVisible);
 
+                // FRESH START FIX: Never show on fresh app start in floating mode
+                // The fresh start override takes precedence over persisted visibility
+                const shouldShowOverlay = useOverlayMode && sidebarVisible && !freshStartOverrideActive;
+
                 // If we're in overlay mode and sidebar should be visible
-                if (useOverlayMode && sidebarVisible) {
+                if (shouldShowOverlay) {
                     // Ensure overlay is shown (handles case where main process already has it visible)
                     if (!mainProcessVisible) {
                         console.log('[App] Showing overlay (was hidden)');
@@ -382,7 +441,7 @@ export function App(): React.ReactElement {
                 } else {
                     // If overlay is visible but shouldn't be, hide it
                     if (mainProcessVisible) {
-                        console.log('[App] Hiding overlay (should not be visible)');
+                        console.log('[App] Hiding overlay (should not be visible, freshStartOverride:', freshStartOverrideActive, ')');
                         await window.electronAPI.sidebarOverlay.hideInstant();
                     }
                     setOverlayActuallyVisible(false);
@@ -397,7 +456,7 @@ export function App(): React.ReactElement {
         };
 
         syncOverlayOnMount();
-    }, [useOverlayMode, sidebarVisible, hasCompletedInitialSync]);
+    }, [useOverlayMode, sidebarVisible, hasCompletedInitialSync, freshStartOverrideActive]);
 
     // Handle overlay visibility based on useOverlayMode (Spec 020)
     // Hide overlay when not in overlay mode (fixed mode or non-browser tab)
@@ -434,6 +493,9 @@ export function App(): React.ReactElement {
                     sidebarMode,
                     activeTab,
                     userName: 'dishant ghai',
+                    // FRESH START FIX: Disable auto-show on fresh app start
+                    // This prevents sidebar from appearing when mouse is near left edge during startup
+                    enableAutoShow: !freshStartOverrideActive,
                 };
 
                 // Handle different visibility scenarios
@@ -482,8 +544,11 @@ export function App(): React.ReactElement {
 
     // Sync state changes to sidebar overlay (Spec 020)
     // This runs whenever content changes (spaces, selections, expanded state, etc.)
+    // FRESH START FIX: Wait for initial sync to complete before syncing state
+    // This prevents mouse tracking from starting before we've decided initial visibility
     useEffect(() => {
         if (!window.electronAPI?.sidebarOverlay || !useOverlayMode) return;
+        if (!hasCompletedInitialSync) return; // Don't sync until initial visibility is decided
 
         const expandedIdsForSpace = Array.from(
             sidebarExpandedIdsMap.get(spaces[sidebarActiveSpaceIndex]?.id) || []
@@ -498,6 +563,8 @@ export function App(): React.ReactElement {
             sidebarMode,
             activeTab,
             userName: 'dishant ghai',
+            // FRESH START FIX: Disable auto-show on fresh app start
+            enableAutoShow: !freshStartOverrideActive,
         });
     }, [
         useOverlayMode,
@@ -507,6 +574,8 @@ export function App(): React.ReactElement {
         sidebarExpandedIdsMap,
         sidebarMode,
         activeTab,
+        hasCompletedInitialSync,
+        freshStartOverrideActive,
     ]);
 
     // Keyboard shortcut: Cmd+B to toggle sidebar (Spec 020)
@@ -2008,6 +2077,36 @@ export function App(): React.ReactElement {
                     }
                     break;
 
+                case 'REQUEST_STATE_SYNC':
+                    // Sidebar overlay requested state sync after it finished loading
+                    // This ensures it gets current state even if early syncs were missed
+                    console.log('[App] REQUEST_STATE_SYNC received, syncing state to overlay');
+                    {
+                        const expandedIdsForSpace = Array.from(
+                            sidebarExpandedIdsMap.get(spaces[sidebarActiveSpaceIndex]?.id) || []
+                        );
+                        window.electronAPI.sidebarOverlay.syncState({
+                            spaces: spaces as unknown[],
+                            activeSpaceId: spaces[sidebarActiveSpaceIndex]?.id || null,
+                            activeSpaceIndex: sidebarActiveSpaceIndex,
+                            selectedItemId: sidebarSelectedId,
+                            expandedIds: expandedIdsForSpace,
+                            sidebarMode,
+                            activeTab,
+                            userName: 'dishant ghai',
+                            // FRESH START FIX: Disable auto-show on fresh app start
+                            enableAutoShow: !freshStartOverrideActive,
+                        });
+                    }
+                    break;
+
+                case 'VISIBILITY_CHANGE':
+                    // Sidebar overlay notifies when it hides (via mouse leave)
+                    // This persists the visibility state to localStorage for refresh
+                    console.log('[App] VISIBILITY_CHANGE received:', action.payload.visible);
+                    setSidebarVisible(action.payload.visible);
+                    break;
+
                 default:
                     console.warn('[App] Unknown overlay action:', action.type);
             }
@@ -2033,15 +2132,34 @@ export function App(): React.ReactElement {
         handlePinItem,
         handleReorderPins,
         setFocusContext,
+        setSidebarVisible, // Required for VISIBILITY_CHANGE handler
     ]);
 
     // Handle auto-show notification from mouse tracking (Spec 020)
     // When overlay auto-shows via left edge hover, update sidebarVisible to trigger state sync
     // This ensures expandedIdsMap is synced before user interacts with overlay
+    // FRESH START FIX: Add startup cooldown to prevent auto-show from triggering immediately
+    // This gives user time to move mouse away from left edge on app start
+    const autoShowCooldownRef = useRef(freshStartOverrideActive ? Date.now() : 0);
+    const AUTO_SHOW_COOLDOWN_MS = 1500; // 1.5 seconds cooldown on fresh start
+
     useEffect(() => {
         if (!window.electronAPI?.sidebarOverlay) return;
 
-        const handleAutoShow = () => {
+        const handleAutoShow = async () => {
+            // Check startup cooldown - prevent auto-show during first 1.5s on fresh start
+            const cooldownRemaining = AUTO_SHOW_COOLDOWN_MS - (Date.now() - autoShowCooldownRef.current);
+            if (cooldownRemaining > 0) {
+                console.log('[App] Auto-show blocked by startup cooldown, remaining:', cooldownRemaining, 'ms - hiding overlay');
+                // Main process already showed the overlay, so we need to hide it
+                try {
+                    await window.electronAPI.sidebarOverlay.hideInstant();
+                } catch (error) {
+                    console.error('[App] Failed to hide overlay during cooldown:', error);
+                }
+                return;
+            }
+
             console.log('[App] Overlay auto-shown via mouse tracking - updating sidebarVisible');
             setSidebarVisible(true);
         };
@@ -2049,7 +2167,7 @@ export function App(): React.ReactElement {
         const unsubscribe = window.electronAPI.sidebarOverlay.onAutoShowTriggered(handleAutoShow);
 
         return unsubscribe;
-    }, []);
+    }, [setSidebarVisible]);
 
     // Show loading state only on initial load (not during refetch)
     // This prevents Sidebar from unmounting/remounting during refetch

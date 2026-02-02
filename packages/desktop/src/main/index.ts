@@ -48,16 +48,23 @@ async function initialize() {
         registerIpcHandlers();
 
         // Create main window (but don't load content yet)
+        console.log('[Spayce] Creating main window...');
         mainWindow = createMainWindow();
+        console.log('[Spayce] Main window created');
 
         // Register browser IPC handlers (requires mainWindow)
+        console.log('[Spayce] Registering browser handlers...');
         registerBrowserHandlers(mainWindow);
 
         // Register sidebar overlay IPC handlers (Spec 020)
+        console.log('[Spayce] Registering sidebar overlay handlers...');
         registerSidebarOverlayHandlers(mainWindow);
+        console.log('[Spayce] Sidebar overlay handlers registered');
 
         // Now load the renderer - after all IPC handlers are registered
+        console.log('[Spayce] Loading renderer...');
         loadRenderer(mainWindow);
+        console.log('[Spayce] Renderer load initiated');
     } catch (error) {
         console.error('Failed to initialize app:', error);
         app.quit();

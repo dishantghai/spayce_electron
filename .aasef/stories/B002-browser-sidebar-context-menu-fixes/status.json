@@ -2,9 +2,11 @@
   "id": "B002",
   "title": "Fix Context Menu, Stale State, and Drag/Drop in Browser Sidebar Overlay",
   "type": "bug",
-  "status": "draft",
+  "status": "completed",
   "created": "2026-02-01T21:30:00Z",
-  "related_specs": ["020"],
+  "related_specs": [
+    "020"
+  ],
   "dependencies": [],
   "affected_files": [
     "packages/desktop/src/renderer/App.tsx",
@@ -15,5 +17,6 @@
     "packages/desktop/src/preload/types.ts",
     "packages/react-ui/src/components/Sidebar.tsx",
     "packages/react-ui/src/components/spaces/SpaceCard.tsx"
-  ]
+  ],
+  "completed": "2026-02-02T18:07:57.939074"
 }

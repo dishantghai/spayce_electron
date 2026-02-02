@@ -13,6 +13,9 @@
       }
       html, body, #sidebar-root {
         width: 100%;
+        /* Start with 100% which will be 0 initially, then JavaScript sets explicit height
+           after viewport becomes valid. Using 100vh doesn't work because it computes to 0
+           when the WebContentsView isn't attached to window yet */
         height: 100%;
         overflow: hidden;
         background-color: #131020;

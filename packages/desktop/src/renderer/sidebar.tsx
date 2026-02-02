@@ -113,10 +113,38 @@ function SidebarOverlayApp() {
     // Track clipboard state from main renderer (for context menu items)
     const [hasClipboard, setHasClipboard] = useState(false);
 
+    // State to force re-render when viewport changes
+    const [, setViewportHeight] = useState(0);
+
+    // FIX: Track viewport dimensions and force re-render on change
+    // This fixes the narrow strip bug by ensuring React re-renders after
+    // the WebContentsView bounds are properly applied to the viewport
+    useEffect(() => {
+        // Listen for resize events
+        const handleResize = () => {
+            // Force re-render with new viewport height
+            setViewportHeight(window.innerHeight);
+        };
+        window.addEventListener('resize', handleResize);
+
+        // FIX: Use ResizeObserver on document.body as a fallback
+        // This catches size changes that might not trigger window resize events
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (const entry of entries) {
+                const newHeight = entry.contentRect.height;
+                setViewportHeight(newHeight);
+            }
+        });
+        resizeObserver.observe(document.body);
+
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            resizeObserver.disconnect();
+        };
+    }, []);
+
     // Initialize IPC subscriptions
     useEffect(() => {
-        console.log('[SidebarOverlay] Initializing...');
-
         // Check if electronAPI is available
         if (!window.electronAPI?.sidebarOverlay) {
             console.error('[SidebarOverlay] electronAPI.sidebarOverlay not available');
@@ -126,8 +154,6 @@ function SidebarOverlayApp() {
 
         // Subscribe to state updates from main renderer
         const unsubscribe = window.electronAPI.sidebarOverlay.onStateUpdate((state: SidebarStatePayload) => {
-            console.log('[SidebarOverlay] State update received:', state);
-
             // Update all state from main renderer
             if (state.spaces) setSpaces(state.spaces as Space[]);
             setActiveSpaceIndex(state.activeSpaceIndex);
@@ -142,7 +168,6 @@ function SidebarOverlayApp() {
             // Overlay manages inline input state completely independently
             // Main renderer setting inline inputs is for the React sidebar (non-overlay mode)
             // Overlay's inline inputs are triggered locally (context menu, hover actions)
-            console.log('[SidebarOverlay] State synced - inline input state managed locally (not synced)');
 
             // Convert expandedIds array to Map for active space only
             // Preserve expanded state for other spaces to avoid unwanted collapses
@@ -156,11 +181,17 @@ function SidebarOverlayApp() {
         });
 
         setConnectionStatus('connected');
-        console.log('[SidebarOverlay] Connected successfully');
+
+        // CRITICAL: Request initial state from main renderer
+        // State updates may have been sent while we were waiting for valid viewport
+        // This ensures we get the current state after we're ready to receive it
+        window.electronAPI.sidebarOverlay.sendAction({
+            type: 'REQUEST_STATE_SYNC',
+            payload: { timestamp: Date.now() },
+        });
 
         return () => {
             unsubscribe();
-            console.log('[SidebarOverlay] Cleanup complete');
         };
     }, []);
 
@@ -208,6 +239,10 @@ function SidebarOverlayApp() {
                 // Hide overlay with animation when mouse leaves
                 await window.electronAPI.sidebarOverlay.hide();
                 console.log('[SidebarOverlay] Hidden via mouse leave');
+
+                // CRITICAL: Notify main renderer to update sidebarVisible state
+                // This persists the collapsed state to localStorage for refresh
+                sendAction('VISIBILITY_CHANGE', { visible: false });
             } catch (error) {
                 console.error('[SidebarOverlay] Failed to hide:', error);
             }
@@ -215,7 +250,7 @@ function SidebarOverlayApp() {
         // Note: We don't call show() here because showing is handled by:
         // 1. Mouse tracking in SidebarOverlayService (auto-show on left edge hover)
         // 2. Main App's overlay visibility effect
-    }, [sidebarMode]);
+    }, [sidebarMode, sendAction]);
 
     const handleItemClick = useCallback((item: SpaceItem, spaceId: string) => {
         console.log('[SidebarOverlay] Item clicked:', item.name, '- clearing inline states');
@@ -642,7 +677,10 @@ function SidebarOverlayApp() {
 // Styles
 const containerStyle: React.CSSProperties = {
     width: '100%',
-    height: '100%',
+    // FIX: Use 100vh to avoid narrow strip bug where 100% height
+    // computes before WebContentsView bounds are applied
+    height: '100vh',
+    minHeight: '100vh',
     overflow: 'hidden',
     backgroundColor: '#131020',
 };
@@ -652,7 +690,9 @@ const loadingContainerStyle: React.CSSProperties = {
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
+    // FIX: Use 100vh to avoid narrow strip bug
+    height: '100vh',
+    minHeight: '100vh',
     gap: '16px',
     backgroundColor: '#131020',
 };
@@ -675,7 +715,9 @@ const errorContainerStyle: React.CSSProperties = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
+    // FIX: Use 100vh to avoid narrow strip bug
+    height: '100vh',
+    minHeight: '100vh',
     padding: '24px',
     textAlign: 'center',
     backgroundColor: '#131020',
@@ -696,19 +738,70 @@ styleSheet.textContent = `
 document.head.appendChild(styleSheet);
 
 // Mount React app
-console.log('[SidebarOverlay] Starting initialization...');
-
 const container = document.getElementById('sidebar-root');
 if (!container) {
     console.error('[SidebarOverlay] Root element not found!');
     throw new Error('Root element not found');
 }
 
-console.log('[SidebarOverlay] Root element found, creating React root...');
+// CRITICAL FIX: Wait for valid dimensions before rendering React
+// Dimensions can come from either:
+// 1. window.innerHeight (viewport) - becomes valid after addChildView
+// 2. view-attached signal from main process - provides dimensions immediately
+// This prevents the narrow strip bug where viewport is 0 during initial render.
+const waitForValidDimensions = (): Promise<{ width: number; height: number }> => {
+    return new Promise((resolve) => {
+        const startTime = Date.now();
+        const maxWaitTime = 10000; // 10 second timeout (generous for Vite module loading)
 
-const root = createRoot(container);
+        // Check if we already have valid dimensions from main process
+        if (receivedBounds && receivedBounds.height >= 100) {
+            resolve(receivedBounds);
+            return;
+        }
 
-// Add global error handler
+        // Set up resolver for when view-attached signal arrives
+        boundsResolver = (bounds) => {
+            resolve(bounds);
+        };
+
+        const checkViewport = () => {
+            const elapsed = Date.now() - startTime;
+            const height = window.innerHeight;
+            const width = window.innerWidth;
+
+            // Check if viewport is now valid
+            if (height >= 100) {
+                boundsResolver = null; // Clear the resolver
+                resolve({ width, height });
+                return;
+            }
+
+            // Check if we received bounds from main process while polling
+            if (receivedBounds && receivedBounds.height >= 100) {
+                boundsResolver = null;
+                resolve(receivedBounds);
+                return;
+            }
+
+            // Timeout fallback - use fallback dimensions
+            if (elapsed > maxWaitTime) {
+                console.error('[SidebarOverlay] Timeout waiting for valid dimensions, using fallback');
+                boundsResolver = null;
+                resolve({ width: 320, height: 800 }); // Fallback dimensions
+                return;
+            }
+
+            // Use requestAnimationFrame for faster detection
+            requestAnimationFrame(checkViewport);
+        };
+
+        // Start checking immediately
+        checkViewport();
+    });
+};
+
+// Add global error handler (before async code)
 window.addEventListener('error', (e) => {
     console.error('[SidebarOverlay] Global error:', e.error);
 });
@@ -717,14 +810,78 @@ window.addEventListener('unhandledrejection', (e) => {
     console.error('[SidebarOverlay] Unhandled rejection:', e.reason);
 });
 
-try {
-    root.render(
-        <React.StrictMode>
-            <SidebarOverlayApp />
-        </React.StrictMode>
-    );
-    console.log('[SidebarOverlay] App render completed');
-} catch (error) {
-    console.error('[SidebarOverlay] Error during render:', error);
-    throw error;
+// Track dimensions received from main process
+let receivedBounds: { width: number; height: number } | null = null;
+let boundsResolver: ((bounds: { width: number; height: number }) => void) | null = null;
+
+// Listen for view-attached signal from main process
+// CRITICAL: This provides the correct dimensions before viewport is valid
+if (window.electronAPI?.on) {
+    window.electronAPI.on('sidebar:view-attached', (data: unknown) => {
+        const attachData = data as { width?: number; height?: number; bounds?: unknown };
+
+        // Use bounds from main process if viewport is still invalid
+        if (attachData.width && attachData.height && attachData.height >= 100) {
+            receivedBounds = { width: attachData.width, height: attachData.height };
+
+            // Resolve any pending wait
+            if (boundsResolver) {
+                boundsResolver(receivedBounds);
+                boundsResolver = null;
+            }
+        }
+    });
 }
+
+// Wait for valid dimensions (from viewport or main process signal)
+// Then render React with correct dimensions
+waitForValidDimensions().then((dimensions) => {
+    // CRITICAL FIX: Use dimensions from promise, not viewport
+    // The viewport might still be 0 if dimensions came from main process signal
+    const height = dimensions.height;
+
+    // Force immediate style update on all parent containers
+    document.documentElement.style.height = `${height}px`;
+    document.body.style.height = `${height}px`;
+    container.style.height = `${height}px`;
+
+    // Force a reflow
+    void document.body.offsetHeight;
+
+    // Keep heights updated on resize
+    const updateHeights = () => {
+        const newHeight = window.innerHeight;
+        if (newHeight >= 100) {
+            document.documentElement.style.height = `${newHeight}px`;
+            document.body.style.height = `${newHeight}px`;
+            container.style.height = `${newHeight}px`;
+        }
+    };
+    window.addEventListener('resize', updateHeights);
+
+    const root = createRoot(container);
+
+    try {
+        root.render(
+            <React.StrictMode>
+                <SidebarOverlayApp />
+            </React.StrictMode>
+        );
+
+        // CRITICAL: Signal to main process that sidebar is ready to be shown
+        // This ensures the animation doesn't start until React has rendered
+        // with correct dimensions
+        setTimeout(() => {
+            if (window.electronAPI?.sidebarOverlay) {
+                window.electronAPI.sidebarOverlay.sendAction({
+                    type: 'SIDEBAR_READY',
+                    payload: { timestamp: Date.now() },
+                });
+            }
+        }, 50); // Small delay to ensure React has committed to DOM
+
+    } catch (error) {
+        console.error('[SidebarOverlay] Error during render:', error);
+        throw error;
+    }
+});

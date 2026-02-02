@@ -403,6 +403,186 @@ describe('sidebarOverlayHandlers', () => {
         });
     });
 
+    describe('Fresh Start Auto-Show Prevention (enableAutoShow flag)', () => {
+        /**
+         * REGRESSION PREVENTION for Fresh Start Fix:
+         *
+         * Problem: On fresh app start, sidebar was appearing when user's mouse
+         * was near the left edge during startup, even though sidebar should
+         * start collapsed in floating mode.
+         *
+         * Fix: Added enableAutoShow flag to state sync. When false, mouse
+         * tracking is disabled to prevent unwanted auto-show.
+         *
+         * Critical behaviors:
+         * 1. enableAutoShow=false should disable mouse tracking even in overlay mode
+         * 2. enableAutoShow=true should enable normal mouse tracking behavior
+         * 3. enableAutoShow=undefined should default to enabled (backwards compatible)
+         */
+
+        beforeEach(() => {
+            registerSidebarOverlayHandlers(mockMainWindow);
+        });
+
+        it('should DISABLE mouse tracking when enableAutoShow is false (fresh start)', () => {
+            const listener = mockIpcMain.on.mock.calls.find(
+                (call) => call[0] === 'sidebar-overlay:sync-state'
+            )?.[1];
+
+            const freshStartState = {
+                spaces: [],
+                activeSpaceIndex: 0,
+                selectedItemId: null,
+                expandedIds: [],
+                sidebarMode: 'floating',
+                activeTab: 'browser',
+                enableAutoShow: false, // Fresh start - disable auto-show
+            };
+
+            listener({}, freshStartState);
+
+            // Even though we're in overlay mode (floating + browser),
+            // mouse tracking should be disabled because enableAutoShow is false
+            expect(mockService.setFloatingMode).toHaveBeenCalledWith(false);
+        });
+
+        it('should ENABLE mouse tracking when enableAutoShow is true', () => {
+            const listener = mockIpcMain.on.mock.calls.find(
+                (call) => call[0] === 'sidebar-overlay:sync-state'
+            )?.[1];
+
+            const normalState = {
+                spaces: [],
+                activeSpaceIndex: 0,
+                selectedItemId: null,
+                expandedIds: [],
+                sidebarMode: 'floating',
+                activeTab: 'browser',
+                enableAutoShow: true, // User has interacted - enable auto-show
+            };
+
+            listener({}, normalState);
+
+            // In overlay mode with enableAutoShow=true, mouse tracking should be enabled
+            expect(mockService.setFloatingMode).toHaveBeenCalledWith(true);
+        });
+
+        it('should ENABLE mouse tracking when enableAutoShow is undefined (backwards compatible)', () => {
+            const listener = mockIpcMain.on.mock.calls.find(
+                (call) => call[0] === 'sidebar-overlay:sync-state'
+            )?.[1];
+
+            const legacyState = {
+                spaces: [],
+                activeSpaceIndex: 0,
+                selectedItemId: null,
+                expandedIds: [],
+                sidebarMode: 'floating',
+                activeTab: 'browser',
+                // No enableAutoShow field - backwards compatible
+            };
+
+            listener({}, legacyState);
+
+            // Without enableAutoShow, should default to enabled for backwards compatibility
+            expect(mockService.setFloatingMode).toHaveBeenCalledWith(true);
+        });
+
+        it('should disable mouse tracking when enableAutoShow is false even with all other conditions met', () => {
+            const listener = mockIpcMain.on.mock.calls.find(
+                (call) => call[0] === 'sidebar-overlay:sync-state'
+            )?.[1];
+
+            // All conditions for overlay mode are met
+            const state = {
+                spaces: [{ id: 'space-1', name: 'Test', icon: '📁' }],
+                activeSpaceId: 'space-1',
+                activeSpaceIndex: 0,
+                selectedItemId: 'item-1',
+                expandedIds: ['folder-1'],
+                sidebarMode: 'floating',
+                activeTab: 'browser',
+                enableAutoShow: false, // But this overrides
+            };
+
+            listener({}, state);
+
+            expect(mockService.setFloatingMode).toHaveBeenCalledWith(false);
+        });
+
+        it('should transition from disabled to enabled auto-show after user interaction', () => {
+            const listener = mockIpcMain.on.mock.calls.find(
+                (call) => call[0] === 'sidebar-overlay:sync-state'
+            )?.[1];
+
+            // First: Fresh start state (auto-show disabled)
+            const freshStartState = {
+                spaces: [],
+                activeSpaceIndex: 0,
+                selectedItemId: null,
+                expandedIds: [],
+                sidebarMode: 'floating',
+                activeTab: 'browser',
+                enableAutoShow: false,
+            };
+
+            listener({}, freshStartState);
+            expect(mockService.setFloatingMode).toHaveBeenLastCalledWith(false);
+
+            // Second: After user shows sidebar manually (auto-show enabled)
+            const afterInteractionState = {
+                ...freshStartState,
+                enableAutoShow: true,
+            };
+
+            mockService.setFloatingMode.mockClear();
+            listener({}, afterInteractionState);
+            expect(mockService.setFloatingMode).toHaveBeenLastCalledWith(true);
+        });
+
+        it('should still respect fixed mode when enableAutoShow is true', () => {
+            const listener = mockIpcMain.on.mock.calls.find(
+                (call) => call[0] === 'sidebar-overlay:sync-state'
+            )?.[1];
+
+            const fixedModeState = {
+                spaces: [],
+                activeSpaceIndex: 0,
+                selectedItemId: null,
+                expandedIds: [],
+                sidebarMode: 'fixed', // Fixed mode - no auto-show regardless
+                activeTab: 'browser',
+                enableAutoShow: true,
+            };
+
+            listener({}, fixedModeState);
+
+            // Fixed mode should always disable mouse tracking
+            expect(mockService.setFloatingMode).toHaveBeenCalledWith(false);
+        });
+
+        it('should still respect non-browser tab when enableAutoShow is true', () => {
+            const listener = mockIpcMain.on.mock.calls.find(
+                (call) => call[0] === 'sidebar-overlay:sync-state'
+            )?.[1];
+
+            const spacesTabState = {
+                spaces: [],
+                activeSpaceIndex: 0,
+                selectedItemId: null,
+                expandedIds: [],
+                sidebarMode: 'floating',
+                activeTab: 'spaces', // Not browser tab - no overlay
+                enableAutoShow: true,
+            };
+
+            listener({}, spacesTabState);
+
+            // Non-browser tab should always disable mouse tracking
+            expect(mockService.setFloatingMode).toHaveBeenCalledWith(false);
+        });
+    });
+
     describe('Action Forwarding (Commit 06130e5)', () => {
         beforeEach(() => {
             registerSidebarOverlayHandlers(mockMainWindow);

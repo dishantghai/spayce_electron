@@ -29,10 +29,14 @@ export function createMainWindow(): BrowserWindow {
     // Handle renderer reload (CMD+R / CMD+SHIFT+R)
     // This ensures WebContentsViews are properly reset after reload
     let isFirstLoad = true;
+    console.log('[Spayce] Window created, setting up did-finish-load handler');
+
     mainWindow.webContents.on('did-finish-load', () => {
+        console.log('[Spayce] did-finish-load fired, isFirstLoad:', isFirstLoad);
+
         if (isFirstLoad) {
             isFirstLoad = false;
-            console.log('[Spayce] Initial load complete');
+            console.log('[Spayce] Initial load complete - NOT calling reload handlers');
             return;
         }
 

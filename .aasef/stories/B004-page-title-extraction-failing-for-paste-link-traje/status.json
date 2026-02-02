@@ -1,8 +1,8 @@
 {
-  "id": "B002",
+  "id": "B004",
   "title": "Page Title Extraction Failing for Paste Link Trajectories",
   "type": "bug",
-  "status": "in_progress",
+  "status": "completed",
   "created": "2026-01-29T13:58:47.922261",
   "related_specs": [],
   "related_epic": null,
@@ -20,5 +20,6 @@
       "failed": 0,
       "total": 0
     }
-  }
+  },
+  "completed": "2026-02-02T18:05:34.625709"
 }

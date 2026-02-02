@@ -161,6 +161,9 @@ export interface SidebarStatePayload {
     } | null;
     // Rename state
     sidebarRenameItemId?: string | null;
+    // FRESH START FIX: Controls whether auto-show on left edge hover is enabled
+    // Set to false on fresh app start to prevent unwanted sidebar appearance
+    enableAutoShow?: boolean;
 }
 
 /**

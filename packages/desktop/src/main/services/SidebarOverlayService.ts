@@ -16,6 +16,11 @@ const DEFAULT_CONFIG: SidebarOverlayConfig = {
     hoverTriggerWidth: 10, // 10px from left edge triggers sidebar
 };
 
+// Minimum valid height to prevent narrow strip bug
+// If window height is less than this, use fallback height
+const MIN_VALID_HEIGHT = 100;
+const FALLBACK_HEIGHT = 800;
+
 /**
  * SidebarOverlayService manages the sidebar WebContentsView overlay
  *
@@ -40,6 +45,8 @@ export class SidebarOverlayService {
     private mouseTrackingInterval: NodeJS.Timeout | null = null;
     private isFloatingMode = false;
     private isSidebarContentReady = false; // Track if sidebar.html has loaded
+    private isSidebarReactReady = false; // Track if React has rendered with correct dimensions
+    private sidebarReadyResolver: (() => void) | null = null; // Resolver for waiting on React ready
 
     constructor(config: Partial<SidebarOverlayConfig> = {}) {
         this.config = { ...DEFAULT_CONFIG, ...config };
@@ -94,8 +101,6 @@ export class SidebarOverlayService {
             return; // Already tracking
         }
 
-        console.log('[SidebarOverlayService] Starting mouse tracking for auto-show');
-
         this.mouseTrackingInterval = setInterval(() => {
             if (!this.mainWindow || !this.isFloatingMode || this.isVisible || this.isAnimating) {
                 return;
@@ -117,8 +122,6 @@ export class SidebarOverlayService {
 
                     // If cursor is within trigger zone on the left edge
                     if (relativeX <= this.config.hoverTriggerWidth) {
-                        console.log('[SidebarOverlayService] Mouse near left edge - auto-showing sidebar');
-
                         // Notify main renderer BEFORE showing so it can update sidebarVisible
                         // This ensures state sync happens before overlay appears
                         if (this.mainWindow && !this.mainWindow.isDestroyed()) {
@@ -143,7 +146,6 @@ export class SidebarOverlayService {
         if (this.mouseTrackingInterval) {
             clearInterval(this.mouseTrackingInterval);
             this.mouseTrackingInterval = null;
-            console.log('[SidebarOverlayService] Stopped mouse tracking');
         }
     }
 
@@ -157,10 +159,6 @@ export class SidebarOverlayService {
         // Both main.cjs and preload.cjs are in the same dist/ directory
         // __dirname points to the directory containing main.cjs (packages/desktop/dist/)
         const preloadPath = path.join(__dirname, 'preload.cjs');
-
-        console.log('[SidebarOverlayService] Creating sidebar view with preload:', preloadPath);
-        console.log('[SidebarOverlayService] __dirname:', __dirname);
-        console.log('[SidebarOverlayService] app.isPackaged:', app.isPackaged);
 
         this.sidebarView = new WebContentsView({
             webPreferences: {
@@ -187,14 +185,19 @@ export class SidebarOverlayService {
 
         // Set initial bounds (off-screen AND invisible)
         // Use explicit values to ensure view is truly hidden
+        // IMPORTANT: Use MIN_VALID_HEIGHT to prevent narrow strip bug
         if (this.mainWindow) {
             const [, windowHeight] = this.mainWindow.getSize();
-            this.sidebarView.setBounds({
+            // Use fallback height if window height is 0 or too small
+            const safeHeight = windowHeight >= MIN_VALID_HEIGHT ? windowHeight : FALLBACK_HEIGHT;
+
+            const initialBounds = {
                 x: -this.config.width, // Off-screen to the left
                 y: 0,
                 width: this.config.width,
-                height: windowHeight > 0 ? windowHeight : 800, // Fallback height if window not ready
-            });
+                height: safeHeight,
+            };
+            this.sidebarView.setBounds(initialBounds);
         }
 
         // Make view invisible until explicitly shown
@@ -202,17 +205,25 @@ export class SidebarOverlayService {
 
         // Wait for sidebar content to load before allowing it to be shown
         this.sidebarView.webContents.on('did-finish-load', () => {
-            console.log('[SidebarOverlayService] Sidebar content loaded and ready');
             this.isSidebarContentReady = true;
+
+            // FIX: Re-set bounds after content loads to ensure renderer gets correct viewport
+            // This fixes the narrow strip bug where the renderer's viewport dimensions
+            // might not match the view bounds on initial load
+            if (this.sidebarView && this.mainWindow) {
+                const [, windowHeight] = this.mainWindow.getSize();
+                const safeHeight = windowHeight >= MIN_VALID_HEIGHT ? windowHeight : FALLBACK_HEIGHT;
+                const currentBounds = this.sidebarView.getBounds();
+
+                // Re-set bounds to trigger viewport update in renderer
+                this.sidebarView.setBounds({
+                    x: currentBounds.x,
+                    y: currentBounds.y,
+                    width: this.config.width,
+                    height: safeHeight,
+                });
+            }
         });
-
-        // Open DevTools in development for debugging (optional)
-        if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
-            // Uncomment to debug sidebar overlay
-            // this.sidebarView.webContents.openDevTools({ mode: 'detach' });
-        }
-
-        console.log('[SidebarOverlayService] Sidebar view created');
     }
 
     /**
@@ -223,36 +234,73 @@ export class SidebarOverlayService {
             return;
         }
 
-        // Don't show sidebar until content has loaded
-        if (!this.isSidebarContentReady) {
-            console.log('[SidebarOverlayService] Waiting for sidebar content to load before showing...');
-            // Wait up to 3 seconds for content to load
-            const startTime = Date.now();
-            while (!this.isSidebarContentReady && Date.now() - startTime < 3000) {
-                await new Promise(resolve => setTimeout(resolve, 50));
-            }
-            if (!this.isSidebarContentReady) {
-                console.warn('[SidebarOverlayService] Sidebar content not ready after 3s, showing anyway');
-            }
-        }
-
+        // CRITICAL FIX: Set isAnimating IMMEDIATELY to prevent race condition
+        // where multiple show() calls proceed past this check before any sets isAnimating
         this.isAnimating = true;
 
-        // Stop mouse tracking while sidebar is visible
-        this.stopMouseTracking();
-
         try {
+            // Don't show sidebar until content has loaded AND window has valid size
+            // This prevents the narrow strip bug on first load
+            const startTime = Date.now();
+            const timeout = 3000;
+
+            // Wait for content to be ready
+            if (!this.isSidebarContentReady) {
+                while (!this.isSidebarContentReady && Date.now() - startTime < timeout) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                if (!this.isSidebarContentReady) {
+                    console.warn('[SidebarOverlayService] Sidebar content not ready after 3s, showing anyway');
+                }
+            }
+
+            // Also wait for window to have valid size (prevents narrow strip bug)
+            if (!this.hasValidWindowSize()) {
+                const sizeWaitStart = Date.now();
+                while (!this.hasValidWindowSize() && Date.now() - sizeWaitStart < timeout) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                if (!this.hasValidWindowSize()) {
+                    console.warn('[SidebarOverlayService] Window size not valid after 3s, showing anyway with fallback');
+                }
+            }
+
+            // Stop mouse tracking while sidebar is visible
+            this.stopMouseTracking();
+
             // Make view visible
             this.sidebarView.setVisible(true);
 
             // Add to window at index 1 (above browser at index 0)
             this.mainWindow.contentView.addChildView(this.sidebarView, 1);
 
+            // CRITICAL: Force a setBounds call AFTER addChildView to ensure viewport is updated
+            // The WebContentsView might not update its internal viewport until attached + bounds set
+            const boundsForForceUpdate = this.sidebarView.getBounds();
+            this.sidebarView.setBounds({
+                x: boundsForForceUpdate.x,
+                y: boundsForForceUpdate.y,
+                width: boundsForForceUpdate.width,
+                height: boundsForForceUpdate.height,
+            });
+
+            // Send a signal to the sidebar renderer with the correct bounds
+            // CRITICAL: This tells the sidebar what dimensions to use BEFORE viewport is valid
+            // The sidebar should use these dimensions instead of waiting for viewport
+            const targetBounds = this.sidebarView.getBounds();
+            if (this.sidebarView.webContents && !this.sidebarView.webContents.isDestroyed()) {
+                this.sidebarView.webContents.send('sidebar:view-attached', {
+                    timestamp: Date.now(),
+                    bounds: targetBounds,
+                    width: targetBounds.width,
+                    height: targetBounds.height,
+                });
+            }
+
             // Animate from off-screen to visible
             await this.animateBounds(-this.config.width, 0);
 
             this.isVisible = true;
-            console.log('[SidebarOverlayService] Sidebar shown');
         } finally {
             this.isAnimating = false;
         }
@@ -279,12 +327,10 @@ export class SidebarOverlayService {
             this.sidebarView.setVisible(false);
 
             this.isVisible = false;
-            console.log('[SidebarOverlayService] Sidebar hidden');
 
             // Restart mouse tracking if still in floating mode
             // setFloatingMode() will handle stopping it if mode changed
             if (this.isFloatingMode) {
-                console.log('[SidebarOverlayService] Restarting mouse tracking (still in floating mode)');
                 this.startMouseTracking();
             }
         } finally {
@@ -318,7 +364,6 @@ export class SidebarOverlayService {
             // Make view invisible
             this.sidebarView.setVisible(false);
             this.isVisible = false;
-            console.log('[SidebarOverlayService] Sidebar hidden instantly (mode switch)');
         } catch (error) {
             console.error('[SidebarOverlayService] Error hiding instantly:', error);
         }
@@ -326,16 +371,22 @@ export class SidebarOverlayService {
 
     /**
      * Update sidebar bounds with cached height to avoid expensive getSize() calls
+     * IMPORTANT: Validates height to prevent narrow strip bug
      */
     private updateBoundsWithHeight(x: number, height: number): void {
         if (!this.sidebarView || !this.mainWindow) return;
 
-        this.sidebarView.setBounds({
+        // Validate height - use fallback if too small
+        const safeHeight = height >= MIN_VALID_HEIGHT ? height : FALLBACK_HEIGHT;
+
+        const newBounds = {
             x: x,
             y: 0,
             width: this.config.width,
-            height: height,
-        });
+            height: safeHeight,
+        };
+
+        this.sidebarView.setBounds(newBounds);
     }
 
     /**
@@ -349,15 +400,28 @@ export class SidebarOverlayService {
     }
 
     /**
+     * Check if window has valid size for displaying sidebar
+     */
+    private hasValidWindowSize(): boolean {
+        if (!this.mainWindow) return false;
+        const [, height] = this.mainWindow.getSize();
+        return height >= MIN_VALID_HEIGHT;
+    }
+
+    /**
      * Animate bounds from start to end x position
      * Optimized to:
-     * 1. Cache window height at animation start (avoid repeated getSize calls)
+     * 1. Use view's current bounds height (prevents overwriting correct bounds with wrong getSize)
      * 2. Use setImmediate for more precise timing when possible
      * 3. Skip intermediate frames if animation is behind schedule
+     *
+     * CRITICAL FIX: Uses view's current bounds height instead of getSize().
+     * This prevents the narrow strip bug where getSize() returns wrong value
+     * during first load but view was already set with correct bounds.
      */
     private animateBounds(startX: number, endX: number): Promise<void> {
         return new Promise((resolve) => {
-            if (!this.mainWindow) {
+            if (!this.mainWindow || !this.sidebarView) {
                 resolve();
                 return;
             }
@@ -366,8 +430,16 @@ export class SidebarOverlayService {
             const startTime = Date.now();
             const frameInterval = 1000 / 60; // ~16.67ms for 60fps
 
-            // Cache height at animation start to avoid expensive getSize() calls during animation
-            const [, windowHeight] = this.mainWindow.getSize();
+            // CRITICAL FIX: Use view's CURRENT bounds height (set correctly during init)
+            // instead of getSize() which may return wrong value on first load
+            const currentBounds = this.sidebarView.getBounds();
+            let windowHeight = currentBounds.height;
+
+            // Only fall back to getSize() if current bounds are invalid
+            if (windowHeight < MIN_VALID_HEIGHT) {
+                const [, windowSizeHeight] = this.mainWindow.getSize();
+                windowHeight = windowSizeHeight >= MIN_VALID_HEIGHT ? windowSizeHeight : FALLBACK_HEIGHT;
+            }
 
             // Track last rendered position to avoid redundant setBounds calls
             let lastRenderedX = startX;
@@ -452,17 +524,47 @@ export class SidebarOverlayService {
     }
 
     /**
+     * Called when sidebar overlay signals that React has rendered with correct dimensions
+     */
+    handleSidebarReady(): void {
+        this.isSidebarReactReady = true;
+        if (this.sidebarReadyResolver) {
+            this.sidebarReadyResolver();
+            this.sidebarReadyResolver = null;
+        }
+    }
+
+    /**
+     * Wait for sidebar React to be ready (rendered with correct dimensions)
+     * NOTE: This is kept for potential future use but currently animation starts immediately
+     */
+    private waitForSidebarReady(): Promise<void> {
+        if (this.isSidebarReactReady) {
+            return Promise.resolve();
+        }
+
+        return new Promise((resolve) => {
+            const timeout = setTimeout(() => {
+                console.warn('[SidebarOverlayService] SIDEBAR_READY timeout');
+                this.sidebarReadyResolver = null;
+                resolve();
+            }, 5000);
+
+            this.sidebarReadyResolver = () => {
+                clearTimeout(timeout);
+                resolve();
+            };
+        });
+    }
+
+    /**
      * Handle renderer reload (CMD+R)
      * Resets view state and re-attaches views if they were visible
      */
     handleRendererReload(): void {
         if (!this.sidebarView || !this.mainWindow) {
-            console.log('[SidebarOverlayService] No view to reset on reload');
             return;
         }
-
-        console.log('[SidebarOverlayService] Handling renderer reload...');
-        console.log('[SidebarOverlayService] Sidebar was visible:', this.isVisible);
 
         // Stop any ongoing animations
         this.isAnimating = false;
@@ -487,8 +589,6 @@ export class SidebarOverlayService {
 
                 // Update bounds to correct position
                 this.updateBounds(0);
-
-                console.log('[SidebarOverlayService] Re-attached visible sidebar after reload');
             } else {
                 // Sidebar was hidden - ensure it's removed and positioned off-screen
                 try {
@@ -502,8 +602,6 @@ export class SidebarOverlayService {
 
                 // Set off-screen bounds
                 this.updateBounds(-this.config.width);
-
-                console.log('[SidebarOverlayService] Reset hidden sidebar after reload');
 
                 // Restart mouse tracking if in floating mode
                 if (this.isFloatingMode) {
