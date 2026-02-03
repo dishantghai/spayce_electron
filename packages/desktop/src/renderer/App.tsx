@@ -2185,6 +2185,30 @@ export function App(): React.ReactElement {
         return unsubscribe;
     }, [setSidebarVisible]);
 
+    // B008: Handle system resume (wake from sleep)
+    // Collapses sidebar in floating mode (same as fresh start behavior)
+    // Main process already hid the overlay; this syncs renderer state
+    useEffect(() => {
+        if (!window.electronAPI?.app?.onSystemResumed) return;
+
+        const handleResume = () => {
+            console.log('[App] System resumed from sleep - collapsing sidebar');
+
+            // Activate fresh start override to collapse sidebar in floating mode
+            setFreshStartOverrideActive(true);
+
+            // Reset auto-show cooldown to prevent immediate re-show
+            autoShowCooldownRef.current = Date.now();
+
+            // Hide React sidebar (main process already hid overlay)
+            setReactSidebarVisible(false);
+            setOverlayActuallyVisible(false);
+        };
+
+        const unsubscribe = window.electronAPI.app.onSystemResumed(handleResume);
+        return unsubscribe;
+    }, []);
+
     // Show loading state only on initial load (not during refetch)
     // This prevents Sidebar from unmounting/remounting during refetch
     // The useSpaces hook now uses isRefetching flag for refetches, keeping loading=false

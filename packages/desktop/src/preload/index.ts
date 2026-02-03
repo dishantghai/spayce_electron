@@ -55,6 +55,12 @@ const electronAPI = {
     app: {
         getVersion: () => ipcRenderer.invoke('app:getVersion'),
         getPlatform: () => ipcRenderer.invoke('app:getPlatform'),
+        // B008: Listen for system resume (wake from sleep)
+        onSystemResumed: (callback: () => void) => {
+            const handler = () => callback();
+            ipcRenderer.on('app:system-resumed', handler);
+            return () => ipcRenderer.removeListener('app:system-resumed', handler);
+        },
     },
 
     // Clipboard operations

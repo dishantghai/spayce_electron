@@ -1,0 +1,25 @@
+{
+  "id": "B008",
+  "title": "Sidebar Overlay Narrow Strip After System Sleep/Wake",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-03T00:00:00",
+  "related_specs": [
+    "020"
+  ],
+  "dependencies": [],
+  "related_stories": [
+    "B002",
+    "B003"
+  ],
+  "affected_files": [
+    "packages/desktop/src/main/index.ts",
+    "packages/desktop/src/main/services/SidebarOverlayService.ts",
+    "packages/desktop/src/main/services/BrowserService.ts",
+    "packages/desktop/src/main/window.ts",
+    "packages/desktop/src/renderer/App.tsx",
+    "packages/desktop/src/preload/types.ts",
+    "packages/desktop/src/preload/index.ts"
+  ],
+  "completed": "2026-02-03T11:20:45.547196"
+}

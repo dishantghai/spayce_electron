@@ -1,10 +1,12 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, powerMonitor } from 'electron';
 import path from 'path';
 import { createMainWindow, loadRenderer } from './window';
 import { ServiceBootstrap } from '@spayce/infrastructure';
 import { registerIpcHandlers } from './ipc/handlers';
 import { registerBrowserHandlers } from './ipc/browserHandlers';
 import { registerSidebarOverlayHandlers } from './ipc/sidebarOverlayHandlers';
+import { getSidebarOverlayService } from './services/SidebarOverlayService';
+import { getBrowserService } from './services/BrowserService';
 
 // Add Chrome-like command line switches to bypass Google's detection
 // These make Electron behave more like a regular Chrome browser
@@ -71,7 +73,36 @@ async function initialize() {
     }
 }
 
-app.whenReady().then(initialize);
+app.whenReady().then(() => {
+    initialize();
+
+    // B008: Handle system resume (wake from sleep)
+    // Collapses sidebar overlay and re-validates WebContentsView bounds
+    // to prevent narrow strip bug and stale viewport after sleep
+    powerMonitor.on('resume', () => {
+        console.log('[Spayce] System resumed from sleep');
+
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            try {
+                const sidebarService = getSidebarOverlayService();
+                const browserService = getBrowserService();
+
+                // Hide sidebar overlay (collapse) and re-validate bounds
+                sidebarService.handleSystemResume();
+
+                // Re-validate browser view bounds
+                browserService.handleSystemResume();
+
+                // Notify renderer to collapse sidebar state
+                mainWindow.webContents.send('app:system-resumed');
+
+                console.log('[Spayce] System resume handling complete');
+            } catch (error) {
+                console.error('[Spayce] Error handling system resume:', error);
+            }
+        }
+    });
+});
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {

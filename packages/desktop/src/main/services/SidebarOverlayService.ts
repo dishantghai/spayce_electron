@@ -558,6 +558,56 @@ export class SidebarOverlayService {
     }
 
     /**
+     * Handle system resume (wake from sleep)
+     * Hides the overlay, re-validates bounds, and restarts mouse tracking
+     * This prevents the narrow strip bug after sleep and ensures clean state
+     */
+    handleSystemResume(): void {
+        if (!this.sidebarView || !this.mainWindow) {
+            return;
+        }
+
+        console.log('[SidebarOverlayService] Handling system resume...');
+
+        // Stop any ongoing animations
+        this.isAnimating = false;
+
+        // Stop mouse tracking temporarily
+        this.stopMouseTracking();
+
+        // If overlay was visible, hide it (collapse on resume = fresh start behavior)
+        if (this.isVisible) {
+            try {
+                this.mainWindow.contentView.removeChildView(this.sidebarView);
+            } catch (error) {
+                console.warn('[SidebarOverlayService] View was not attached on resume:', error);
+            }
+
+            this.sidebarView.setVisible(false);
+            this.isVisible = false;
+        }
+
+        // Re-validate bounds with current window height (may have changed during sleep)
+        const [, windowHeight] = this.mainWindow.getSize();
+        const safeHeight = windowHeight >= MIN_VALID_HEIGHT ? windowHeight : FALLBACK_HEIGHT;
+
+        this.sidebarView.setBounds({
+            x: -this.config.width, // Off-screen
+            y: 0,
+            width: this.config.width,
+            height: safeHeight,
+        });
+
+        // Restart mouse tracking if in floating mode
+        // This allows user to re-show sidebar by hovering left edge
+        if (this.isFloatingMode) {
+            this.startMouseTracking();
+        }
+
+        console.log('[SidebarOverlayService] System resume handled - overlay hidden, bounds re-validated');
+    }
+
+    /**
      * Handle renderer reload (CMD+R)
      * Resets view state and re-attaches views if they were visible
      */

@@ -434,6 +434,27 @@ export class BrowserService implements IBrowserService {
     }
 
     /**
+     * Handle system resume (wake from sleep)
+     * Re-validates bounds on the active browser view to prevent stale viewport
+     */
+    handleSystemResume(): void {
+        if (!this.mainWindow || !this.isInitialized) {
+            return;
+        }
+
+        console.log('[BrowserService] Handling system resume...');
+
+        // Re-set bounds on active view to force viewport update
+        if (this.activeViewId) {
+            const view = this.views.get(this.activeViewId);
+            if (view) {
+                view.setBounds(this.currentBounds);
+                console.log('[BrowserService] Re-applied bounds after resume:', this.currentBounds);
+            }
+        }
+    }
+
+    /**
      * Handle renderer reload (CMD+R)
      * Re-attaches the active browser view with correct bounds
      */
