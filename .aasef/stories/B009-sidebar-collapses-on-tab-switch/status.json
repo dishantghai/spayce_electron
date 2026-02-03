@@ -1,0 +1,20 @@
+{
+  "id": "B009",
+  "title": "Sidebar Collapses When Switching From Browser to Non-Browser Tabs in Floating Mode",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-03T00:00:00",
+  "related_specs": [
+    "020"
+  ],
+  "dependencies": [],
+  "related_stories": [
+    "B002",
+    "B003",
+    "B006"
+  ],
+  "affected_files": [
+    "packages/desktop/src/renderer/App.tsx"
+  ],
+  "completed": "2026-02-03T13:17:39.279324"
+}

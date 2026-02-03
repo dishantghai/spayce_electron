@@ -298,6 +298,11 @@ export function App(): React.ReactElement {
     const useOverlayMode = sidebarMode === 'floating' && activeTab === 'browser';
     const prevUseOverlayMode = useRef(useOverlayMode);
     const prevSidebarMode = useRef(sidebarMode);
+    // B009-FIX: Ref tracking overlay mode for use in IPC callback closures.
+    // Updated on every render AND synchronously in TAB_CHANGE handler to prevent
+    // spurious VISIBILITY_CHANGE events from collapsing the React sidebar.
+    const useOverlayModeRef = useRef(useOverlayMode);
+    useOverlayModeRef.current = useOverlayMode;
 
     // Track overlay transition state to prevent double sidebar
     const [isOverlayTransitioning, setIsOverlayTransitioning] = useState(false);
@@ -476,24 +481,41 @@ export function App(): React.ReactElement {
 
     // Handle overlay visibility based on useOverlayMode (Spec 020)
     // Hide overlay when not in overlay mode (fixed mode or non-browser tab)
+    // B009-FIX: Track invocation generation to abort stale async operations.
+    // When tabs switch rapidly (e.g., Workspace→Browser→Workspace), the first
+    // invocation's await show() may not have completed when the second fires.
+    // Without abort tracking, the second invocation reads stale prevUseOverlayMode
+    // and takes the wrong branch (else instead of isTransitioningOut).
+    const overlayEffectGenRef = useRef(0);
+
     useEffect(() => {
         if (!window.electronAPI?.sidebarOverlay) return;
         // B003-FIX: Skip until initial sync is complete
         if (!hasCompletedInitialSync) return;
 
+        // B009-FIX: Capture transition detection SYNCHRONOUSLY before any async work.
+        // Previously, prevUseOverlayMode.current was only updated at the END of the
+        // async function, causing stale reads when the effect fired again before the
+        // prior invocation's await completed (rapid tab switching race condition).
+        const wasOverlayMode = prevUseOverlayMode.current;
+        const wasSidebarMode = prevSidebarMode.current;
+        const isTransitioningOut = wasOverlayMode === true && useOverlayMode === false;
+        const isFloatingToFixed = wasSidebarMode === 'floating' && sidebarMode === 'fixed';
+
+        // Update refs IMMEDIATELY so the next invocation reads correct values
+        prevUseOverlayMode.current = useOverlayMode;
+        prevSidebarMode.current = sidebarMode;
+
+        // B009-FIX: Increment generation to invalidate any in-flight async operations
+        const currentGen = ++overlayEffectGenRef.current;
+
+        // Set React sidebar visibility for mode transitions
+        if (isFloatingToFixed) {
+            // When switching to fixed mode, preserve current sidebar visibility
+            setReactSidebarVisible(sidebarVisible);
+        }
+
         const handleOverlayVisibility = async () => {
-            // Detect if this is a transition OUT of overlay mode (to fixed or other tabs)
-            const wasOverlayMode = prevUseOverlayMode.current;
-            const wasSidebarMode = prevSidebarMode.current;
-            const isTransitioningOut = wasOverlayMode === true && useOverlayMode === false;
-            const isFloatingToFixed = wasSidebarMode === 'floating' && sidebarMode === 'fixed';
-
-            // Set React sidebar visibility for mode transitions
-            if (isFloatingToFixed) {
-                // When switching to fixed mode, preserve current sidebar visibility
-                setReactSidebarVisible(sidebarVisible);
-            }
-
             try {
                 // Build state payload
                 const expandedIdsForSpace = Array.from(
@@ -520,6 +542,8 @@ export function App(): React.ReactElement {
                     window.electronAPI.sidebarOverlay.syncState(statePayload);
                     setIsOverlayTransitioning(true);
                     await window.electronAPI.sidebarOverlay.show();
+                    // B009-FIX: Abort if a newer invocation has started
+                    if (currentGen !== overlayEffectGenRef.current) return;
                     setOverlayActuallyVisible(true);
                     setIsOverlayTransitioning(false);
                 } else if (isTransitioningOut) {
@@ -533,6 +557,8 @@ export function App(): React.ReactElement {
 
                     // Hide overlay instantly - React sidebar is already visible so no gap
                     await window.electronAPI.sidebarOverlay.hideInstant();
+                    // B009-FIX: Abort if a newer invocation has started
+                    if (currentGen !== overlayEffectGenRef.current) return;
 
                     setOverlayActuallyVisible(false);
                     setIsOverlayTransitioning(false);
@@ -541,18 +567,18 @@ export function App(): React.ReactElement {
                     window.electronAPI.sidebarOverlay.syncState(statePayload);
                     setIsOverlayTransitioning(true);
                     await window.electronAPI.sidebarOverlay.hide();
+                    // B009-FIX: Abort if a newer invocation has started
+                    if (currentGen !== overlayEffectGenRef.current) return;
                     setOverlayActuallyVisible(false);
                     setIsOverlayTransitioning(false);
                 }
             } catch (error) {
                 console.error('[App] Overlay visibility error:', error);
+                // B009-FIX: Only update state if still current generation
+                if (currentGen !== overlayEffectGenRef.current) return;
                 setOverlayActuallyVisible(false);
                 setIsOverlayTransitioning(false);
             }
-
-            // Update previous state
-            prevUseOverlayMode.current = useOverlayMode;
-            prevSidebarMode.current = sidebarMode;
         };
 
         handleOverlayVisibility();
@@ -1674,9 +1700,41 @@ export function App(): React.ReactElement {
                     setFocusContext('sidebar');
                     break;
 
-                case 'TAB_CHANGE':
-                    setActiveTab(action.payload.tab);
+                case 'TAB_CHANGE': {
+                    const newTab = action.payload.tab;
+
+                    // B009-FIX: When leaving overlay mode via tab switch, set React sidebar
+                    // visible synchronously and suppress CSS transitions. Without this,
+                    // reactSidebarVisible stays false for one render (only updated by useEffect),
+                    // causing the sidebar to flash in collapsed state then animate a 250ms slide-in.
+                    // Since this action comes from the overlay, we're currently in overlay mode
+                    // (floating + browser tab) and sidebarVisible is true (overlay was visible).
+                    // Same pattern as handleModeToggle for floating→fixed transition.
+                    if (newTab !== 'browser') {
+                        setIsModeSwitch(true);
+                        setReactSidebarVisible(true);
+                        // B009-FIX: Restore sidebarVisible=true. The overlay sidebar's mouseleave
+                        // fires BEFORE the tab click event, sending VISIBILITY_CHANGE {visible: false}
+                        // which sets sidebarVisible=false. Without this restore, the sync effect
+                        // (which runs after render) would see sidebarVisible=false and override
+                        // reactSidebarVisible back to false, collapsing the sidebar.
+                        // React 18 batches both updates, so the last write (true) wins.
+                        setSidebarVisible(true);
+                        // B009-FIX: Mark overlay mode as false immediately so the
+                        // VISIBILITY_CHANGE handler ignores spurious events from overlay
+                        // mouseleave that fires when the overlay WebContentsView is hidden.
+                        useOverlayModeRef.current = false;
+
+                        requestAnimationFrame(() => {
+                            requestAnimationFrame(() => {
+                                setIsModeSwitch(false);
+                            });
+                        });
+                    }
+
+                    setActiveTab(newTab);
                     break;
+                }
 
                 case 'MODE_TOGGLE':
                     handleModeToggle();
@@ -2119,6 +2177,15 @@ export function App(): React.ReactElement {
                 case 'VISIBILITY_CHANGE':
                     // Sidebar overlay notifies when it hides (via mouse leave)
                     // This persists the visibility state to localStorage for refresh
+                    // B009-FIX: Ignore VISIBILITY_CHANGE {visible: false} when not in overlay mode.
+                    // After tab switch from browser to non-browser, the overlay hides and the
+                    // overlay sidebar's mouseleave fires VISIBILITY_CHANGE {visible: false}.
+                    // Processing this would set sidebarVisible=false, causing the sync effect
+                    // to set reactSidebarVisible=false and collapse the React sidebar.
+                    if (!useOverlayModeRef.current && !action.payload.visible) {
+                        console.log('[App] VISIBILITY_CHANGE ignored - not in overlay mode');
+                        break;
+                    }
                     console.log('[App] VISIBILITY_CHANGE received:', action.payload.visible);
                     setSidebarVisible(action.payload.visible);
                     break;
