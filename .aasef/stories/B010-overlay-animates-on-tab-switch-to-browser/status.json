@@ -1,0 +1,24 @@
+{
+  "id": "B010",
+  "title": "Sidebar Overlay Unnecessarily Animates When Switching to Browser Tab in Floating Mode",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-03T00:00:00",
+  "related_specs": [
+    "020"
+  ],
+  "dependencies": [],
+  "related_stories": [
+    "B009",
+    "B002",
+    "B003",
+    "B008"
+  ],
+  "affected_files": [
+    "packages/desktop/src/main/services/SidebarOverlayService.ts",
+    "packages/desktop/src/main/ipc/sidebarOverlayHandlers.ts",
+    "packages/desktop/src/preload/index.ts",
+    "packages/desktop/src/renderer/App.tsx"
+  ],
+  "completed": "2026-02-03T13:41:12.752493"
+}

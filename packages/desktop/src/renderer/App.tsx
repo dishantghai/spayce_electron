@@ -500,6 +500,10 @@ export function App(): React.ReactElement {
         const wasOverlayMode = prevUseOverlayMode.current;
         const wasSidebarMode = prevSidebarMode.current;
         const isTransitioningOut = wasOverlayMode === true && useOverlayMode === false;
+        // B010-FIX: Detect entering overlay mode via tab switch (symmetric to isTransitioningOut).
+        // This is true when switching from Spaces/Workspace to Browser tab in floating mode.
+        // It is NOT true for auto-show (mouse hover) because prevUseOverlayMode is already true.
+        const isTransitioningIn = wasOverlayMode === false && useOverlayMode === true;
         const isFloatingToFixed = wasSidebarMode === 'floating' && sidebarMode === 'fixed';
 
         // Update refs IMMEDIATELY so the next invocation reads correct values
@@ -541,7 +545,13 @@ export function App(): React.ReactElement {
                     // In overlay mode and sidebar should be visible - show it
                     window.electronAPI.sidebarOverlay.syncState(statePayload);
                     setIsOverlayTransitioning(true);
-                    await window.electronAPI.sidebarOverlay.show();
+                    if (isTransitioningIn) {
+                        // B010-FIX: Tab switch into overlay mode — show instantly (no slide-in animation)
+                        await window.electronAPI.sidebarOverlay.showInstant();
+                    } else {
+                        // Normal animated show (auto-show via mouse hover)
+                        await window.electronAPI.sidebarOverlay.show();
+                    }
                     // B009-FIX: Abort if a newer invocation has started
                     if (currentGen !== overlayEffectGenRef.current) return;
                     setOverlayActuallyVisible(true);

@@ -162,6 +162,7 @@ const electronAPI = {
     // Sidebar overlay operations (Spec 020)
     sidebarOverlay: {
         show: () => ipcRenderer.invoke('sidebar-overlay:show'),
+        showInstant: () => ipcRenderer.invoke('sidebar-overlay:showInstant'),
         hide: () => ipcRenderer.invoke('sidebar-overlay:hide'),
         hideInstant: () => ipcRenderer.invoke('sidebar-overlay:hideInstant'),
         toggle: () => ipcRenderer.invoke('sidebar-overlay:toggle'),

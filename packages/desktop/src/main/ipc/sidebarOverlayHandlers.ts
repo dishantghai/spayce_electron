@@ -108,6 +108,21 @@ export function registerSidebarOverlayHandlers(mainWindow: BrowserWindow): void 
         return { success: true, isVisible };
     });
 
+    // Show instantly without animation (B010: for tab switches into overlay mode)
+    ipcMain.handle('sidebar-overlay:showInstant', async () => {
+        console.log('[SidebarOverlayHandlers] showInstant() IPC called');
+        try {
+            await service.showInstant();
+            const isVisible = service.getIsVisible();
+            console.log('[SidebarOverlayHandlers] showInstant() completed, isVisible:', isVisible);
+            return { success: true, isVisible };
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error('[SidebarOverlayHandlers] showInstant() error:', message);
+            return { success: false, error: message };
+        }
+    });
+
     // Hide instantly (for mode switches)
     ipcMain.handle('sidebar-overlay:hideInstant', () => {
         try {
@@ -170,6 +185,7 @@ export function unregisterSidebarOverlayHandlers(): void {
 
     const handleChannels = [
         'sidebar-overlay:show',
+        'sidebar-overlay:showInstant',
         'sidebar-overlay:hide',
         'sidebar-overlay:hideInstant',
         'sidebar-overlay:toggle',

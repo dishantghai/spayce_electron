@@ -351,6 +351,64 @@ export class SidebarOverlayService {
     }
 
     /**
+     * Show sidebar instantly without animation (for tab switches into overlay mode)
+     * B010-FIX: Symmetric to hideInstant(). Used when switching from Spaces/Workspace
+     * to Browser tab — the overlay should appear instantly, not slide in.
+     */
+    async showInstant(): Promise<void> {
+        if (!this.sidebarView || !this.mainWindow || this.isVisible || this.isAnimating) {
+            return;
+        }
+
+        try {
+            // Wait for content to be ready (same as show())
+            if (!this.isSidebarContentReady) {
+                const startTime = Date.now();
+                const timeout = 3000;
+                while (!this.isSidebarContentReady && Date.now() - startTime < timeout) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+            }
+
+            // Stop mouse tracking while sidebar is visible
+            this.stopMouseTracking();
+
+            // Make view visible
+            this.sidebarView.setVisible(true);
+
+            // Add to window at index 1 (above browser at index 0)
+            this.mainWindow.contentView.addChildView(this.sidebarView, 1);
+
+            // Force setBounds after addChildView (same as show())
+            const boundsForForceUpdate = this.sidebarView.getBounds();
+            this.sidebarView.setBounds({
+                x: boundsForForceUpdate.x,
+                y: boundsForForceUpdate.y,
+                width: boundsForForceUpdate.width,
+                height: boundsForForceUpdate.height,
+            });
+
+            // Send view-attached signal (same as show())
+            const targetBounds = this.sidebarView.getBounds();
+            if (this.sidebarView.webContents && !this.sidebarView.webContents.isDestroyed()) {
+                this.sidebarView.webContents.send('sidebar:view-attached', {
+                    timestamp: Date.now(),
+                    bounds: targetBounds,
+                    width: targetBounds.width,
+                    height: targetBounds.height,
+                });
+            }
+
+            // B010-FIX: Set bounds directly at x=0 — NO animation
+            this.updateBounds(0);
+
+            this.isVisible = true;
+        } catch (error) {
+            console.error('[SidebarOverlayService] Error showing instantly:', error);
+        }
+    }
+
+    /**
      * Hide sidebar instantly without animation (for mode switches)
      */
     hideInstant(): void {
