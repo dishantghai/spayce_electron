@@ -59,6 +59,26 @@ export interface SidebarActionPayload {
  * Register sidebar overlay IPC handlers
  */
 export function registerSidebarOverlayHandlers(mainWindow: BrowserWindow): void {
+    // B013: Remove any existing handlers/listeners first to make registration idempotent.
+    // Prevents "Attempted to register a second handler" crash when app.on('activate')
+    // re-creates the window after macOS hibernation destroys it.
+    // NOTE: We intentionally do NOT call unregisterSidebarOverlayHandlers() here because
+    // that function calls service.destroy(), which we don't want during re-registration.
+    const handleChannels = [
+        'sidebar-overlay:show',
+        'sidebar-overlay:showInstant',
+        'sidebar-overlay:hide',
+        'sidebar-overlay:hideInstant',
+        'sidebar-overlay:toggle',
+        'sidebar-overlay:getVisibility',
+    ];
+    for (const channel of handleChannels) {
+        ipcMain.removeHandler(channel);
+    }
+    ipcMain.removeAllListeners('sidebar-overlay:sync-state');
+    ipcMain.removeAllListeners('sidebar-overlay:action');
+    ipcMain.removeAllListeners('sidebar-overlay:set-mode');
+
     const service = getSidebarOverlayService();
 
     // Initialize service with main window

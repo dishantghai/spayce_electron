@@ -6,6 +6,11 @@ import { getSidebarOverlayService } from '../services/SidebarOverlayService';
  * Register all browser-related IPC handlers
  */
 export function registerBrowserHandlers(mainWindow: BrowserWindow): void {
+    // B013: Remove any existing handlers first to make registration idempotent.
+    // Prevents "Attempted to register a second handler" crash when app.on('activate')
+    // re-creates the window after macOS hibernation destroys it.
+    unregisterBrowserHandlers();
+
     const browserService = getBrowserService();
     browserService.initialize(mainWindow);
 

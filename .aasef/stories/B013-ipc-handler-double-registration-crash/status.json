@@ -1,0 +1,17 @@
+{
+  "id": "B013",
+  "title": "IPC Handler Double-Registration Crash After macOS Hibernation + CMD+R",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-04T00:00:00",
+  "related_specs": [
+    "019",
+    "020"
+  ],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/main/ipc/browserHandlers.ts",
+    "packages/desktop/src/main/ipc/sidebarOverlayHandlers.ts"
+  ],
+  "completed": "2026-02-04T03:44:15.631992"
+}
