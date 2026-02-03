@@ -75,7 +75,7 @@ export class UpdateTabValidator {
 
         return {
             success: true,
-            data: data as UpdateTabInput,
+            data: data as unknown as UpdateTabInput,
             errors: [],
         };
     }

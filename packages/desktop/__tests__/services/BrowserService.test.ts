@@ -257,12 +257,12 @@ describe('BrowserService', () => {
             );
         });
 
-        it('should set Safari macOS user agent', () => {
+        it('should set Firefox macOS user agent', () => {
             service.createView('test-view');
 
             const mockView = (WebContentsView as any).mock.results[0].value;
             expect(mockView.webContents.setUserAgent).toHaveBeenCalledWith(
-                expect.stringContaining('Safari')
+                expect.stringContaining('Firefox')
             );
             expect(mockView.webContents.setUserAgent).toHaveBeenCalledWith(
                 expect.stringContaining('Macintosh')

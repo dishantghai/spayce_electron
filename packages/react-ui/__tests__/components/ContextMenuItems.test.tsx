@@ -78,7 +78,7 @@ describe('Feature: Context Menu Items (F004)', () => {
             const onItemClick = vi.fn();
             const onClose = vi.fn();
 
-            const { container } = render(
+            render(
                 <ContextMenu
                     items={folderMenuItems}
                     position={defaultPosition}
@@ -87,9 +87,9 @@ describe('Feature: Context Menu Items (F004)', () => {
                 />
             );
 
-            // Check for menu items (should be 2) and dividers are rendered as divs
-            const menu = container.querySelector('[role="menu"]');
-            const menuItems = container.querySelectorAll('[role="menuitem"]');
+            // ContextMenu uses createPortal to document.body, so query from document
+            const menu = document.querySelector('[role="menu"]');
+            const menuItems = document.querySelectorAll('[role="menuitem"]');
             expect(menuItems.length).toBe(2); // 2 menu items, 1 divider is a div not a menuitem
             // Total children should be 3 (2 buttons + 1 divider div)
             expect(menu?.children.length).toBe(3);
@@ -571,7 +571,7 @@ describe('Feature: Context Menu Items (F004)', () => {
             const onItemClick = vi.fn();
             const onClose = vi.fn();
 
-            const { container } = render(
+            render(
                 <ContextMenu
                     items={[]}
                     position={defaultPosition}
@@ -580,7 +580,8 @@ describe('Feature: Context Menu Items (F004)', () => {
                 />
             );
 
-            const menu = container.querySelector('[role="menu"]');
+            // ContextMenu uses createPortal to document.body, so query from document
+            const menu = document.querySelector('[role="menu"]');
             expect(menu).toBeTruthy();
             expect(menu?.children.length).toBe(0);
         });
@@ -594,7 +595,7 @@ describe('Feature: Context Menu Items (F004)', () => {
             const onItemClick = vi.fn();
             const onClose = vi.fn();
 
-            const { container } = render(
+            render(
                 <ContextMenu
                     items={menuItems}
                     position={defaultPosition}
@@ -603,11 +604,12 @@ describe('Feature: Context Menu Items (F004)', () => {
                 />
             );
 
-            const menu = container.querySelector('[role="menu"]');
+            // ContextMenu uses createPortal to document.body, so query from document
+            const menu = document.querySelector('[role="menu"]');
             // Should have 2 children (2 divider divs)
             expect(menu?.children.length).toBe(2);
             // Should have no menuitem buttons
-            const menuItemButtons = container.querySelectorAll('[role="menuitem"]');
+            const menuItemButtons = document.querySelectorAll('[role="menuitem"]');
             expect(menuItemButtons.length).toBe(0);
         });
 

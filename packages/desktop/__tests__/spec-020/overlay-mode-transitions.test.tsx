@@ -143,14 +143,14 @@ describe('Spec-020: Overlay Mode Transitions', () => {
         it('should reset isModeSwitch after render + one frame', async () => {
             let isModeSwitch = true;
 
-            // Simulate double requestAnimationFrame
+            // Simulate double requestAnimationFrame with setTimeout (jsdom doesn't have real rAF)
             await new Promise<void>((resolve) => {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
+                setTimeout(() => {
+                    setTimeout(() => {
                         isModeSwitch = false;
                         resolve();
-                    });
-                });
+                    }, 0);
+                }, 0);
             });
 
             expect(isModeSwitch).toBe(false);

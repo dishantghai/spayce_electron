@@ -151,7 +151,7 @@ describe('REGRESSION: Stale Inline Input State Cleanup', () => {
     });
 
     describe('BUG #3: Rename → Cancel → Rename Same Item → No Input', () => {
-        it('should force state toggle when renaming same item', () => {
+        it('should force state toggle when renaming same item', async () => {
             sidebarRenameItemId = 'item-A'; // Previous state
 
             // Simulate rename action with forced toggle
@@ -165,9 +165,12 @@ describe('REGRESSION: Stale Inline Input State Cleanup', () => {
 
             handleRenameAction('item-A'); // Same item
 
-            // Should call setSidebarRenameItemId twice
-            expect(setSidebarRenameItemId).toHaveBeenCalledTimes(2);
+            // First call is synchronous (null)
             expect(setSidebarRenameItemId).toHaveBeenNthCalledWith(1, null);
+            // Flush the setTimeout(0) so the second call executes
+            await vi.waitFor(() => {
+                expect(setSidebarRenameItemId).toHaveBeenCalledTimes(2);
+            });
             expect(setSidebarRenameItemId).toHaveBeenNthCalledWith(2, 'item-A');
         });
 
@@ -204,7 +207,7 @@ describe('REGRESSION: Stale Inline Input State Cleanup', () => {
     });
 
     describe('Comprehensive Scenario Tests', () => {
-        it('Scenario 1: Rename A → Click B → Rename B', () => {
+        it('Scenario 1: Rename A → Click B → Rename B', async () => {
             // Step 1: Rename A
             sidebarRenameItemId = 'item-A';
 
@@ -219,7 +222,10 @@ describe('REGRESSION: Stale Inline Input State Cleanup', () => {
             setSidebarRenameItemId(null);
             setTimeout(() => setSidebarRenameItemId('item-B'), 0);
 
-            expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-B');
+            // Flush the setTimeout(0) so the rename call executes
+            await vi.waitFor(() => {
+                expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-B');
+            });
         });
 
         it('Scenario 2: New Folder A → Right-click B → Delete B', () => {
@@ -236,7 +242,7 @@ describe('REGRESSION: Stale Inline Input State Cleanup', () => {
             // No stale state interfering ✅
         });
 
-        it('Scenario 3: Rename A → Click A → Rename A', () => {
+        it('Scenario 3: Rename A → Click A → Rename A', async () => {
             // Step 1: Rename A
             sidebarRenameItemId = 'item-A';
             selectedItemId = 'item-A';
@@ -251,7 +257,10 @@ describe('REGRESSION: Stale Inline Input State Cleanup', () => {
             setSidebarRenameItemId(null);
             setTimeout(() => setSidebarRenameItemId('item-A'), 0);
 
-            expect(setSidebarRenameItemId).toHaveBeenLastCalledWith('item-A');
+            // Flush the setTimeout(0) so the rename call executes
+            await vi.waitFor(() => {
+                expect(setSidebarRenameItemId).toHaveBeenLastCalledWith('item-A');
+            });
         });
 
         it('Scenario 4: Multiple rapid interactions', () => {

@@ -27,7 +27,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 describe('REGRESSION: All Context Menu Action Types', () => {
     describe('Rename Action', () => {
-        it('should trigger inline rename with forced state toggle', () => {
+        it('should trigger inline rename with forced state toggle', async () => {
             const setSidebarRenameItemId = vi.fn();
 
             const handleRename = (itemId: string) => {
@@ -38,7 +38,10 @@ describe('REGRESSION: All Context Menu Action Types', () => {
             handleRename('item-123');
 
             expect(setSidebarRenameItemId).toHaveBeenCalledWith(null);
-            expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-123');
+            // Flush the setTimeout(0) so the second call executes
+            await vi.waitFor(() => {
+                expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-123');
+            });
         });
 
         it('should clear input state but NOT rename state (selective)', () => {
@@ -207,7 +210,7 @@ describe('REGRESSION: All Context Menu Action Types', () => {
     });
 
     describe('Paste Action', () => {
-        it('should paste from internal clipboard', () => {
+        it('should paste from internal clipboard', async () => {
             const mockHasItems = vi.fn(() => true);
             const mockGetItems = vi.fn(() => [{ id: 'item-1' }]);
             const mockClear = vi.fn();
@@ -223,7 +226,7 @@ describe('REGRESSION: All Context Menu Action Types', () => {
                 }
             };
 
-            handlePaste();
+            await handlePaste();
 
             expect(mockGetItems).toHaveBeenCalled();
             expect(mockPasteItem).toHaveBeenCalled();

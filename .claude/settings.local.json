@@ -34,7 +34,30 @@
       "Bash(pnpm -F @spayce/desktop build:main:*)",
       "Bash(pnpm -F @spayce/desktop test:*)",
       "Bash(pnpm exec vitest run:*)",
-      "Bash(pnpm --filter @spayce/react-ui test -- --run B006)"
+      "Bash(pnpm --filter @spayce/react-ui test -- --run B006)",
+      "Bash(export PATH:*)",
+      "Bash(pnpm vitest run:*)",
+      "Bash(export NVM_DIR=\"$HOME/.nvm\")",
+      "Bash([ -s \"$NVM_DIR/nvm.sh\" ])",
+      "Bash(. \"$NVM_DIR/nvm.sh\")",
+      "Bash(NVM_DIR=\"$HOME/.nvm\")",
+      "Bash(export HOME=/Users/apple:*)",
+      "Bash(file:*)",
+      "Bash(tee:*)",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && node --version && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx vitest run \"\"packages/react-ui/__tests__/components/TreeView-animation-optimization.test.tsx\"\" 2>&1 | tail -200')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx vitest run \"\"packages/desktop/__tests__/spec-020/\"\" 2>&1 | grep -E \"\"\\(FAIL|×|✓|AssertionError|expected|Error:\\)\"\" | head -60')",
+      "Bash(bash -l -c 'source \"\"\"\"$HOME/.nvm/nvm.sh\"\"\"\" && nvm use 22 && cd \"\"\"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\"\"\" && npx vitest run \"\"\"\"packages/desktop/__tests__/spec-020/\"\"\"\" 2>&1 | grep -A 15 \"\"\"\"AssertionError\\\\|expected.*to\\\\|Error:\"\"\"\"')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx vitest run \"\"packages/core/__tests__/spec-011/documentation-updates.test.ts\"\" 2>&1 | grep -A 10 \"\"×\\\\|FAIL\\\\|Expected\\\\|Received\"\" | head -60')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx vitest run \"\"packages/desktop/__tests__/services/BrowserService.test.ts\"\" 2>&1 | grep -A 15 \"\"×\\\\|FAIL\"\" | head -40')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx vitest run \"\"packages/desktop/__tests__/ipc/ipc-contract.test.ts\"\" 2>&1 | grep -A 20 \"\"should have matching\"\"')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npm rebuild better-sqlite3 2>&1')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx vitest run \"\"packages/desktop/__tests__/smoke/smoke-tests.test.ts\"\" 2>&1 | grep -E \"\"×|FAIL|✓\"\" | head -30')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx vitest run \"\"packages/desktop/__tests__/smoke/smoke-tests.test.ts\"\" 2>&1 | grep \"\"ERR_DLOPEN\\\\|MODULE_VERSION\\\\|compiled against\"\" | head -5')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && node --version && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && npx node-gyp rebuild --directory=node_modules/.pnpm/better-sqlite3@11.8.2/node_modules/better-sqlite3 2>&1 | tail -10')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && ls node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3/build/Release/ 2>/dev/null && file node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3/build/Release/better_sqlite3.node 2>/dev/null')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && ls node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3/package.json')",
+      "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron/node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3\"\" && npx --yes prebuild-install --runtime napi 2>&1 || \\(npm run build-release 2>&1 | tail -20\\)')",
+      "Bash(bash -l -c:*)"
     ]
   }
 }

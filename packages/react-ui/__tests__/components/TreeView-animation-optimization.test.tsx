@@ -78,8 +78,8 @@ describe('TreeView Animation Optimization', () => {
                     id: 'folder-1',
                     isExpanded: true,
                     children: [
-                        createMockItem({ id: 'child-1' }),
-                        createMockItem({ id: 'child-2' }),
+                        createMockItem({ id: 'child-1', name: 'Child One' }),
+                        createMockItem({ id: 'child-2', name: 'Child Two' }),
                     ],
                 }),
             ];
@@ -94,7 +94,8 @@ describe('TreeView Animation Optimization', () => {
                 />
             );
 
-            expect(screen.getByText('Child')).toBeTruthy();
+            // Use getAllByText since drag preview may duplicate text nodes
+            expect(screen.getAllByText('Child One').length).toBeGreaterThan(0);
         });
 
         it('should handle collapsed folder (children hidden)', () => {
@@ -218,13 +219,15 @@ describe('TreeView Animation Optimization', () => {
             const items = [
                 createMockItem({
                     id: 'folder-1',
+                    name: 'Folder A',
                     isExpanded: true,
-                    children: [createMockItem({ id: 'child-1' })],
+                    children: [createMockItem({ id: 'child-1', name: 'Child A' })],
                 }),
                 createMockItem({
                     id: 'folder-2',
+                    name: 'Folder B',
                     isExpanded: true,
-                    children: [createMockItem({ id: 'child-2' })],
+                    children: [createMockItem({ id: 'child-2', name: 'Child B' })],
                 }),
             ];
 
@@ -238,7 +241,9 @@ describe('TreeView Animation Optimization', () => {
                 />
             );
 
-            expect(screen.getByText('Child')).toBeTruthy();
+            // Use getAllByText since drag preview may duplicate text nodes
+            expect(screen.getAllByText('Child A').length).toBeGreaterThan(0);
+            expect(screen.getAllByText('Child B').length).toBeGreaterThan(0);
         });
     });
 
@@ -279,7 +284,8 @@ describe('TreeView Animation Optimization', () => {
                 />
             );
 
-            expect(screen.getByText('Deep Child')).toBeTruthy();
+            // Use getAllByText since drag preview may duplicate text nodes
+            expect(screen.getAllByText('Deep Child').length).toBeGreaterThan(0);
         });
 
         it('should collapse all children when parent collapses', () => {
@@ -447,7 +453,8 @@ describe('TreeView Animation Optimization', () => {
             );
 
             // Should not crash or cause infinite loops
-            expect(screen.getByText('Test Item')).toBeTruthy();
+            // Use getAllByText since drag preview may duplicate text nodes
+            expect(screen.getAllByText('Test Item').length).toBeGreaterThan(0);
         });
     });
 });

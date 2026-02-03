@@ -193,7 +193,10 @@ export interface SidebarActionPayload {
         | 'REORDER_SPACES'
         | 'PIN_ITEM'
         | 'REORDER_PINS'
-        | 'EXPANDED_IDS_CHANGE';
+        | 'EXPANDED_IDS_CHANGE'
+        | 'REQUEST_STATE_SYNC'
+        | 'SIDEBAR_READY'
+        | 'VISIBILITY_CHANGE';
     payload: unknown;
 }
 

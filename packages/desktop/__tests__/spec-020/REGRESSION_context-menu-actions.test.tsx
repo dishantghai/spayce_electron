@@ -51,7 +51,7 @@ describe('REGRESSION: Context Menu Action Execution', () => {
     });
 
     describe('Rename Action', () => {
-        it('should set rename state with forced toggle', () => {
+        it('should set rename state with forced toggle', async () => {
             const setSidebarRenameItemId = vi.fn();
 
             const handleRenameAction = (itemId: string) => {
@@ -63,10 +63,13 @@ describe('REGRESSION: Context Menu Action Execution', () => {
             handleRenameAction('item-123');
 
             expect(setSidebarRenameItemId).toHaveBeenNthCalledWith(1, null);
-            expect(setSidebarRenameItemId).toHaveBeenNthCalledWith(2, 'item-123');
+            // Flush the setTimeout(0) so the second call executes
+            await vi.waitFor(() => {
+                expect(setSidebarRenameItemId).toHaveBeenNthCalledWith(2, 'item-123');
+            });
         });
 
-        it('should NOT clear rename state for rename action (selective cleanup)', () => {
+        it('should NOT clear rename state for rename action (selective cleanup)', async () => {
             const setSidebarRenameItemId = vi.fn();
             const clearSidebarInput = vi.fn();
 
@@ -88,8 +91,10 @@ describe('REGRESSION: Context Menu Action Execution', () => {
 
             handleAction('rename', 'item-123');
 
-            // Rename state set (via forced toggle)
-            expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-123');
+            // Flush the setTimeout(0) so the rename call executes
+            await vi.waitFor(() => {
+                expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-123');
+            });
             // Input state cleared (not related to rename)
             expect(clearSidebarInput).toHaveBeenCalled();
         });

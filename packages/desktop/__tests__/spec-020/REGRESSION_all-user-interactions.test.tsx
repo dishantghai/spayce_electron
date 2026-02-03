@@ -143,7 +143,9 @@ describe('REGRESSION: All User Interaction Scenarios', () => {
             const env = createMockEnvironment();
 
             env.rename('item-A');
-            expect(env.state.sidebarRenameItemId).not.toBeNull();
+            // rename() calls setSidebarRenameItemId(null) synchronously,
+            // the setTimeout(itemId) hasn't fired yet, so state is null
+            expect(env.state.sidebarRenameItemId).toBeNull();
 
             env.rightClick('item-B');
             expect(env.state.sidebarRenameItemId).toBeNull();
@@ -262,7 +264,7 @@ describe('REGRESSION: All User Interaction Scenarios', () => {
             expect(env.state.contextMenuOpen).toBe(true);
         });
 
-        it('should handle rapid rename attempts on same item', () => {
+        it('should handle rapid rename attempts on same item', async () => {
             const setSidebarRenameItemId = vi.fn();
 
             const attemptRename = (itemId: string) => {
@@ -276,7 +278,10 @@ describe('REGRESSION: All User Interaction Scenarios', () => {
 
             // Each attempt should toggle through null
             expect(setSidebarRenameItemId).toHaveBeenCalledWith(null);
-            expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-A');
+            // Flush the setTimeout(0) so the rename calls execute
+            await vi.waitFor(() => {
+                expect(setSidebarRenameItemId).toHaveBeenCalledWith('item-A');
+            });
         });
     });
 

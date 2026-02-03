@@ -355,6 +355,7 @@ export function App(): React.ReactElement {
         setSidebarRenameItemId,
         setCardRenameItemId,
         setSidebarInput,
+        clearSidebarInput,
         setCardInput,
     } = useInlineInputStore();
 
@@ -1491,7 +1492,7 @@ export function App(): React.ReactElement {
         console.log('[Drop] ========== DROP OPERATION START ==========');
         console.log('[Drop] Source:', dragData.source);
         console.log('[Drop] Items to move:', itemsToMove.length, isMultiDrag ? '(multi-select)' : '(single)');
-        console.log('[Drop] Items:', itemsToMove.map(i => i.name).join(', '));
+        console.log('[Drop] Items:', itemsToMove.map((i: { name: string }) => i.name).join(', '));
         console.log('[Drop] Target:', targetId, 'Position:', position);
 
         // If dragging from pins grid, unpin items first
@@ -2205,7 +2206,7 @@ export function App(): React.ReactElement {
             }
         });
 
-        return unsubscribe;
+        return () => { unsubscribe(); };
     }, [
         spaces,
         sidebarActiveSpaceIndex,
@@ -2259,7 +2260,7 @@ export function App(): React.ReactElement {
 
         const unsubscribe = window.electronAPI.sidebarOverlay.onAutoShowTriggered(handleAutoShow);
 
-        return unsubscribe;
+        return () => { unsubscribe(); };
     }, [setSidebarVisible]);
 
     // B008: Handle system resume (wake from sleep)
@@ -2283,7 +2284,7 @@ export function App(): React.ReactElement {
         };
 
         const unsubscribe = window.electronAPI.app.onSystemResumed(handleResume);
-        return unsubscribe;
+        return () => { unsubscribe(); };
     }, []);
 
     // Show loading state only on initial load (not during refetch)

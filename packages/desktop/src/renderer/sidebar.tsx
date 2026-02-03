@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Sidebar, ContextMenu, type SidebarMode, type ContextMenuItem, SpaceItemType } from '@spayce/react-ui';
 import type { Space, SpaceItem, SidebarTabId } from '@spayce/react-ui';
-import type { SidebarStatePayload } from '../preload/types';
+import type { SidebarStatePayload, SidebarActionPayload } from '../preload/types';
 import type { DropPosition } from '@spayce/react-ui/stores';
 import { useInlineInputStore, useDragDropUiStore } from '@spayce/react-ui/stores';
 import * as LucideIcons from 'lucide-react';
@@ -172,9 +172,11 @@ function SidebarOverlayApp() {
             // Convert expandedIds array to Map for active space only
             // Preserve expanded state for other spaces to avoid unwanted collapses
             if (state.activeSpaceId && state.expandedIds) {
+                const spaceId = state.activeSpaceId;
+                const expandedIds = state.expandedIds;
                 setExpandedIdsMap((prevMap) => {
                     const newMap = new Map(prevMap);
-                    newMap.set(state.activeSpaceId, new Set(state.expandedIds));
+                    newMap.set(spaceId, new Set(expandedIds));
                     return newMap;
                 });
             }
@@ -196,7 +198,7 @@ function SidebarOverlayApp() {
     }, []);
 
     // Send action to main renderer and track interaction time
-    const sendAction = useCallback((type: string, payload: any) => {
+    const sendAction = useCallback((type: SidebarActionPayload['type'], payload: any) => {
         // Track interaction time to prevent spurious mouseleave events from hiding sidebar
         lastInteractionTimeRef.current = Date.now();
         if (window.electronAPI?.sidebarOverlay) {

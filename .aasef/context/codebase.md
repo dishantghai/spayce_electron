@@ -3,11 +3,11 @@
 ## Project Type
 **Electron-based desktop application** implementing a multi-tab browser with spaces/collections management. Uses a **monorepo architecture** with clean architecture principles (Domain-Driven Design).
 
-## Key Directories
-- `packages/core/` - Domain and application layers (entities, use cases, queries)
-- `packages/infrastructure/` - Database and services implementation (SQLite repositories)
-- `packages/react-ui/` - Presentation layer hooks and React components
-- `packages/shared/` - Reusable UI components and design system
+## Monorepo Packages
+- `@spayce/core` (`packages/core/`) - Domain and application layers (entities, use cases, queries)
+- `@spayce/infrastructure` (`packages/infrastructure/`) - Database and services implementation (SQLite repositories)
+- `@spayce/react-ui` (`packages/react-ui/`) - Presentation layer hooks and React components
+- `packages/shared/` - Reusable UI components and design system (being migrated into above packages)
 - `packages/desktop/` - Electron main/renderer processes
 - `scripts/` - Development and migration utilities
 - `docs/` - Technical documentation and setup guides

@@ -189,14 +189,14 @@ describe('Spec-020: Overlay Integration Tests', () => {
             // 6. React sidebar visible (already set reactSidebarVisible=true)
             flowSteps.push('react_sidebar_visible');
 
-            // 7. Mode switch flag reset after frames
-            await new Promise((resolve) => {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
+            // 7. Mode switch flag reset after frames (simulate double rAF with setTimeout)
+            await new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    setTimeout(() => {
                         isModeSwitch = false;
-                        resolve(undefined);
-                    });
-                });
+                        resolve();
+                    }, 0);
+                }, 0);
             });
             flowSteps.push('mode_switch_flag_reset');
 
@@ -240,14 +240,14 @@ describe('Spec-020: Overlay Integration Tests', () => {
             sidebarMode = newMode;
             flowSteps.push('mode_updated_sidebar_collapsed');
 
-            // 4. Reset mode switch flag
-            await new Promise((resolve) => {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => {
+            // 4. Reset mode switch flag (simulate double rAF with setTimeout)
+            await new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    setTimeout(() => {
                         isModeSwitch = false;
-                        resolve(undefined);
-                    });
-                });
+                        resolve();
+                    }, 0);
+                }, 0);
             });
             flowSteps.push('mode_switch_flag_reset');
 
