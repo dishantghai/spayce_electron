@@ -542,14 +542,14 @@ describe('B010: Overlay Animation Prevention on Tab Switch to Browser', () => {
             expect(service.getIsVisible()).toBe(true);
         });
 
-        it('should add sidebar view to window at index 1', async () => {
+        it('should add sidebar view to window at highest z-order', async () => {
             service.initialize(mockMainWindow);
 
             await service.showInstant();
 
+            // No index argument = added at the end (highest z-order)
             expect(mockMainWindow.contentView.addChildView).toHaveBeenCalledWith(
-                expect.anything(),
-                1
+                expect.anything()
             );
         });
 

@@ -20,6 +20,30 @@ import {
     STORAGE_KEYS,
 } from '@spayce/react-ui';
 
+// FRESH APP START DETECTION (module-level)
+// Uses the Navigation Timing API to reliably distinguish cold start from CMD+R.
+// - 'navigate' type = fresh page load (cold start, new tab) → collapse sidebar
+// - 'reload' type = CMD+R or location.reload() → preserve sidebar state
+// Module-level cache prevents re-computation on React StrictMode double-renders.
+let _freshStartResult: boolean | null = null;
+
+function detectFreshStart(): boolean {
+    if (_freshStartResult !== null) return _freshStartResult;
+
+    const navEntries = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    const navType = navEntries.length > 0 ? navEntries[0].type : 'navigate';
+
+    // 'navigate' = fresh navigation (cold start, typing URL)
+    // 'reload' = page reload (CMD+R, location.reload(), Vite HMR full reload)
+    // 'back_forward' = back/forward navigation
+    const isFreshStart = navType === 'navigate';
+
+    console.log('[App] detectFreshStart: navigation.type =', navType, '→', isFreshStart ? 'FRESH START (sidebar will collapse)' : 'PAGE REFRESH (preserving sidebar state)');
+
+    _freshStartResult = isFreshStart;
+    return isFreshStart;
+}
+
 // Helper to recursively find all pinned items from the entire tree
 const findAllPinnedItems = (items: SpaceItem[]): SpaceItem[] => {
     const pinned: SpaceItem[] = [];
@@ -236,37 +260,11 @@ export function App(): React.ReactElement {
         STORAGE_KEYS.ACTIVE_TAB, 'spaces'
     );
 
-    // FRESH APP START FIX: Start with sidebar collapsed in floating mode on fresh app start
-    // Uses sessionStorage with timestamp to distinguish between fresh app start and page refresh.
-    // In Electron dev mode, sessionStorage can persist across app restarts, so we use
-    // a timestamp to detect stale sessions (> 5 seconds old = fresh start)
-    const [freshStartOverrideActive, setFreshStartOverrideActive] = useState(() => {
-        const SESSION_FLAG_KEY = 'spayce_session_started';
-        const SESSION_TIMESTAMP_KEY = 'spayce_session_timestamp';
-        const STALE_SESSION_THRESHOLD_MS = 5000; // 5 seconds - if session is older than this, treat as fresh start
-
-        const storedTimestamp = sessionStorage.getItem(SESSION_TIMESTAMP_KEY);
-        const currentTimestamp = Date.now();
-
-        // Check if this is a fresh start:
-        // 1. No timestamp stored (first ever load)
-        // 2. Timestamp is stale (app was restarted in Electron dev mode)
-        const isFreshStart = !storedTimestamp ||
-            (currentTimestamp - parseInt(storedTimestamp, 10)) > STALE_SESSION_THRESHOLD_MS;
-
-        // Always update the timestamp to current time
-        sessionStorage.setItem(SESSION_TIMESTAMP_KEY, String(currentTimestamp));
-        sessionStorage.setItem(SESSION_FLAG_KEY, 'true');
-
-        if (isFreshStart) {
-            console.log('[App] Fresh app start detected - sidebar will start collapsed in floating mode');
-            console.log('[App] (storedTimestamp:', storedTimestamp, ', age:', storedTimestamp ? currentTimestamp - parseInt(storedTimestamp, 10) : 'N/A', 'ms)');
-            return true; // Override is active until user shows sidebar
-        }
-        console.log('[App] Page refresh detected - respecting persisted sidebar state');
-        console.log('[App] (session age:', currentTimestamp - parseInt(storedTimestamp!, 10), 'ms)');
-        return false; // No override on refresh
-    });
+    // FRESH APP START FIX: Start with sidebar collapsed in floating mode on fresh app start.
+    // Uses module-level detectFreshStart() which is computed once per page load.
+    // This is immune to React StrictMode double-rendering and writes the session
+    // timestamp synchronously so CMD+R refreshes see a fresh value.
+    const [freshStartOverrideActive, setFreshStartOverrideActive] = useState(detectFreshStart);
 
     // Persisted sidebar visibility (stores user preference)
     const [persistedSidebarVisible, setPersistedSidebarVisible] = usePersistedState<boolean>(
@@ -536,21 +534,27 @@ export function App(): React.ReactElement {
                     sidebarMode,
                     activeTab,
                     userName: 'dishant ghai',
-                    // FRESH START FIX: Disable auto-show on fresh app start
-                    // This prevents sidebar from appearing when mouse is near left edge during startup
-                    enableAutoShow: !freshStartOverrideActive,
+                    // Auto-show is always enabled. The 1.5s cooldown in handleAutoShow
+                    // prevents the sidebar from appearing during startup. Disabling
+                    // auto-show entirely would create a deadlock where the user can
+                    // never open the sidebar (no hover → no setSidebarVisible → override
+                    // never deactivates).
+                    enableAutoShow: true,
                 };
 
                 // Handle different visibility scenarios
+                console.log('[App] Overlay effect — useOverlayMode:', useOverlayMode, 'sidebarVisible:', sidebarVisible, 'isTransitioningIn:', isTransitioningIn, 'isTransitioningOut:', isTransitioningOut);
                 if (useOverlayMode && sidebarVisible) {
                     // In overlay mode and sidebar should be visible - show it
                     window.electronAPI.sidebarOverlay.syncState(statePayload);
                     setIsOverlayTransitioning(true);
                     if (isTransitioningIn) {
                         // B010-FIX: Tab switch into overlay mode — show instantly (no slide-in animation)
+                        console.log('[App] Overlay effect → showInstant() (tab switch into overlay mode)');
                         await window.electronAPI.sidebarOverlay.showInstant();
                     } else {
                         // Normal animated show (auto-show via mouse hover)
+                        console.log('[App] Overlay effect → show() (animated)');
                         await window.electronAPI.sidebarOverlay.show();
                     }
                     // B009-FIX: Abort if a newer invocation has started
@@ -559,8 +563,7 @@ export function App(): React.ReactElement {
                     setIsOverlayTransitioning(false);
                 } else if (isTransitioningOut) {
                     // Transitioning out of overlay mode (pinning or tab change)
-                    // React sidebar is now visible (handleModeToggle set reactSidebarVisible=true)
-                    // Now safe to hide the overlay - this prevents flicker
+                    console.log('[App] Overlay effect → hideInstant() (transitioning out of overlay mode)');
                     setIsOverlayTransitioning(true);
 
                     // Sync state first to disable mouse tracking
@@ -575,6 +578,7 @@ export function App(): React.ReactElement {
                     setIsOverlayTransitioning(false);
                 } else {
                     // Normal hide with animation (user closed sidebar with X or Cmd+B)
+                    console.log('[App] Overlay effect → hide() (animated, sidebar not visible or not in overlay mode)');
                     window.electronAPI.sidebarOverlay.syncState(statePayload);
                     setIsOverlayTransitioning(true);
                     await window.electronAPI.sidebarOverlay.hide();
@@ -616,8 +620,7 @@ export function App(): React.ReactElement {
             sidebarMode,
             activeTab,
             userName: 'dishant ghai',
-            // FRESH START FIX: Disable auto-show on fresh app start
-            enableAutoShow: !freshStartOverrideActive,
+            enableAutoShow: true,
         });
     }, [
         useOverlayMode,
@@ -628,7 +631,6 @@ export function App(): React.ReactElement {
         sidebarMode,
         activeTab,
         hasCompletedInitialSync,
-        freshStartOverrideActive,
     ]);
 
     // Keyboard shortcut: Cmd+B to toggle sidebar (Spec 020)
@@ -2179,8 +2181,7 @@ export function App(): React.ReactElement {
                             sidebarMode,
                             activeTab,
                             userName: 'dishant ghai',
-                            // FRESH START FIX: Disable auto-show on fresh app start
-                            enableAutoShow: !freshStartOverrideActive,
+                            enableAutoShow: true,
                         });
                     }
                     break;
@@ -2343,7 +2344,6 @@ export function App(): React.ReactElement {
                     opacity: useOverlayMode ? 0 : 1,
                     visibility: useOverlayMode ? 'hidden' : 'visible',
                     pointerEvents: (useOverlayMode || !reactSidebarVisible) ? 'none' : 'auto',
-                    boxShadow: (useOverlayMode || !reactSidebarVisible) ? 'none' : '10px 0 30px -5px rgba(0, 0, 0, 0.5)',
                     // Force no transitions on wrapper during mode switch
                     transition: isModeSwitch ? 'none' : undefined,
                 }}

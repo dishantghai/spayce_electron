@@ -76,9 +76,6 @@ export function MinimalApp(): React.ReactElement {
         >
             <div
                 style={{
-                    boxShadow: sidebarMode === 'floating' && !sidebarVisible
-                        ? 'none'
-                        : '10px 0 30px -5px rgba(0, 0, 0, 0.5)',
                     ...(sidebarMode === 'floating' ? {
                         position: 'absolute',
                         left: 0,

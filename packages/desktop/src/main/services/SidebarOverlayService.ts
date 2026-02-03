@@ -231,6 +231,7 @@ export class SidebarOverlayService {
      */
     async show(): Promise<void> {
         if (!this.sidebarView || !this.mainWindow || this.isVisible || this.isAnimating) {
+            console.log('[SidebarOverlayService] show() skipped — isVisible:', this.isVisible, 'isAnimating:', this.isAnimating, 'hasView:', !!this.sidebarView);
             return;
         }
 
@@ -271,8 +272,10 @@ export class SidebarOverlayService {
             // Make view visible
             this.sidebarView.setVisible(true);
 
-            // Add to window at index 1 (above browser at index 0)
-            this.mainWindow.contentView.addChildView(this.sidebarView, 1);
+            // Add to window at highest z-order (always above browser views).
+            // Using no index ensures sidebar is on top even when browser views
+            // are added/swapped after this call (e.g., after CMD+R reload).
+            this.mainWindow.contentView.addChildView(this.sidebarView);
 
             // CRITICAL: Force a setBounds call AFTER addChildView to ensure viewport is updated
             // The WebContentsView might not update its internal viewport until attached + bounds set
@@ -298,9 +301,12 @@ export class SidebarOverlayService {
             }
 
             // Animate from off-screen to visible
+            const finalBounds = this.sidebarView.getBounds();
+            console.log('[SidebarOverlayService] show() starting animation, bounds:', JSON.stringify(finalBounds));
             await this.animateBounds(-this.config.width, 0);
 
             this.isVisible = true;
+            console.log('[SidebarOverlayService] show() completed, final bounds:', JSON.stringify(this.sidebarView.getBounds()));
         } finally {
             this.isAnimating = false;
         }
@@ -357,8 +363,10 @@ export class SidebarOverlayService {
      */
     async showInstant(): Promise<void> {
         if (!this.sidebarView || !this.mainWindow || this.isVisible || this.isAnimating) {
+            console.log('[SidebarOverlayService] showInstant() skipped — isVisible:', this.isVisible, 'isAnimating:', this.isAnimating, 'hasView:', !!this.sidebarView);
             return;
         }
+        console.log('[SidebarOverlayService] showInstant() starting...');
 
         try {
             // Wait for content to be ready (same as show())
@@ -370,39 +378,66 @@ export class SidebarOverlayService {
                 }
             }
 
+            // Wait for window to have valid size (prevents narrow strip bug after reload)
+            // Same check as show() — without this, showInstant() can use stale/zero height
+            if (!this.hasValidWindowSize()) {
+                const sizeWaitStart = Date.now();
+                const timeout = 3000;
+                while (!this.hasValidWindowSize() && Date.now() - sizeWaitStart < timeout) {
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                if (!this.hasValidWindowSize()) {
+                    console.warn('[SidebarOverlayService] Window size not valid for showInstant, using fallback');
+                }
+            }
+
             // Stop mouse tracking while sidebar is visible
             this.stopMouseTracking();
+
+            // Ensure sidebar view has correct height BEFORE making visible.
+            // After renderer reloads, the view's cached bounds may be stale.
+            // Re-validate with current window size.
+            const [, currentWindowHeight] = this.mainWindow.getSize();
+            const validHeight = currentWindowHeight >= MIN_VALID_HEIGHT ? currentWindowHeight : FALLBACK_HEIGHT;
+            this.sidebarView.setBounds({
+                x: -this.config.width, // Still off-screen until updateBounds(0) below
+                y: 0,
+                width: this.config.width,
+                height: validHeight,
+            });
 
             // Make view visible
             this.sidebarView.setVisible(true);
 
-            // Add to window at index 1 (above browser at index 0)
-            this.mainWindow.contentView.addChildView(this.sidebarView, 1);
+            // Add to window at highest z-order (always above browser views).
+            // Using no index ensures sidebar is on top even when browser views
+            // are added/swapped after this call (e.g., after CMD+R reload).
+            this.mainWindow.contentView.addChildView(this.sidebarView);
 
-            // Force setBounds after addChildView (same as show())
-            const boundsForForceUpdate = this.sidebarView.getBounds();
+            // Force setBounds after addChildView to ensure renderer viewport is updated
             this.sidebarView.setBounds({
-                x: boundsForForceUpdate.x,
-                y: boundsForForceUpdate.y,
-                width: boundsForForceUpdate.width,
-                height: boundsForForceUpdate.height,
+                x: -this.config.width,
+                y: 0,
+                width: this.config.width,
+                height: validHeight,
             });
 
-            // Send view-attached signal (same as show())
-            const targetBounds = this.sidebarView.getBounds();
+            // Send view-attached signal with explicit dimensions
             if (this.sidebarView.webContents && !this.sidebarView.webContents.isDestroyed()) {
                 this.sidebarView.webContents.send('sidebar:view-attached', {
                     timestamp: Date.now(),
-                    bounds: targetBounds,
-                    width: targetBounds.width,
-                    height: targetBounds.height,
+                    bounds: { x: 0, y: 0, width: this.config.width, height: validHeight },
+                    width: this.config.width,
+                    height: validHeight,
                 });
             }
 
             // B010-FIX: Set bounds directly at x=0 — NO animation
-            this.updateBounds(0);
+            this.updateBoundsWithHeight(0, validHeight);
 
             this.isVisible = true;
+            const finalBounds = this.sidebarView.getBounds();
+            console.log('[SidebarOverlayService] showInstant() completed — bounds:', JSON.stringify(finalBounds), 'windowHeight:', currentWindowHeight, 'validHeight:', validHeight);
         } catch (error) {
             console.error('[SidebarOverlayService] Error showing instantly:', error);
         }
@@ -413,8 +448,10 @@ export class SidebarOverlayService {
      */
     hideInstant(): void {
         if (!this.sidebarView || !this.mainWindow || !this.isVisible) {
+            console.log('[SidebarOverlayService] hideInstant() skipped — isVisible:', this.isVisible);
             return;
         }
+        console.log('[SidebarOverlayService] hideInstant() — hiding overlay');
 
         try {
             // Remove from window immediately without animation
@@ -549,6 +586,29 @@ export class SidebarOverlayService {
     }
 
     /**
+     * Re-raise sidebar overlay to the top of the z-order.
+     * Must be called after any other WebContentsView is added to the window
+     * (e.g., after BrowserService.setActiveView) to maintain the invariant:
+     * sidebar overlay is ALWAYS at the highest z-order when visible.
+     *
+     * Without this, addChildView(browserView) pushes the browser ABOVE the
+     * sidebar, causing the sidebar to be covered (only top strip visible).
+     */
+    raiseToTop(): void {
+        if (!this.sidebarView || !this.mainWindow || !this.isVisible) {
+            return;
+        }
+
+        try {
+            // Re-adding an already-attached child view moves it to the end
+            // (highest z-order) without triggering detach/reattach lifecycle
+            this.mainWindow.contentView.addChildView(this.sidebarView);
+        } catch (error) {
+            console.warn('[SidebarOverlayService] Error raising to top:', error);
+        }
+    }
+
+    /**
      * Get visibility state
      */
     getIsVisible(): boolean {
@@ -674,6 +734,8 @@ export class SidebarOverlayService {
             return;
         }
 
+        console.log('[SidebarOverlayService] handleRendererReload() — isVisible:', this.isVisible, 'isFloatingMode:', this.isFloatingMode);
+
         // Stop any ongoing animations
         this.isAnimating = false;
 
@@ -692,8 +754,8 @@ export class SidebarOverlayService {
                 // Make view visible
                 this.sidebarView.setVisible(true);
 
-                // Re-add the view at correct z-index and bounds
-                this.mainWindow.contentView.addChildView(this.sidebarView, 1);
+                // Re-add the view at highest z-order (always above browser views)
+                this.mainWindow.contentView.addChildView(this.sidebarView);
 
                 // Update bounds to correct position
                 this.updateBounds(0);

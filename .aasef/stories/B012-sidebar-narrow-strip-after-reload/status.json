@@ -1,0 +1,15 @@
+{
+  "id": "B012",
+  "title": "Sidebar Narrow Strip After CMD+R Reload + Tab Switch",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-03T00:00:00",
+  "related_specs": ["020"],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/main/services/SidebarOverlayService.ts",
+    "packages/desktop/src/main/ipc/browserHandlers.ts",
+    "packages/desktop/src/renderer/sidebar.tsx",
+    "packages/desktop/__tests__/B012-sidebar-narrow-strip-after-reload.test.ts"
+  ]
+}

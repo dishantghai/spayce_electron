@@ -22,7 +22,8 @@
         "test:paths": "vitest run __tests__/paths/",
         "test:all": "vitest run --reporter=verbose",
         "check-health": "node scripts/check-health.js",
-        "predev": "node scripts/check-health.js",
+        "predev": "node ../../scripts/ensure-native-modules.cjs electron && node scripts/check-health.js",
+        "pretest": "node ../../scripts/ensure-native-modules.cjs node",
         "lint": "eslint src --ext .ts,.tsx",
         "typecheck": "tsc --noEmit"
     },

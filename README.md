@@ -58,12 +58,10 @@ node -p "process.arch"  # Should now show "arm64"
 
 The project includes automatic architecture validation. If there's a mismatch, `pnpm install` will fail with helpful instructions.
 
-**Note:** This project uses Electron, which bundles its own Node.js runtime (v20). The `postinstall` script automatically rebuilds `better-sqlite3` for Electron's Node.js version.
-
 ### Installation
 
 ```bash
-# Install dependencies (runs architecture check + Electron rebuild automatically)
+# Install dependencies (runs architecture check automatically)
 pnpm install
 
 # Start development (use the convenience script)
@@ -75,6 +73,28 @@ source ~/.nvm/nvm.sh && nvm use v22.17.1 && pnpm run dev
 # Run tests
 pnpm test
 ```
+
+### Native Module Rebuilds (better-sqlite3)
+
+`better-sqlite3` is a native C++ addon that requires a different binary depending on the runtime:
+
+| Runtime | ABI | Used by |
+|---------|-----|---------|
+| Electron 30 | NODE_MODULE_VERSION 123 | `pnpm dev` |
+| Node.js 22 | NODE_MODULE_VERSION 127 | `pnpm test` |
+
+**This is handled automatically.** Both `pnpm dev` and `pnpm test` have `predev`/`pretest` hooks that check if the binary matches and rebuild only when there's a mismatch. This works from both the project root and `packages/desktop/`.
+
+- When the binary already matches, the check completes in ~40ms (no rebuild).
+- When switching between dev and test, the rebuild happens automatically before the command runs.
+
+**Manual rebuild** (rarely needed):
+```bash
+node scripts/ensure-native-modules.cjs electron   # rebuild for Electron (dev)
+node scripts/ensure-native-modules.cjs node        # rebuild for Node.js (tests)
+```
+
+**If you see `ERR_DLOPEN_FAILED` or `NODE_MODULE_VERSION` mismatch errors**, just re-run `pnpm dev` or `pnpm test` — the hook will fix it automatically.
 
 ## AASEF Specs
 

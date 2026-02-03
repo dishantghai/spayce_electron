@@ -1,5 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import { getBrowserService, ViewBounds, CreateViewOptions } from '../services/BrowserService';
+import { getSidebarOverlayService } from '../services/SidebarOverlayService';
 
 /**
  * Register all browser-related IPC handlers
@@ -30,6 +31,12 @@ export function registerBrowserHandlers(mainWindow: BrowserWindow): void {
     ipcMain.handle('browser:setActiveView', async (_, id: string) => {
         try {
             const result = browserService.setActiveView(id);
+
+            // B012-FIX: Re-raise sidebar overlay to maintain z-order invariant.
+            // setActiveView calls addChildView(browserView) which puts the browser
+            // ABOVE the sidebar. We must re-raise the sidebar to stay on top.
+            getSidebarOverlayService().raiseToTop();
+
             return { success: result };
         } catch (error) {
             const message = error instanceof Error ? error.message : String(error);

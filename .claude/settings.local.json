@@ -57,7 +57,10 @@
       "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && ls node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3/build/Release/ 2>/dev/null && file node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3/build/Release/better_sqlite3.node 2>/dev/null')",
       "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron\"\" && ls node_modules/.pnpm/better-sqlite3*/node_modules/better-sqlite3/package.json')",
       "Bash(bash -l -c 'source \"\"$HOME/.nvm/nvm.sh\"\" && nvm use 22 && cd \"\"/Users/Shared/ALL WORKSPACE/projects/spayce_electron/node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3\"\" && npx --yes prebuild-install --runtime napi 2>&1 || \\(npm run build-release 2>&1 | tail -20\\)')",
-      "Bash(bash -l -c:*)"
+      "Bash(bash -l -c:*)",
+      "Bash(npm run build-release:*)",
+      "Bash(echo:*)",
+      "Bash(export PATH=\"$HOME/.nvm/versions/node/v22.17.1/bin:$PATH\")"
     ]
   }
 }

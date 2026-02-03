@@ -1,0 +1,16 @@
+{
+  "id": "B011",
+  "title": "Floating Sidebar Shadow Desyncs from Slide-In Animation",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-03T00:00:00",
+  "related_specs": [
+    "020"
+  ],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/renderer/App.tsx",
+    "packages/react-ui/src/components/Sidebar.module.css"
+  ],
+  "completed": "2026-02-03T21:05:59.307975"
+}

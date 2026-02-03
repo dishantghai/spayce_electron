@@ -192,12 +192,12 @@ describe('SidebarOverlayService', () => {
             service.initialize(mockMainWindow);
         });
 
-        it('should add view to window at z-index 1', async () => {
+        it('should add view to window at highest z-order', async () => {
             await service.show();
 
+            // No index argument = added at the end (highest z-order)
             expect(mockMainWindow.contentView.addChildView).toHaveBeenCalledWith(
-                expect.anything(),
-                1
+                expect.anything()
             );
         });
 
@@ -911,12 +911,12 @@ describe('SidebarOverlayService', () => {
             service.initialize(mockMainWindow);
         });
 
-        it('should add sidebar at index 1 (above browser at 0)', async () => {
+        it('should add sidebar at highest z-order (above browser)', async () => {
             await service.show();
 
+            // No index argument = added at the end (highest z-order)
             expect(mockMainWindow.contentView.addChildView).toHaveBeenCalledWith(
-                expect.anything(),
-                1 // Z-index above browser
+                expect.anything()
             );
         });
     });

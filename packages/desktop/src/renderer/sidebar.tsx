@@ -826,11 +826,24 @@ if (window.electronAPI?.on) {
         if (attachData.width && attachData.height && attachData.height >= 100) {
             receivedBounds = { width: attachData.width, height: attachData.height };
 
-            // Resolve any pending wait
+            // Resolve any pending wait (for initial load)
             if (boundsResolver) {
                 boundsResolver(receivedBounds);
                 boundsResolver = null;
             }
+
+            // B012-FIX: ALWAYS update DOM heights when view is re-attached.
+            // After CMD+R reload, the initial waitForValidDimensions has already
+            // resolved, but the view may have been detached and re-attached with
+            // new bounds. Without this, DOM heights remain stale from initial load,
+            // causing the narrow strip bug when switching to Browser tab.
+            document.documentElement.style.height = `${attachData.height}px`;
+            document.body.style.height = `${attachData.height}px`;
+            const sidebarContainer = document.getElementById('sidebar-root');
+            if (sidebarContainer) sidebarContainer.style.height = `${attachData.height}px`;
+
+            // Force resize event to trigger React re-render with new viewport
+            window.dispatchEvent(new Event('resize'));
         }
     });
 }
