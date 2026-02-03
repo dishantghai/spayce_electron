@@ -1,0 +1,20 @@
+{
+  "id": "B007",
+  "title": "Pinned Links Grid Reorder Flash on Drop (Browser Floating Sidebar)",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-03T22:00:00",
+  "related_specs": [
+    "020"
+  ],
+  "related_stories": [
+    "F023",
+    "B006"
+  ],
+  "dependencies": [],
+  "affected_files": [
+    "packages/react-ui/src/components/PinnedLinksGrid.tsx",
+    "packages/react-ui/src/components/PinnedLinksGrid.module.css"
+  ],
+  "completed": "2026-02-03T10:48:10.823983"
+}

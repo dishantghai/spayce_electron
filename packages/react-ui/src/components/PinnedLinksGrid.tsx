@@ -106,15 +106,28 @@ export function PinnedLinksGrid({
     const gridRef = useRef<HTMLDivElement>(null);
     const cleanupTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+    // B007: Local optimistic state for immediate visual feedback on reorder
+    const [optimisticItems, setOptimisticItems] = useState<SpaceItem[] | null>(null);
+
+    // Use optimistic items during drop transition, otherwise use props
+    const displayedItems = optimisticItems ?? pinnedItems;
+
+    // B007: Clear optimistic state when parent props update
+    React.useEffect(() => {
+        if (optimisticItems !== null) {
+            setOptimisticItems(null);
+        }
+    }, [pinnedItems]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const { dragData, setOverPinsGrid, isDragging: isExternalDragging } = useDragDropUiStore();
 
     // Memoize item IDs for SortableContext
-    const itemIds = useMemo(() => pinnedItems.map(item => item.id), [pinnedItems]);
+    const itemIds = useMemo(() => displayedItems.map(item => item.id), [displayedItems]);
 
-    // Get active item for drag overlay
+    // Get active item for drag overlay (use displayedItems for optimistic consistency)
     const activeItem = useMemo(
-        () => pinnedItems.find(item => item.id === activeId),
-        [activeId, pinnedItems]
+        () => displayedItems.find(item => item.id === activeId),
+        [activeId, displayedItems]
     );
 
     // Configure sensors with activation constraints
@@ -144,14 +157,17 @@ export function PinnedLinksGrid({
             return;
         }
 
-        const oldIndex = pinnedItems.findIndex(item => item.id === active.id);
-        const newIndex = pinnedItems.findIndex(item => item.id === over.id);
+        const oldIndex = displayedItems.findIndex(item => item.id === active.id);
+        const newIndex = displayedItems.findIndex(item => item.id === over.id);
 
         if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
-            // Call the reorder callback - parent handles optimistic UI update
+            // B007: Optimistic update - reorder locally FIRST for instant visual feedback
+            setOptimisticItems(arrayMove(displayedItems, oldIndex, newIndex));
+
+            // Call parent handler - will update props which clears optimistic state
             onReorderPins?.(oldIndex, newIndex);
         }
-    }, [pinnedItems, onReorderPins]);
+    }, [displayedItems, onReorderPins]);
 
     // Handle external drops (from sidebar tree)
     const handleExternalDragEnter = useCallback((e: React.DragEvent) => {
@@ -334,8 +350,8 @@ export function PinnedLinksGrid({
                         </div>
                     )}
 
-                    {/* Sortable pinned cards */}
-                    {pinnedItems.map((item) => (
+                    {/* Sortable pinned cards - use displayedItems for B007 optimistic reorder */}
+                    {displayedItems.map((item) => (
                         <SortablePinnedCard
                             key={item.id}
                             item={item}
