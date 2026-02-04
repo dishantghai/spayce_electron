@@ -295,6 +295,20 @@ export class SqliteSpaceItemsRepository implements ISpaceItemsRepository {
 
                 // If moving to a different parent, also normalize the old parent
                 if (!isSameParent) {
+                    // B016: Recursively update all descendants' space_id when moving cross-space
+                    if (currentItem.space_id !== newSpaceId) {
+                        this.db.prepare(`
+                            WITH RECURSIVE item_tree AS (
+                                SELECT id FROM space_items WHERE parent_id = ?
+                                UNION ALL
+                                SELECT si.id FROM space_items si
+                                INNER JOIN item_tree it ON si.parent_id = it.id
+                            )
+                            UPDATE space_items SET space_id = ?
+                            WHERE id IN (SELECT id FROM item_tree)
+                        `).run(itemId, newSpaceId);
+                    }
+
                     const oldSiblingsSql = currentItem.parent_id === null
                         ? `SELECT id FROM space_items WHERE space_id = ? AND parent_id IS NULL ORDER BY sort_order ASC`
                         : `SELECT id FROM space_items WHERE space_id = ? AND parent_id = ? ORDER BY sort_order ASC`;

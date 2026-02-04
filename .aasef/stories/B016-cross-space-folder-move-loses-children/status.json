@@ -1,0 +1,13 @@
+{
+  "id": "B016",
+  "title": "Cross-Space Folder Drag-Drop Loses Children",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-04T00:00:00",
+  "related_specs": [],
+  "dependencies": [],
+  "affected_files": [
+    "packages/infrastructure/src/persistence/sqlite/SqliteSpaceItemsRepository.ts"
+  ],
+  "completed": "2026-02-04T12:43:23.371508"
+}
