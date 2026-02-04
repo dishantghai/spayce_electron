@@ -1,0 +1,15 @@
+{
+  "id": "B014",
+  "title": "Sidebar Font Style Inconsistency Across Contexts",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-04T00:00:00",
+  "related_specs": [
+    "020"
+  ],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/renderer/index.html"
+  ],
+  "completed": "2026-02-04T04:55:06.846940"
+}

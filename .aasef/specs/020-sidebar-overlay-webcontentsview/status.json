@@ -1,13 +1,51 @@
 {
   "id": "020",
   "title": "Sidebar Overlay WebContentsView",
-  "status": "draft",
+  "status": "completed",
   "priority": "high",
   "created": "2026-01-31T00:00:00Z",
   "updated": "2026-01-31T00:00:00Z",
-  "dependencies": ["017", "019", "002"],
+  "dependencies": [
+    "017",
+    "019",
+    "002"
+  ],
   "blocks": [],
   "estimated_duration": "3-4 days",
-  "tags": ["browser", "sidebar", "overlay", "webcontentsview", "electron"],
-  "notes": "Implements true sidebar overlay using multiple WebContentsViews with z-ordering. Solves fundamental Electron constraint where WebContentsView renders above HTML content."
+  "tags": [
+    "browser",
+    "sidebar",
+    "overlay",
+    "webcontentsview",
+    "electron"
+  ],
+  "notes": "Implements true sidebar overlay using multiple WebContentsViews with z-ordering. Solves fundamental Electron constraint where WebContentsView renders above HTML content.",
+  "completed_at": "2026-02-04T05:00:21.007027",
+  "drift_resolved": [
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The spec defines a comprehensive SidebarOverlayService with animation methods (animateBounds, smooth slide transitions with 250ms duration and ease-out cubic curves), but the actual implementation appears to have different animation handling and additional features like mouse tracking and instant hide functionality not specified."
+    },
+    {
+      "type": "SPEC_BEHIND",
+      "action": "spec_updated",
+      "description": "The actual implementation includes mouse tracking functionality for auto-show behavior (10px left edge trigger) and instant hide methods that are not documented in the specification. The test files show features like `hideInstant`, mouse tracking, and focus change action handling."
+    },
+    {
+      "type": "SPEC_BEHIND",
+      "action": "spec_updated",
+      "description": "The actual implementation includes error handling patterns in IPC handlers (returning success/error responses) and WebContents lifecycle management (isDestroyed checks) that are not specified in the original spec."
+    },
+    {
+      "type": "SPEC_BEHIND",
+      "action": "spec_updated",
+      "description": "The actual implementation includes floating mode configuration (`setFloatingMode`) and mode-specific behavior that goes beyond the basic show/hide functionality described in the spec."
+    },
+    {
+      "type": "DOC_STALE",
+      "action": "docs_updated",
+      "description": "The test files reference commits and regression prevention notes (like \"Commit 17fa3d0\", \"Commit 06130e5\", \"Commit f936462\") that indicate significant implementation details not reflected in the original specification."
+    }
+  ]
 }

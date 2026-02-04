@@ -684,7 +684,9 @@ const containerStyle: React.CSSProperties = {
     height: '100vh',
     minHeight: '100vh',
     overflow: 'hidden',
-    backgroundColor: '#131020',
+    // B015: No opaque background here — the .sidebar component provides its own
+    // background at 320px width. This container spans the full view (320 + SHADOW_MARGIN),
+    // and must be transparent so the sidebar's box-shadow can render into the margin area.
 };
 
 const loadingContainerStyle: React.CSSProperties = {
@@ -695,6 +697,7 @@ const loadingContainerStyle: React.CSSProperties = {
     // FIX: Use 100vh to avoid narrow strip bug
     height: '100vh',
     minHeight: '100vh',
+    width: '320px',
     gap: '16px',
     backgroundColor: '#131020',
 };
@@ -720,6 +723,7 @@ const errorContainerStyle: React.CSSProperties = {
     // FIX: Use 100vh to avoid narrow strip bug
     height: '100vh',
     minHeight: '100vh',
+    width: '320px',
     padding: '24px',
     textAlign: 'center',
     backgroundColor: '#131020',

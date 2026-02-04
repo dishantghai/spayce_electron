@@ -1254,3 +1254,20 @@ After completing this spec, update `.aasef/context/tech_decisions.md`:
 | State Sync | IPC with full payload | Simple, reliable |
 | Build | Multi-entry Vite | Separate entry for overlay |
 ```
+
+
+## Implementation Notes
+
+- **Auto-Show Behavior:**
+- Sidebar automatically shows when mouse hovers within 10px of the left screen edge
+- Includes `hideInstant()` method for immediate sidebar dismissal without animation
+- Mouse tracking and focus change events trigger show/hide actions for seamless UX
+- ## IPC Error Handling & Lifecycle Management
+
+**Error Handling**: All IPC handlers return structured responses with success/error status and appropriate error messages for debugging and graceful failure handling.
+
+**WebContents Lifecycle**: All WebContents operations include `isDestroyed()` checks to prevent crashes when accessing destroyed WebContents instances during cleanup or rapid state changes.
+- ```markdown
+- **Floating Mode Configuration**: `setFloatingMode(enabled: boolean)` method configures overlay behavior - when enabled, sidebar renders as overlay WebContentsView; when disabled, sidebar uses standard docked layout
+- **Mode-Specific Behavior**: Overlay positioning, z-index management, and bounds calculations adapt automatically based on current floating mode state
+```

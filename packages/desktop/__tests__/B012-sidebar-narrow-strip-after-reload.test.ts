@@ -307,9 +307,11 @@ describe('B012: showInstant sends view-attached with correct dimensions after re
         const viewAttachedCalls = mockView.webContents.send.mock.calls.filter(
             (call: any[]) => call[0] === 'sidebar:view-attached'
         );
+        const module = await import('../src/main/services/SidebarOverlayService');
+        const SHADOW_MARGIN = (module as any).SHADOW_MARGIN;
         expect(viewAttachedCalls.length).toBeGreaterThan(0);
         expect(viewAttachedCalls[viewAttachedCalls.length - 1][1].height).toBe(800);
-        expect(viewAttachedCalls[viewAttachedCalls.length - 1][1].width).toBe(320);
+        expect(viewAttachedCalls[viewAttachedCalls.length - 1][1].width).toBe(320 + SHADOW_MARGIN);
     });
 
     it('should use fallback height when window reports 0 after reload', async () => {
@@ -520,9 +522,11 @@ describe('B012 REGRESSION: End-to-end user scenarios', () => {
         // Step 5: Verify sidebar is at correct full-height bounds
         const allBounds = mockView.setBounds.mock.calls;
         const finalBounds = allBounds[allBounds.length - 1][0];
+        const module = await import('../src/main/services/SidebarOverlayService');
+        const SHADOW_MARGIN = (module as any).SHADOW_MARGIN;
         expect(finalBounds.x).toBe(0);
         expect(finalBounds.y).toBe(0);
-        expect(finalBounds.width).toBe(320);
+        expect(finalBounds.width).toBe(320 + SHADOW_MARGIN);
         expect(finalBounds.height).toBe(900);
 
         // Verify view-attached signal sent with correct dimensions

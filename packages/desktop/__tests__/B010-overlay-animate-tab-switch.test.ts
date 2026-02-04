@@ -563,6 +563,9 @@ describe('B010: Overlay Animation Prevention on Tab Switch to Browser', () => {
         });
 
         it('should set final bounds at x=0 (not animated from -320)', async () => {
+            const module = await import('../src/main/services/SidebarOverlayService');
+            const SHADOW_MARGIN = (module as any).SHADOW_MARGIN;
+
             service.initialize(mockMainWindow);
 
             await service.showInstant();
@@ -572,7 +575,7 @@ describe('B010: Overlay Animation Prevention on Tab Switch to Browser', () => {
             const allCalls = mockView.setBounds.mock.calls;
             const lastCall = allCalls[allCalls.length - 1][0];
             expect(lastCall.x).toBe(0);
-            expect(lastCall.width).toBe(320);
+            expect(lastCall.width).toBe(320 + SHADOW_MARGIN);
         });
 
         it('should complete instantly (not take 250ms like show())', async () => {

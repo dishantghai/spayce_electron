@@ -1,41 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' ws://localhost:* http://localhost:* https:; font-src 'self' data:;">
-    <title>Spayce Sidebar Overlay</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-      html, body, #sidebar-root {
-        width: 100%;
-        /* Start with 100% which will be 0 initially, then JavaScript sets explicit height
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob:; connect-src 'self' ws://localhost:* http://localhost:* https:; font-src 'self' data:;">
+  <title>Spayce Sidebar Overlay</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body,
+    #sidebar-root {
+      width: 100%;
+      /* Start with 100% which will be 0 initially, then JavaScript sets explicit height
            after viewport becomes valid. Using 100vh doesn't work because it computes to 0
            when the WebContentsView isn't attached to window yet */
-        height: 100%;
-        overflow: hidden;
-        background-color: #131020;
-      }
-      body {
-        font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        color: #E5E7EB;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
+      height: 100%;
+      overflow: hidden;
+      /* B015: Background must be transparent so the sidebar's CSS box-shadow
+         can render into the SHADOW_MARGIN area beyond the 320px sidebar element.
+         The .sidebar component has its own background-color (#131020). */
+      background-color: transparent;
+    }
 
-      /* Ensure sidebar overlay doesn't have extra padding/margin */
-      #sidebar-root {
-        display: flex;
-        flex-direction: column;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="sidebar-root"></div>
-    <script type="module" src="./sidebar.tsx"></script>
-  </body>
+    body {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #E5E7EB;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Ensure sidebar overlay doesn't have extra padding/margin */
+    #sidebar-root {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="sidebar-root"></div>
+  <script type="module" src="./sidebar.tsx"></script>
+</body>
+
 </html>

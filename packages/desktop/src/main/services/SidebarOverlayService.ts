@@ -16,6 +16,11 @@ const DEFAULT_CONFIG: SidebarOverlayConfig = {
     hoverTriggerWidth: 10, // 10px from left edge triggers sidebar
 };
 
+// B015: Extra width for the WebContentsView so the sidebar's CSS box-shadow
+// (4px offset + 30px blur + 5px spread = 39px) can render beyond the sidebar
+// element's right edge without being clipped by the view boundary.
+export const SHADOW_MARGIN = 40;
+
 // Minimum valid height to prevent narrow strip bug
 // If window height is less than this, use fallback height
 const MIN_VALID_HEIGHT = 100;
@@ -169,8 +174,10 @@ export class SidebarOverlayService {
             },
         });
 
-        // Set background color to match sidebar theme - prevents white flash before React renders
-        this.sidebarView.setBackgroundColor('#131020');
+        // B015: Transparent background so the sidebar's CSS box-shadow can render
+        // into the SHADOW_MARGIN area. The .sidebar component has its own background.
+        // No white flash risk because the view starts invisible and off-screen.
+        this.sidebarView.setBackgroundColor('#00000000');
 
         // Load sidebar entry point
         if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
@@ -192,9 +199,9 @@ export class SidebarOverlayService {
             const safeHeight = windowHeight >= MIN_VALID_HEIGHT ? windowHeight : FALLBACK_HEIGHT;
 
             const initialBounds = {
-                x: -this.config.width, // Off-screen to the left
+                x: -(this.config.width + SHADOW_MARGIN), // Off-screen to the left
                 y: 0,
-                width: this.config.width,
+                width: this.config.width + SHADOW_MARGIN,
                 height: safeHeight,
             };
             this.sidebarView.setBounds(initialBounds);
@@ -219,7 +226,7 @@ export class SidebarOverlayService {
                 this.sidebarView.setBounds({
                     x: currentBounds.x,
                     y: currentBounds.y,
-                    width: this.config.width,
+                    width: this.config.width + SHADOW_MARGIN,
                     height: safeHeight,
                 });
             }
@@ -303,7 +310,7 @@ export class SidebarOverlayService {
             // Animate from off-screen to visible
             const finalBounds = this.sidebarView.getBounds();
             console.log('[SidebarOverlayService] show() starting animation, bounds:', JSON.stringify(finalBounds));
-            await this.animateBounds(-this.config.width, 0);
+            await this.animateBounds(-(this.config.width + SHADOW_MARGIN), 0);
 
             this.isVisible = true;
             console.log('[SidebarOverlayService] show() completed, final bounds:', JSON.stringify(this.sidebarView.getBounds()));
@@ -324,7 +331,7 @@ export class SidebarOverlayService {
 
         try {
             // Animate from visible to off-screen
-            await this.animateBounds(0, -this.config.width);
+            await this.animateBounds(0, -(this.config.width + SHADOW_MARGIN));
 
             // Remove from window
             this.mainWindow.contentView.removeChildView(this.sidebarView);
@@ -400,9 +407,9 @@ export class SidebarOverlayService {
             const [, currentWindowHeight] = this.mainWindow.getSize();
             const validHeight = currentWindowHeight >= MIN_VALID_HEIGHT ? currentWindowHeight : FALLBACK_HEIGHT;
             this.sidebarView.setBounds({
-                x: -this.config.width, // Still off-screen until updateBounds(0) below
+                x: -(this.config.width + SHADOW_MARGIN), // Still off-screen until updateBounds(0) below
                 y: 0,
-                width: this.config.width,
+                width: this.config.width + SHADOW_MARGIN,
                 height: validHeight,
             });
 
@@ -416,9 +423,9 @@ export class SidebarOverlayService {
 
             // Force setBounds after addChildView to ensure renderer viewport is updated
             this.sidebarView.setBounds({
-                x: -this.config.width,
+                x: -(this.config.width + SHADOW_MARGIN),
                 y: 0,
-                width: this.config.width,
+                width: this.config.width + SHADOW_MARGIN,
                 height: validHeight,
             });
 
@@ -426,8 +433,8 @@ export class SidebarOverlayService {
             if (this.sidebarView.webContents && !this.sidebarView.webContents.isDestroyed()) {
                 this.sidebarView.webContents.send('sidebar:view-attached', {
                     timestamp: Date.now(),
-                    bounds: { x: 0, y: 0, width: this.config.width, height: validHeight },
-                    width: this.config.width,
+                    bounds: { x: 0, y: 0, width: this.config.width + SHADOW_MARGIN, height: validHeight },
+                    width: this.config.width + SHADOW_MARGIN,
                     height: validHeight,
                 });
             }
@@ -477,7 +484,7 @@ export class SidebarOverlayService {
         const newBounds = {
             x: x,
             y: 0,
-            width: this.config.width,
+            width: this.config.width + SHADOW_MARGIN,
             height: safeHeight,
         };
 
@@ -710,9 +717,9 @@ export class SidebarOverlayService {
         const safeHeight = windowHeight >= MIN_VALID_HEIGHT ? windowHeight : FALLBACK_HEIGHT;
 
         this.sidebarView.setBounds({
-            x: -this.config.width, // Off-screen
+            x: -(this.config.width + SHADOW_MARGIN), // Off-screen
             y: 0,
-            width: this.config.width,
+            width: this.config.width + SHADOW_MARGIN,
             height: safeHeight,
         });
 
@@ -771,7 +778,7 @@ export class SidebarOverlayService {
                 this.sidebarView.setVisible(false);
 
                 // Set off-screen bounds
-                this.updateBounds(-this.config.width);
+                this.updateBounds(-(this.config.width + SHADOW_MARGIN));
 
                 // Restart mouse tracking if in floating mode
                 if (this.isFloatingMode) {

@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
  * Critical behaviors to maintain:
  * 1. Smooth 60fps slide animation (cached height, frame skipping)
  * 2. Mouse tracking auto-show (10px left edge trigger)
- * 3. Background color prevents white flash (#131020)
+ * 3. Transparent background for shadow rendering (B015)
  * 4. Proper cleanup on destroy
  * 5. Singleton pattern
  */
@@ -160,11 +160,11 @@ describe('SidebarOverlayService', () => {
             );
         });
 
-        it('should set background color to prevent white flash', () => {
+        it('should set transparent background for shadow rendering (B015)', () => {
             service.initialize(mockMainWindow);
 
             const mockView = MockWebContentsView.mock.results[0].value;
-            expect(mockView.setBackgroundColor).toHaveBeenCalledWith('#131020');
+            expect(mockView.setBackgroundColor).toHaveBeenCalledWith('#00000000');
         });
 
         it('should setup window resize handler', () => {
@@ -257,15 +257,17 @@ describe('SidebarOverlayService', () => {
             await service.show();
         });
 
-        it('should animate from visible (0) to off-screen (-320)', async () => {
+        it('should animate from visible (0) to off-screen (-(width + SHADOW_MARGIN))', async () => {
+            const module = await import('../../src/main/services/SidebarOverlayService');
+            const SHADOW_MARGIN = (module as any).SHADOW_MARGIN;
             const mockView = MockWebContentsView.mock.results[0].value;
             mockView.setBounds.mockClear();
 
             await service.hide();
 
-            // Final call should be at x=-320 (fully hidden)
+            // Final call should be fully hidden: -(config.width + SHADOW_MARGIN)
             const lastCall = mockView.setBounds.mock.calls[mockView.setBounds.mock.calls.length - 1][0];
-            expect(lastCall.x).toBe(-320);
+            expect(lastCall.x).toBe(-(320 + SHADOW_MARGIN));
         });
 
         it('should remove view from window after hide completes', async () => {
@@ -1292,14 +1294,17 @@ describe('SidebarOverlayService', () => {
                 expect(mockView.setVisible).toHaveBeenCalledWith(false);
             });
 
-            it('should position view off-screen during creation', () => {
+            it('should position view off-screen during creation (including shadow margin)', async () => {
+                const module = await import('../../src/main/services/SidebarOverlayService');
+                const SHADOW_MARGIN = (module as any).SHADOW_MARGIN;
+
                 service.initialize(mockMainWindow);
 
                 const mockView = MockWebContentsView.mock.results[0].value;
 
-                // Initial position should be off-screen (negative x)
+                // Initial position should be off-screen: -(config.width + SHADOW_MARGIN)
                 const initialBoundsCall = mockView.setBounds.mock.calls[0]?.[0];
-                expect(initialBoundsCall?.x).toBe(-320);
+                expect(initialBoundsCall?.x).toBe(-(320 + SHADOW_MARGIN));
             });
         });
     });

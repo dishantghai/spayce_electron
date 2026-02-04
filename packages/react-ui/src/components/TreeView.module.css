@@ -77,7 +77,7 @@
 }
 
 /* Inner wrapper needed for grid animation to work smoothly */
-.children > * {
+.children>* {
     min-height: 0;
 }
 

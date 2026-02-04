@@ -1,0 +1,15 @@
+{
+  "id": "B015",
+  "title": "Browser Overlay Floating Sidebar Missing Embossed Shadow",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-04T00:00:00",
+  "related_specs": [
+    "020"
+  ],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/main/services/SidebarOverlayService.ts"
+  ],
+  "completed": "2026-02-04T04:55:09.773356"
+}

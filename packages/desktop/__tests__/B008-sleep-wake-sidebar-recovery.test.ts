@@ -175,10 +175,12 @@ describe('B008: SidebarOverlayService.handleSystemResume()', () => {
         service.handleSystemResume();
 
         // Should set bounds with updated height at off-screen position
+        const module = await import('../src/main/services/SidebarOverlayService');
+        const SHADOW_MARGIN = (module as any).SHADOW_MARGIN;
         const setBoundsCall = mockView.setBounds.mock.calls[mockView.setBounds.mock.calls.length - 1][0];
-        expect(setBoundsCall.x).toBe(-320); // Off-screen
+        expect(setBoundsCall.x).toBe(-(320 + SHADOW_MARGIN)); // Off-screen
         expect(setBoundsCall.y).toBe(0);
-        expect(setBoundsCall.width).toBe(320);
+        expect(setBoundsCall.width).toBe(320 + SHADOW_MARGIN);
         expect(setBoundsCall.height).toBe(900); // Updated height
     });
 
