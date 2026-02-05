@@ -1,0 +1,14 @@
+{
+  "id": "B023",
+  "title": "Excessive Re-rendering from Bare Store Hook Subscriptions",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-06T00:00:00",
+  "related_specs": ["018", "019", "020"],
+  "dependencies": ["B019"],
+  "affected_files": [
+    "packages/desktop/src/renderer/App.tsx",
+    "packages/react-ui/src/components/browser/BrowserArea.tsx",
+    "packages/react-ui/src/components/browser/BrowserErrorOverlay.tsx"
+  ]
+}

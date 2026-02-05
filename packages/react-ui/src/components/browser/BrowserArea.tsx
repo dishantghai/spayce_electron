@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 import { useBrowserUiStore, initializeBrowserEventSubscriptions, ensureBrowserViewsExist } from '../../stores/browserUiStore';
 import { useTabStore } from '../../stores/tabStore';
 import { BrowserLoadingBar } from './BrowserLoadingBar';
@@ -55,9 +56,15 @@ export function BrowserArea({
     // Track last sent bounds to avoid redundant updates
     const lastBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
 
-    // browserUiStore: view-level state (loading, errors, navigation)
+    // B023 fix: Use selectors to avoid re-rendering on every browser event.
+    // Bare useBrowserUiStore()/useTabStore() subscribed to ALL state changes,
+    // causing 100-300 unnecessary re-renders per page load from browser events.
+
+    // browserUiStore: state (only re-renders when activeViewId changes)
+    const activeViewId = useBrowserUiStore((state) => state.activeViewId);
+
+    // browserUiStore: actions (stable references — useShallow prevents object identity re-renders)
     const {
-        activeViewId,
         updateBounds,
         loadURL,
         goBack,
@@ -67,21 +74,45 @@ export function BrowserArea({
         clearError,
         registerView,
         unregisterView,
-    } = useBrowserUiStore();
+    } = useBrowserUiStore(useShallow((state) => ({
+        updateBounds: state.updateBounds,
+        loadURL: state.loadURL,
+        goBack: state.goBack,
+        goForward: state.goForward,
+        reload: state.reload,
+        stop: state.stop,
+        clearError: state.clearError,
+        registerView: state.registerView,
+        unregisterView: state.unregisterView,
+    })));
 
-    // tabStore: tab list state
-    const tabStoreState = useTabStore();
+    // tabStore: state (re-renders when tabs/activeTab/init changes, NOT on every event)
     const {
         tabs: tabList,
         activeTabId,
         isInitialized: tabsInitialized,
         initError: tabsInitError,
+    } = useTabStore(useShallow((state) => ({
+        tabs: state.tabs,
+        activeTabId: state.activeTabId,
+        isInitialized: state.isInitialized,
+        initError: state.initError,
+    })));
+
+    // tabStore: actions (stable references)
+    const {
         initialize: initializeTabs,
         createTab,
         closeTab,
         switchTab,
         reorderTabs,
-    } = tabStoreState;
+    } = useTabStore(useShallow((state) => ({
+        initialize: state.initialize,
+        createTab: state.createTab,
+        closeTab: state.closeTab,
+        switchTab: state.switchTab,
+        reorderTabs: state.reorderTabs,
+    })));
 
     // Get active view state from browserUiStore (for toolbar/loading/error display)
     // B018 fix: Use activeTabId as the view ID since tab.id === view.id

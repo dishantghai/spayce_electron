@@ -70,7 +70,9 @@ export function BrowserErrorOverlay({
     onRetry,
     onGoToGoogle,
 }: BrowserErrorOverlayProps) {
-    const { reload, loadURL } = useBrowserUiStore();
+    // B023 fix: Use selectors to avoid re-rendering on every browser event
+    const reload = useBrowserUiStore((state) => state.reload);
+    const loadURL = useBrowserUiStore((state) => state.loadURL);
 
     const userMessage = getUserMessage(errorCode, errorDescription);
 

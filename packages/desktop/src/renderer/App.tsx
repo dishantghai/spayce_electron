@@ -358,7 +358,9 @@ export function App(): React.ReactElement {
     } = useInlineInputStore();
 
     // Browser visibility control - hide WebContentsView when not on browser tab
-    const { setVisibility: setBrowserVisibility } = useBrowserUiStore();
+    // B023 fix: Use selector to avoid subscribing App.tsx to ALL browserUiStore changes.
+    // Bare useBrowserUiStore() caused 100-300 re-renders per page load from browser events.
+    const setBrowserVisibility = useBrowserUiStore((state) => state.setVisibility);
 
     // B003: Validate persisted space indices when spaces change
     // Clamp indices to valid range if spaces were deleted
