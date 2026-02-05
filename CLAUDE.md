@@ -1041,20 +1041,34 @@ Example:
 - Fixed and floating sidebar modes
 
 
+## Key Directories
+- `packages/core/` - Domain and application layers with entities, use cases, and business logic
+- `packages/infrastructure/` - SQLite database implementation and service layer
+- `packages/react-ui/` - Presentation layer with React hooks and UI components  
+- `packages/shared/` - Reusable components and design system tokens
+- `packages/desktop/` - Electron main process and renderer configuration
+- `project_ops/spayce_migration/` - Migration specifications and component specs (F001-F008)
+- `scripts/` - Build, migration, and development utility scripts
+- `docs/` - Technical documentation and setup guides
+- `BROWSER_INTEGRATION_PLAN/` - Phased browser integration implementation plan
+- `.aasef/` - AASEF framework context and specifications
+
 ## Key Files
 - `pnpm-workspace.yaml` - Monorepo workspace configuration
-- `vitest.config.ts` - Testing configuration for Vitest
-- `tsconfig.json` - Root TypeScript configuration
+- `package.json` - Root package with workspace dependencies
+- `tsconfig.json` - TypeScript configuration for the monorepo
+- `vitest.config.ts` - Testing configuration using Vitest
 - `resources/db/spaces.sqlite` - SQLite database file
-- `scripts/seed-db.ts` - Database seeding script
-- `scripts/migrate-db.ts` - Database migration utilities
+- `test-imports.mjs` - Import verification script
+- Multiple session summary files indicating active development iterations
 
 ## Patterns Observed
-- **Clean Architecture**: Strict separation of domain, application, infrastructure, and presentation layers
+- **Clean Architecture**: Strict layered architecture with domain, application, infrastructure, and presentation layers
 - **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and test configuration
-- **Test Coverage**: Comprehensive test suites in `__tests__/` directories with integration tests
-- **Migration System**: Structured approach to database and codebase migrations
-- **Documentation-Driven**: Extensive docs for setup, testing, and architectural decisions
+- **Test Coverage**: Comprehensive test suites in `__tests__` directories across packages
+- **Migration Documentation**: Extensive documentation of fixes, sessions, and implementation progress
+- **Build Tooling**: Multiple scripts for environment setup, database migration, and verification
+- **Workspace Dependencies**: Packages reference each other using workspace protocol (`workspace:*`)
 
 ## Important Architecture Decisions
 
