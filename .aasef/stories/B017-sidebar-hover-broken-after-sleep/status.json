@@ -1,0 +1,12 @@
+{
+  "id": "B017",
+  "title": "Sidebar Hover-to-Open Broken After System Sleep/Wake",
+  "type": "bug",
+  "status": "in_progress",
+  "created": "2026-02-04T00:00:00",
+  "related_specs": [],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/main/services/SidebarOverlayService.ts"
+  ]
+}

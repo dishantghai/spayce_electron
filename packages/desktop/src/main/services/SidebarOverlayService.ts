@@ -21,6 +21,10 @@ const DEFAULT_CONFIG: SidebarOverlayConfig = {
 // element's right edge without being clipped by the view boundary.
 export const SHADOW_MARGIN = 40;
 
+// B017: Cooldown period after system resume before mouse tracking can trigger auto-show.
+// Prevents race condition where main process show() fires before renderer's 1.5s cooldown expires.
+export const RESUME_COOLDOWN_MS = 2000;
+
 // Minimum valid height to prevent narrow strip bug
 // If window height is less than this, use fallback height
 const MIN_VALID_HEIGHT = 100;
@@ -49,6 +53,7 @@ export class SidebarOverlayService {
     private isInitialized = false;
     private mouseTrackingInterval: NodeJS.Timeout | null = null;
     private isFloatingMode = false;
+    private resumeCooldownUntil = 0; // B017: timestamp until which auto-show is suppressed after resume
     private isSidebarContentReady = false; // Track if sidebar.html has loaded
     private isSidebarReactReady = false; // Track if React has rendered with correct dimensions
     private sidebarReadyResolver: (() => void) | null = null; // Resolver for waiting on React ready
@@ -111,6 +116,11 @@ export class SidebarOverlayService {
                 return;
             }
 
+            // B017: Skip auto-show during post-resume cooldown
+            if (Date.now() < this.resumeCooldownUntil) {
+                return;
+            }
+
             try {
                 const cursorPosition = screen.getCursorScreenPoint();
                 const windowBounds = this.mainWindow.getBounds();
@@ -137,9 +147,9 @@ export class SidebarOverlayService {
                     }
                 }
             } catch (error) {
-                // Window might be destroyed or in invalid state
+                // B017: Log error but do NOT stop tracking — transient errors (e.g. display
+                // not ready after wake) should not permanently kill hover detection.
                 console.error('[SidebarOverlayService] Error in mouse tracking:', error);
-                this.stopMouseTracking();
             }
         }, 100); // Check every 100ms for responsive hover detection
     }
@@ -327,6 +337,10 @@ export class SidebarOverlayService {
             return;
         }
 
+        // Cache references to prevent race condition if destroy() is called during animation
+        const mainWindow = this.mainWindow;
+        const sidebarView = this.sidebarView;
+
         this.isAnimating = true;
 
         try {
@@ -334,10 +348,12 @@ export class SidebarOverlayService {
             await this.animateBounds(0, -(this.config.width + SHADOW_MARGIN));
 
             // Remove from window
-            this.mainWindow.contentView.removeChildView(this.sidebarView);
+            if (mainWindow?.contentView) {
+                mainWindow.contentView.removeChildView(sidebarView);
+            }
 
             // Make view invisible
-            this.sidebarView.setVisible(false);
+            sidebarView.setVisible(false);
 
             this.isVisible = false;
 
@@ -693,6 +709,9 @@ export class SidebarOverlayService {
         }
 
         console.log('[SidebarOverlayService] Handling system resume...');
+
+        // B017: Set cooldown to prevent auto-show race with renderer's 1.5s cooldown
+        this.resumeCooldownUntil = Date.now() + RESUME_COOLDOWN_MS;
 
         // Stop any ongoing animations
         this.isAnimating = false;
