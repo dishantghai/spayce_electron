@@ -1,0 +1,13 @@
+{
+  "id": "B019",
+  "title": "Tab Loading Race Condition and New Tab Ordering",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-05T00:00:00",
+  "related_specs": ["019", "020"],
+  "dependencies": ["B018"],
+  "affected_files": [
+    "packages/react-ui/src/stores/browserUiStore.ts",
+    "packages/react-ui/src/stores/tabStore.ts"
+  ]
+}

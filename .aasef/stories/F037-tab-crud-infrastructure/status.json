@@ -1,0 +1,18 @@
+{
+  "id": "F037",
+  "title": "Tab CRUD Infrastructure",
+  "type": "feature",
+  "status": "completed",
+  "created": "2026-02-05T00:00:00",
+  "related_specs": ["017", "018", "021"],
+  "dependencies": [],
+  "affected_files": [
+    "packages/infrastructure/src/persistence/sqlite/DatabaseInitializer.ts",
+    "packages/infrastructure/src/persistence/sqlite/SqliteTabsRepository.ts",
+    "packages/infrastructure/src/di/ServiceRegistry.ts",
+    "packages/infrastructure/src/bootstrap/ServiceBootstrap.ts",
+    "packages/desktop/src/main/ipc/tabHandlers.ts",
+    "packages/desktop/src/main/index.ts",
+    "packages/desktop/src/preload/index.ts"
+  ]
+}

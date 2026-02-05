@@ -13,7 +13,7 @@ import type { Result, AppError } from '../common/Result';
 import { ok, err } from '../common/Result';
 import { CreateTabValidator } from '../../domain/validators/CreateTabValidator';
 import { UpdateTabValidator } from '../../domain/validators/UpdateTabValidator';
-import { normalizeUrl, urlsMatch } from '../../domain/validators/UrlNormalizer';
+import { urlsMatch } from '../../domain/validators/UrlNormalizer';
 import {
     TabCreatedEvent,
     TabClosedEvent,
@@ -150,7 +150,10 @@ export class TabsFacade {
             }
 
             // SECONDARY: Check for duplicate by URL
-            if (validatedInput.url) {
+            // B022 fix: Only dedup by URL when there's origin tracking (sidebar/space-initiated
+            // navigation). Plain "new tab" requests (no origin) should always create a fresh tab,
+            // even if the default URL (google.com) already exists in another tab.
+            if (validatedInput.url && (validatedInput.originSpaceId || validatedInput.originSpaceItemId)) {
                 const existing = await this.tabsRepository.getByUrl(validatedInput.url);
                 if (existing) {
                     // Activate existing tab instead of creating duplicate

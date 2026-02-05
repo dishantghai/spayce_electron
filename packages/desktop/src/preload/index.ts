@@ -90,6 +90,19 @@ const electronAPI = {
         return () => ipcRenderer.removeListener(channel, subscription);
     },
 
+    // Tab operations (Phase 2: Multi-Tab Browser)
+    tabs: {
+        getAll: () => ipcRenderer.invoke('tabs:getAll'),
+        getActive: () => ipcRenderer.invoke('tabs:getActive'),
+        create: (input?: { url?: string; title?: string; originSpaceId?: string; originSpaceItemId?: string; faviconUrl?: string }) =>
+            ipcRenderer.invoke('tabs:create', input),
+        close: (tabId: string) => ipcRenderer.invoke('tabs:close', tabId),
+        switch: (tabId: string) => ipcRenderer.invoke('tabs:switch', tabId),
+        update: (input: { id: string; url?: string; title?: string; faviconUrl?: string; isTracked?: boolean }) =>
+            ipcRenderer.invoke('tabs:update', input),
+        reorder: (orderedIds: string[]) => ipcRenderer.invoke('tabs:reorder', orderedIds),
+    },
+
     // Browser operations (Spec 019)
     browser: {
         // View management

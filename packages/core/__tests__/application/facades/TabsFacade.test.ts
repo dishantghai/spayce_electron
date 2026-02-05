@@ -241,14 +241,20 @@ describe('TabsFacade', () => {
             expect(mockRepository.setActive).toHaveBeenCalledWith('existing');
         });
 
-        it('should activate existing tab when duplicate by URL (secondary)', async () => {
+        it('should activate existing tab when duplicate by URL with origin tracking (secondary)', async () => {
             vi.mocked(mockRepository.count).mockResolvedValue(5);
+            // SpaceItemId returns null → falls through to URL check
             vi.mocked(mockRepository.getBySpaceItemId).mockResolvedValue(null);
 
             const existingTab = createMockTab({ id: 'existing-by-url' });
             vi.mocked(mockRepository.getByUrl).mockResolvedValue(existingTab);
 
-            const result = await facade.createTab({ url: 'https://example.com' });
+            // B022: URL dedup only applies when origin tracking is present
+            const result = await facade.createTab({
+                url: 'https://example.com',
+                originSpaceId: 'space-123',
+                originSpaceItemId: 'item-456',
+            });
 
             expect(result.success).toBe(true);
             expect(mockRepository.create).not.toHaveBeenCalled();
@@ -276,6 +282,48 @@ describe('TabsFacade', () => {
             }
             // URL lookup should not have been called since SpaceItemId matched
             expect(mockRepository.getByUrl).not.toHaveBeenCalled();
+        });
+
+        it('should create new tab even when URL matches existing tab if no origin tracking (B022)', async () => {
+            vi.mocked(mockRepository.count).mockResolvedValue(5);
+            // No origin tracking fields → "new tab" request, not sidebar navigation
+            vi.mocked(mockRepository.getBySpaceItemId).mockResolvedValue(null);
+
+            const existingTab = createMockTab({ id: 'existing', url: 'https://www.google.com' });
+            vi.mocked(mockRepository.getByUrl).mockResolvedValue(existingTab);
+
+            const newTab = createMockTab({ id: 'brand-new', url: 'https://www.google.com' });
+            vi.mocked(mockRepository.create).mockResolvedValue(newTab);
+
+            // createTab with URL but NO originSpaceId/originSpaceItemId
+            const result = await facade.createTab({ url: 'https://www.google.com' });
+
+            expect(result.success).toBe(true);
+            // Should create a NEW tab, not return the existing one
+            expect(mockRepository.create).toHaveBeenCalled();
+            if (result.success) {
+                expect(result.data?.id).toBe('brand-new');
+            }
+        });
+
+        it('should still dedup by URL when origin tracking is present (B022)', async () => {
+            vi.mocked(mockRepository.count).mockResolvedValue(5);
+            // SpaceItemId check returns null → falls through to URL check
+            vi.mocked(mockRepository.getBySpaceItemId).mockResolvedValue(null);
+
+            const existingTab = createMockTab({ id: 'existing-by-url' });
+            vi.mocked(mockRepository.getByUrl).mockResolvedValue(existingTab);
+
+            // Has both origin fields → space-initiated navigation, should dedup by URL
+            const result = await facade.createTab({
+                url: 'https://example.com',
+                originSpaceId: 'space-1',
+                originSpaceItemId: 'item-1',
+            });
+
+            expect(result.success).toBe(true);
+            expect(mockRepository.create).not.toHaveBeenCalled();
+            expect(mockRepository.setActive).toHaveBeenCalledWith('existing-by-url');
         });
 
         it('should delete oldest inactive when at tab limit (MAX_TABS = 20)', async () => {

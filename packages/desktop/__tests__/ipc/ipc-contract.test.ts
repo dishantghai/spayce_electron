@@ -26,6 +26,7 @@ describe('IPC Contract', () => {
         const handlersPath = path.join(DESKTOP_ROOT, 'src', 'main', 'ipc', 'handlers.ts');
         const browserHandlersPath = path.join(DESKTOP_ROOT, 'src', 'main', 'ipc', 'browserHandlers.ts');
         const sidebarOverlayHandlersPath = path.join(DESKTOP_ROOT, 'src', 'main', 'ipc', 'sidebarOverlayHandlers.ts');
+        const tabHandlersPath = path.join(DESKTOP_ROOT, 'src', 'main', 'ipc', 'tabHandlers.ts');
         const preloadPath = path.join(DESKTOP_ROOT, 'src', 'preload', 'index.ts');
 
         it('should have handlers file', () => {
@@ -48,7 +49,10 @@ describe('IPC Contract', () => {
             const overlayHandlerChannels = fs.existsSync(sidebarOverlayHandlersPath)
                 ? extractIpcChannelsFromSource(sidebarOverlayHandlersPath)
                 : [];
-            const handlerChannels = [...coreHandlerChannels, ...browserHandlerChannels, ...overlayHandlerChannels];
+            const tabHandlerChannels = fs.existsSync(tabHandlersPath)
+                ? extractIpcChannelsFromSource(tabHandlersPath)
+                : [];
+            const handlerChannels = [...coreHandlerChannels, ...browserHandlerChannels, ...overlayHandlerChannels, ...tabHandlerChannels];
             const preloadChannels = extractIpcChannelsFromSource(preloadPath);
 
             // Channels that are temporarily disabled (not implemented in facade yet)

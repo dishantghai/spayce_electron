@@ -166,7 +166,8 @@
     transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
 }
 
-.tab:hover .tabCloseButton {
+.tab:hover .tabCloseButton,
+.tabActive .tabCloseButton {
     opacity: 1;
 }
 
@@ -183,6 +184,15 @@
     opacity: 1;
     outline: 2px solid var(--color-primary, #6D5AE6);
     outline-offset: 0;
+}
+
+/* Drag-and-drop states */
+.tabDragging {
+    opacity: 0.5;
+}
+
+.tabDragOver {
+    border-left: 2px solid var(--color-primary, #6D5AE6);
 }
 
 /* Tab bar spacer */

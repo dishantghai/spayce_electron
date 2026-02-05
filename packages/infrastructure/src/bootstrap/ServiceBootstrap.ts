@@ -4,13 +4,14 @@ import * as path from 'path';
 import { serviceRegistry, SERVICE_KEYS } from '../di/ServiceRegistry';
 import { SqliteSpacesRepository } from '../persistence/sqlite/SqliteSpacesRepository';
 import { SqliteSpaceItemsRepository } from '../persistence/sqlite/SqliteSpaceItemsRepository';
+import { SqliteTabsRepository } from '../persistence/sqlite/SqliteTabsRepository';
 import { DatabaseInitializer } from '../persistence/sqlite/DatabaseInitializer';
 import { InMemoryEventBus } from '../services/InMemoryEventBus';
 import { ConsoleLogger } from '../services/ConsoleLogger';
-import type { ILogger, IEventBus, ISpacesRepository, ISpaceItemsRepository } from '@spayce/core';
+import type { ILogger, IEventBus, ISpacesRepository, ISpaceItemsRepository, ITabsRepository } from '@spayce/core';
 
 // Import facades
-import { SpacesFacade, SpaceItemsFacade, SearchFacade } from '@spayce/core/application';
+import { SpacesFacade, SpaceItemsFacade, SearchFacade, TabsFacade } from '@spayce/core/application';
 
 // Import use cases
 import {
@@ -129,6 +130,18 @@ export class ServiceBootstrap {
                 new GetRecentItemsQuery(itemsRepo),
                 new GetMostVisitedItemsQuery(itemsRepo)
             );
+        });
+
+        // Register tabs repository and facade (Phase 2: Multi-Tab Browser)
+        serviceRegistry.register(SERVICE_KEYS.TABS_REPOSITORY, () => {
+            const db = serviceRegistry.get<Database.Database>(SERVICE_KEYS.DATABASE);
+            return new SqliteTabsRepository(db);
+        });
+
+        serviceRegistry.register(SERVICE_KEYS.TABS_FACADE, () => {
+            const tabsRepo = serviceRegistry.get<ITabsRepository>(SERVICE_KEYS.TABS_REPOSITORY);
+            const eventBus = serviceRegistry.get<IEventBus>(SERVICE_KEYS.EVENT_BUS);
+            return new TabsFacade(tabsRepo, eventBus);
         });
     }
 

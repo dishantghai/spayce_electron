@@ -1,0 +1,16 @@
+{
+  "id": "F039",
+  "title": "Multi-Tab Bar UI Enhancement",
+  "type": "feature",
+  "status": "completed",
+  "created": "2026-02-05T00:00:00",
+  "related_specs": ["020"],
+  "dependencies": ["F037", "F038"],
+  "affected_files": [
+    "packages/react-ui/src/components/browser/BrowserTabBar.tsx",
+    "packages/react-ui/src/components/browser/BrowserTabBar.module.css",
+    "packages/react-ui/src/components/browser/TabItem.tsx",
+    "packages/react-ui/src/components/browser/TabItem.module.css",
+    "packages/react-ui/src/components/browser/BrowserArea.tsx"
+  ]
+}

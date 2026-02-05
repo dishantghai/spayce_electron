@@ -1,0 +1,13 @@
+{
+  "id": "B020",
+  "title": "WebContentsView Not Created for Existing Tabs on App Restart",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-06T00:00:00",
+  "related_specs": ["019", "020"],
+  "dependencies": ["B018", "B019"],
+  "affected_files": [
+    "packages/react-ui/src/stores/browserUiStore.ts",
+    "packages/react-ui/src/components/browser/BrowserArea.tsx"
+  ]
+}

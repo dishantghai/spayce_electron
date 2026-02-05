@@ -4,6 +4,7 @@ import { createMainWindow, loadRenderer } from './window';
 import { ServiceBootstrap } from '@spayce/infrastructure';
 import { registerIpcHandlers } from './ipc/handlers';
 import { registerBrowserHandlers } from './ipc/browserHandlers';
+import { registerTabHandlers } from './ipc/tabHandlers';
 import { registerSidebarOverlayHandlers } from './ipc/sidebarOverlayHandlers';
 import { getSidebarOverlayService } from './services/SidebarOverlayService';
 import { getBrowserService } from './services/BrowserService';
@@ -57,6 +58,11 @@ async function initialize() {
         // Register browser IPC handlers (requires mainWindow)
         console.log('[Spayce] Registering browser handlers...');
         registerBrowserHandlers(mainWindow);
+
+        // Register tab IPC handlers (Phase 2: Multi-Tab Browser)
+        console.log('[Spayce] Registering tab handlers...');
+        registerTabHandlers();
+        console.log('[Spayce] Tab handlers registered');
 
         // Register sidebar overlay IPC handlers (Spec 020)
         console.log('[Spayce] Registering sidebar overlay handlers...');
@@ -114,6 +120,7 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         mainWindow = createMainWindow();
         registerBrowserHandlers(mainWindow);
+        registerTabHandlers();
         registerSidebarOverlayHandlers(mainWindow);
         loadRenderer(mainWindow);
     }

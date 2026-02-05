@@ -1,0 +1,14 @@
+{
+  "id": "B018",
+  "title": "Multi-Tab Store Synchronization - Five Interconnected Browser Bugs",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-05T00:00:00",
+  "related_specs": ["019", "020", "021"],
+  "dependencies": ["F037", "F038", "F039"],
+  "affected_files": [
+    "packages/react-ui/src/stores/tabStore.ts",
+    "packages/react-ui/src/stores/browserUiStore.ts",
+    "packages/react-ui/src/components/browser/BrowserArea.tsx"
+  ]
+}

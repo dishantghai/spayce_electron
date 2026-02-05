@@ -1,0 +1,13 @@
+{
+  "id": "B021",
+  "title": "Duplicate Tab Entries from Initialization Race Condition",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-06T00:00:00",
+  "related_specs": ["019", "020"],
+  "dependencies": ["B018", "B019", "B020"],
+  "affected_files": [
+    "packages/react-ui/src/stores/tabStore.ts",
+    "packages/react-ui/src/components/browser/BrowserArea.tsx"
+  ]
+}

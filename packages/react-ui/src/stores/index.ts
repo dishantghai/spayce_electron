@@ -6,3 +6,5 @@ export { useSelectionStore } from './selectionStore';
 export { useClipboardStore } from './clipboardStore';
 export { useBrowserUiStore, initializeBrowserEventSubscriptions } from './browserUiStore';
 export type { BrowserViewUiState } from './browserUiStore';
+export { useTabStore } from './tabStore';
+export type { TabData, CreateTabInput as TabCreateInput, TabEventUpdate } from './tabStore';

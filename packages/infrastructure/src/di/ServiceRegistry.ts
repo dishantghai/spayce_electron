@@ -48,9 +48,11 @@ export const SERVICE_KEYS = {
     DATABASE: 'database',
     SPACES_REPOSITORY: 'spacesRepository',
     SPACE_ITEMS_REPOSITORY: 'spaceItemsRepository',
+    TABS_REPOSITORY: 'tabsRepository',
     EVENT_BUS: 'eventBus',
     LOGGER: 'logger',
     SPACES_FACADE: 'spacesFacade',
     SPACE_ITEMS_FACADE: 'spaceItemsFacade',
     SEARCH_FACADE: 'searchFacade',
+    TABS_FACADE: 'tabsFacade',
 } as const;

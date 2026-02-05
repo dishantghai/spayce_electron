@@ -1,5 +1,6 @@
-import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
-import { useBrowserUiStore, initializeBrowserEventSubscriptions } from '../../stores/browserUiStore';
+import { useEffect, useRef, useCallback, useState } from 'react';
+import { useBrowserUiStore, initializeBrowserEventSubscriptions, ensureBrowserViewsExist } from '../../stores/browserUiStore';
+import { useTabStore } from '../../stores/tabStore';
 import { BrowserLoadingBar } from './BrowserLoadingBar';
 import { BrowserErrorOverlay } from './BrowserErrorOverlay';
 import { BrowserTabBar, BrowserTab } from './BrowserTabBar';
@@ -26,15 +27,15 @@ const TOTAL_CHROME_HEIGHT = TAB_BAR_HEIGHT + TOOLBAR_HEIGHT;
 
 /**
  * Container for the browser WebContentsView
- * Spec 019: Single Tab Browser MVP
+ * Phase 2: Multi-Tab Browser (F038 integration)
  *
  * The actual web content is rendered by the main process WebContentsView,
  * positioned to match this component's bounds. This component:
- * 1. Displays tab bar and navigation toolbar
- * 2. Calculates and reports content bounds to main process
- * 3. Shows loading progress
- * 4. Shows error overlay when needed
- * 5. Initializes browser on mount
+ * 1. Displays multi-tab bar from tabStore
+ * 2. Displays navigation toolbar from browserUiStore (active view state)
+ * 3. Calculates and reports content bounds to main process
+ * 4. Shows loading progress and error overlays
+ * 5. Initializes both tabStore and browserUiStore on mount
  */
 // Sidebar animation duration (must match CSS transition in Sidebar.module.css)
 const SIDEBAR_ANIMATION_DURATION = 250;
@@ -54,12 +55,9 @@ export function BrowserArea({
     // Track last sent bounds to avoid redundant updates
     const lastBoundsRef = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
 
+    // browserUiStore: view-level state (loading, errors, navigation)
     const {
         activeViewId,
-        views,
-        isInitialized,
-        initError,
-        initialize,
         updateBounds,
         loadURL,
         goBack,
@@ -67,30 +65,48 @@ export function BrowserArea({
         reload,
         stop,
         clearError,
+        registerView,
+        unregisterView,
     } = useBrowserUiStore();
 
-    // Get active view state
+    // tabStore: tab list state
+    const tabStoreState = useTabStore();
+    const {
+        tabs: tabList,
+        activeTabId,
+        isInitialized: tabsInitialized,
+        initError: tabsInitError,
+        initialize: initializeTabs,
+        createTab,
+        closeTab,
+        switchTab,
+        reorderTabs,
+    } = tabStoreState;
+
+    // Get active view state from browserUiStore (for toolbar/loading/error display)
+    // B018 fix: Use activeTabId as the view ID since tab.id === view.id
     const activeView = useBrowserUiStore((state) => {
-        if (!state.activeViewId) return null;
-        return state.views.get(state.activeViewId) ?? null;
+        const viewId = state.activeViewId;
+        if (!viewId) return null;
+        return state.views.get(viewId) ?? null;
     });
 
-    // Convert views map to tabs array
-    const tabs: BrowserTab[] = useMemo(() => {
-        return Array.from(views.values()).map((view) => ({
-            id: view.id,
-            title: view.title || 'New Tab',
-            faviconUrl: view.faviconUrl,
-            isLoading: view.isLoading,
-        }));
-    }, [views]);
+    // Convert tabStore tabs to BrowserTab[] for the tab bar
+    const tabs: BrowserTab[] = tabList.map((tab) => ({
+        id: tab.id,
+        title: tab.title || 'New Tab',
+        faviconUrl: tab.faviconUrl,
+        isLoading: tab.isLoading,
+    }));
+
+    // Initialization state - only depends on tabStore now (browserUiStore is driven by tab operations)
+    const isInitialized = tabsInitialized;
+    const initError = tabsInitError;
 
     // Calculate and send bounds to main process with debouncing to prevent flickering
-    // sidebarWidth is the additional left offset to apply:
-    // - In floating mode: App passes sidebar width (320) so WebContentsView doesn't cover sidebar
-    // - In fixed mode: App passes 0 (DOM layout already positions content after sidebar)
     const sendBoundsImmediate = useCallback(() => {
-        if (!contentRef.current || !activeViewId) return;
+        const viewId = activeViewId ?? activeTabId;
+        if (!contentRef.current || !viewId) return;
 
         // Skip intermediate updates during sidebar animation to prevent flickering
         if (isAnimatingRef.current) return;
@@ -99,15 +115,13 @@ export function BrowserArea({
 
         // Only update if we have valid dimensions
         if (rect.width > 0 && rect.height > 0) {
-            // Use rect.x directly (already correct from DOM layout)
-            // Add sidebarWidth offset only when App tells us to (floating mode)
             const adjustedX = Math.round(rect.x) + sidebarWidth;
             const adjustedWidth = Math.round(rect.width) - sidebarWidth;
 
             const newBounds = {
                 x: adjustedX,
                 y: Math.round(rect.y),
-                width: Math.max(adjustedWidth, 100), // Minimum width to prevent negative/zero
+                width: Math.max(adjustedWidth, 100),
                 height: Math.round(rect.height),
             };
 
@@ -124,29 +138,63 @@ export function BrowserArea({
                 updateBounds(newBounds);
             }
         }
-    }, [activeViewId, updateBounds, sidebarWidth]);
+    }, [activeViewId, activeTabId, updateBounds, sidebarWidth]);
 
     // Debounced version to prevent flickering during rapid sidebar toggling
     const sendBounds = useCallback(() => {
         if (boundsUpdateTimeoutRef.current) {
             clearTimeout(boundsUpdateTimeoutRef.current);
         }
-        // Small debounce to batch rapid updates (e.g., during sidebar animation)
         boundsUpdateTimeoutRef.current = setTimeout(() => {
             sendBoundsImmediate();
-        }, 16); // ~1 frame at 60fps
+        }, 16);
     }, [sendBoundsImmediate]);
 
-    // Initialize browser and event subscriptions on mount
+    // Initialize tab store and bridge event subscriptions on mount
+    // B018 fix: No longer calls browserUiStore.initialize() independently.
+    // Instead, tab operations drive view creation, and events bridge to both stores.
+    // B021 fix: Uses cancellation flag to prevent stale async work after unmount
+    // (React strict mode double-mounts components).
     useEffect(() => {
-        let cleanup: (() => void) | undefined;
+        let cancelled = false;
+        let eventCleanup: (() => void) | undefined;
 
         const setup = async () => {
-            // Initialize event subscriptions
-            cleanup = initializeBrowserEventSubscriptions();
+            // Set up event subscriptions that forward to BOTH stores
+            eventCleanup = initializeBrowserEventSubscriptions((viewId, updates) => {
+                useTabStore.getState().updateTabFromEvent(viewId, updates);
+            });
 
-            // Initialize browser store (creates first view)
-            await initialize();
+            // If unmounted during setup (strict mode), clean up and bail
+            if (cancelled) {
+                eventCleanup();
+                eventCleanup = undefined;
+                return;
+            }
+
+            // Initialize tabStore (loads tabs from DB, creates default if empty)
+            await initializeTabs();
+            if (cancelled) return;
+
+            // B020 fix: Ensure WebContentsViews exist in main process for all tabs.
+            // On app restart, BrowserService has no views (freshly initialized).
+            // This creates them. Idempotent: no-op if view already exists (first run).
+            const { tabs: loadedTabs, activeTabId: activeId } = useTabStore.getState();
+            await ensureBrowserViewsExist(loadedTabs, activeId);
+            if (cancelled) return;
+
+            // Register all loaded tabs as views in browserUiStore
+            for (const tab of loadedTabs) {
+                registerView(tab.id, tab.url);
+            }
+
+            // Set active view in browserUiStore to match active tab
+            if (activeId) {
+                useBrowserUiStore.setState({
+                    activeViewId: activeId,
+                    isInitialized: true,
+                });
+            }
 
             setIsReady(true);
         };
@@ -154,29 +202,26 @@ export function BrowserArea({
         setup();
 
         return () => {
-            if (cleanup) cleanup();
-            // Clean up debounce timeout
+            cancelled = true;
+            if (eventCleanup) eventCleanup();
             if (boundsUpdateTimeoutRef.current) {
                 clearTimeout(boundsUpdateTimeoutRef.current);
             }
         };
-    }, [initialize]);
+    }, [initializeTabs, registerView]);
 
     // Update bounds when container size changes
     useEffect(() => {
         if (!isReady) return;
 
-        // Initial bounds
         sendBounds();
 
-        // Listen for resize
         const handleResize = () => {
             requestAnimationFrame(sendBounds);
         };
 
         window.addEventListener('resize', handleResize);
 
-        // ResizeObserver for container-specific changes
         const resizeObserver = new ResizeObserver(() => {
             requestAnimationFrame(sendBounds);
         });
@@ -199,23 +244,16 @@ export function BrowserArea({
         const widthChanged = prevWidth !== sidebarWidth;
         prevSidebarWidthRef.current = sidebarWidth;
 
-        // If sidebar width changed, delay bounds update to let sidebar animation complete
-        // This prevents the WebContentsView from flickering during the 250ms sidebar transition
         if (widthChanged) {
-            // Mark animation as in progress to suppress intermediate updates from resize events
             isAnimatingRef.current = true;
 
-            // Clear any pending animation timeout
             if (sidebarAnimationTimeoutRef.current) {
                 clearTimeout(sidebarAnimationTimeoutRef.current);
             }
 
-            // Wait for sidebar animation to complete before updating bounds
             sidebarAnimationTimeoutRef.current = setTimeout(() => {
-                // Animation complete, allow normal updates again
                 isAnimatingRef.current = false;
-                // Force update bounds after animation
-                lastBoundsRef.current = null; // Reset to ensure update happens
+                lastBoundsRef.current = null;
                 sendBoundsImmediate();
             }, SIDEBAR_ANIMATION_DURATION);
         }
@@ -235,14 +273,39 @@ export function BrowserArea({
         }
     }, [topOffset, isReady, sendBounds]);
 
-    // Handlers for tab bar
-    const handleTabClick = useCallback((tabId: string) => {
-        // For MVP with single tab, this is a no-op
-        // In multi-tab future, would call setActiveView
-        console.log('[BrowserArea] Tab clicked:', tabId);
-    }, []);
+    // Tab bar handlers - wired to tabStore with browserUiStore sync (B018 fix)
+    const handleTabClick = useCallback(async (tabId: string) => {
+        await switchTab(tabId);
+        // Sync browserUiStore active view
+        useBrowserUiStore.setState({ activeViewId: tabId });
+    }, [switchTab]);
 
-    // Handlers for toolbar
+    const handleTabClose = useCallback(async (tabId: string) => {
+        unregisterView(tabId);
+        await closeTab(tabId);
+        // After close, sync the new active tab's view
+        const { activeTabId: newActiveId } = useTabStore.getState();
+        if (newActiveId) {
+            registerView(newActiveId, useTabStore.getState().tabs.find(t => t.id === newActiveId)?.url);
+            useBrowserUiStore.setState({ activeViewId: newActiveId });
+        }
+    }, [closeTab, registerView, unregisterView]);
+
+    const handleNewTab = useCallback(async () => {
+        const newTabId = await createTab();
+        if (newTabId) {
+            // Register the new view in browserUiStore and set as active
+            const newTab = useTabStore.getState().tabs.find(t => t.id === newTabId);
+            registerView(newTabId, newTab?.url);
+            useBrowserUiStore.setState({ activeViewId: newTabId });
+        }
+    }, [createTab, registerView]);
+
+    const handleReorder = useCallback((orderedIds: string[]) => {
+        reorderTabs(orderedIds);
+    }, [reorderTabs]);
+
+    // Toolbar handlers - wired to browserUiStore
     const handleBack = useCallback(() => {
         if (activeViewId) goBack();
     }, [activeViewId, goBack]);
@@ -316,15 +379,18 @@ export function BrowserArea({
             className={`${styles.browserArea} ${className ?? ''}`}
             data-testid="browser-area"
         >
-            {/* Tab bar */}
+            {/* Tab bar - driven by tabStore */}
             <BrowserTabBar
                 tabs={tabs}
-                activeTabId={activeViewId}
+                activeTabId={activeTabId}
                 onTabClick={handleTabClick}
+                onTabClose={handleTabClose}
+                onNewTab={handleNewTab}
+                onReorder={handleReorder}
                 className={styles.tabBar}
             />
 
-            {/* Navigation toolbar */}
+            {/* Navigation toolbar - driven by browserUiStore */}
             <BrowserToolbar
                 url={activeView?.url ?? ''}
                 isLoading={activeView?.isLoading ?? false}
@@ -361,14 +427,8 @@ export function BrowserArea({
                     />
                 )}
 
-                {/*
-                    Placeholder div - the actual WebContentsView is positioned by the main process
-                    to match this container's bounds. This div exists to:
-                    1. Provide layout context
-                    2. Allow click-through to WebContentsView
-                    3. Show when no view is active
-                */}
-                {!activeViewId && (
+                {/* Placeholder when no view is active */}
+                {!activeViewId && !activeTabId && (
                     <div className={styles.placeholder}>
                         <span>No browser view active</span>
                     </div>
