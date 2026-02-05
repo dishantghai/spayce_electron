@@ -1,7 +1,7 @@
 {
   "id": "019",
   "name": "single-tab-browser-mvp",
-  "status": "in_progress",
+  "status": "completed",
   "priority": "critical",
   "dependencies": [
     "002",
@@ -53,5 +53,43 @@
       "failed": 0,
       "total": 0
     }
-  }
+  },
+  "completed_at": "2026-02-05T21:28:21.807812",
+  "drift_resolved": [
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The spec defines comprehensive browser API types and preload implementation (BrowserAPI interface with createView, destroyView, loadURL, navigation methods, and event handlers), but the actual codebase shows no evidence of these browser-specific preload APIs being implemented. The preload layer appears to only have sidebar overlay functionality."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The spec requires a browserUiStore (Zustand store) for managing browser UI state with methods like initialize, createView, loadURL, and event handlers for loading/navigation events. No such store exists in the codebase."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The spec requires a BrowserArea component that serves as the container for WebContentsView, handles bounds calculation, and integrates with sidebar layout. This component does not exist in the codebase."
+    },
+    {
+      "type": "SPEC_BEHIND",
+      "action": "spec_updated",
+      "description": "The actual BrowserLoadingBar implementation includes accessibility features (aria-label=\"Page loading progress\") that are not mentioned in the spec, and the component structure is slightly different with additional prop validation."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The spec requires a BrowserErrorOverlay component for handling page load errors with user-friendly messages and retry functionality. This component does not exist in the codebase."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The spec requires integration of BrowserArea into the main App.tsx with sidebar width calculations and layout positioning. The actual App.tsx shows no browser integration."
+    },
+    {
+      "type": "CODE_BEHIND",
+      "action": "skipped",
+      "description": "The spec requires IPC event subscriptions initialization (initializeBrowserEventSubscriptions function) to handle browser events from the main process. This functionality is not implemented."
+    }
+  ]
 }

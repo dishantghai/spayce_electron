@@ -68,7 +68,7 @@
     }
   ],
   "codebase": {
-    "structure": "# Codebase Structure\n\n## Project Type\n**Spayce** - An Electron-based desktop application with browser integration capabilities, built as a monorepo using clean architecture principles. The project appears to be migrating from a Flutter codebase to a TypeScript/React implementation.\n\n## Key Directories\n- `packages/core/` - Domain and application layers with entities, use cases, and business logic\n- `packages/infrastructure/` - SQLite database implementation and service layer\n- `packages/react-ui/` - Presentation layer with React hooks and UI components  \n- `packages/shared/` - Reusable components and design system tokens\n- `packages/desktop/` - Electron main process and renderer configuration\n- `project_ops/spayce_migration/` - Migration specifications and component specs (F001-F008)\n- `scripts/` - Build, migration, and development utility scripts\n- `docs/` - Technical documentation and setup guides\n- `BROWSER_INTEGRATION_PLAN/` - Phased browser integration implementation plan\n- `.aasef/` - AASEF framework context and specifications\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `package.json` - Root package with workspace dependencies\n- `tsconfig.json` - TypeScript configuration for the monorepo\n- `vitest.config.ts` - Testing configuration using Vitest\n- `resources/db/spaces.sqlite` - SQLite database file\n- `test-imports.mjs` - Import verification script\n- Multiple session summary files indicating active development iterations\n\n## Patterns Observed\n- **Clean Architecture**: Strict layered architecture with domain, application, infrastructure, and presentation layers\n- **Monorepo Structure**: Each package has its own `package.json`, `tsconfig.json`, and test configuration\n- **Test Coverage**: Comprehensive test suites in `__tests__` directories across packages\n- **Migration Documentation**: Extensive documentation of fixes, sessions, and implementation progress",
+    "structure": "# Codebase Structure\n\n## Project Type\nElectron-based desktop application called \"Spayce\" - a multi-tab browser with workspace management features, built as a TypeScript monorepo using clean architecture patterns.\n\n## Key Directories\n- `packages/` - Monorepo workspace packages (core, infrastructure, react-ui, shared, desktop)\n- `packages/core/` - Domain and application layers with entities, use cases, and business logic\n- `packages/infrastructure/` - SQLite database implementation and service registry\n- `packages/react-ui/` - React hooks for data fetching, mutations, and UI state management\n- `packages/desktop/` - Electron main process, renderer, and preload scripts\n- `packages/shared/` - Reusable React components and design system tokens\n- `scripts/` - Development utilities for database migration, environment setup, and verification\n- `docs/` - Technical documentation for testing, native modules, and fixes\n- `project_ops/` - Migration specifications and architecture documentation\n- `BROWSER_INTEGRATION_PLAN/` - Phased implementation plan for browser features\n- `.aasef/` - AASEF framework context and specifications\n\n## Key Files\n- `pnpm-workspace.yaml` - Monorepo workspace configuration\n- `tsconfig.json` - Root TypeScript configuration\n- `vitest.config.ts` - Test configuration using Vitest\n- `resources/db/spaces.sqlite` - SQLite database file\n- `.env` / `.env.local` - Environment configuration\n- `.nvmrc` - Node.js version specification\n- Multiple session summary and fix documentation files\n\n## Patterns Observed\n- **Clean Architecture**: Strict separation between domain (`core`), infrastructure, and presentation layers\n- **Monorepo Structure**: pnpm workspaces with TypeScript project references\n- **Test-Driven**: Comprehensive test suites in `__tests__` directories across packages\n- **Documentation-Heavy**: Extensive markdown documentation for fixes, migrations, and implementation plans",
     "components_implemented": [
       "TreeView",
       "TreeItem",
@@ -88,7 +88,7 @@
       "navigation",
       "spaces"
     ],
-    "last_synced": "2026-02-04T05:00:20.998565"
+    "last_synced": "2026-02-05T21:28:21.805531"
   },
   "decisions": [
     "Use WebContentsView (not deprecated BrowserView) for tabs",
@@ -98,7 +98,7 @@
     "Fixed and floating sidebar modes"
   ],
   "created_at": "2026-01-17T22:47:24.865263",
-  "updated_at": "2026-02-04T05:00:20.998639",
+  "updated_at": "2026-02-05T21:28:21.805562",
   "enabled_ides": [
     "windsurf",
     "antigravity",
