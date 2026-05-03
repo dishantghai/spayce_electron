@@ -1,0 +1,13 @@
+{
+  "id": "B025",
+  "title": "Sidebar Overlay Click Events Not Captured Over Tab Bar Drag Region",
+  "type": "bug",
+  "status": "completed",
+  "created": "2026-02-07T00:00:00",
+  "related_specs": ["019", "020"],
+  "dependencies": [],
+  "affected_files": [
+    "packages/desktop/src/renderer/sidebar.html",
+    "packages/react-ui/src/components/browser/BrowserTabBar.module.css"
+  ]
+}

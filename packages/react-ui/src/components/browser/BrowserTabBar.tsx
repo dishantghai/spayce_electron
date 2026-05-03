@@ -36,6 +36,12 @@ export interface BrowserTabBarProps {
     onReorder?: (orderedIds: string[]) => void;
     /** Optional className for styling */
     className?: string;
+    /**
+     * B025: When true, disables -webkit-app-region: drag on the tab bar.
+     * This prevents the drag region from intercepting clicks on the sidebar
+     * overlay WebContentsView that floats above this component.
+     */
+    sidebarOverlayActive?: boolean;
 }
 
 export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
@@ -46,6 +52,7 @@ export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
     onNewTab,
     onReorder,
     className,
+    sidebarOverlayActive = false,
 }) => {
     const tabsContainerRef = useRef<HTMLDivElement>(null);
     const [draggedTabId, setDraggedTabId] = useState<string | null>(null);
@@ -125,8 +132,18 @@ export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
         setDragOverTabId(null);
     }, []);
 
+    // B025: When sidebar overlay is active, disable drag regions to prevent
+    // them from intercepting clicks on the overlay WebContentsView
+    const noDragStyle = sidebarOverlayActive
+        ? { WebkitAppRegion: 'no-drag' as const }
+        : undefined;
+
     return (
-        <div className={`${styles.tabBar} ${className || ''}`}>
+        <div
+            className={`${styles.tabBar} ${className || ''}`}
+            style={noDragStyle}
+            data-drag-disabled={sidebarOverlayActive || undefined}
+        >
             {/* New tab button */}
             {onNewTab && (
                 <button
@@ -210,7 +227,11 @@ export const BrowserTabBar: React.FC<BrowserTabBarProps> = ({
             </div>
 
             {/* Spacer for drag region */}
-            <div className={styles.tabBarSpacer} />
+            <div
+                className={styles.tabBarSpacer}
+                style={noDragStyle}
+                data-drag-disabled={sidebarOverlayActive || undefined}
+            />
         </div>
     );
 };

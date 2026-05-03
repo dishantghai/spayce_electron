@@ -40,6 +40,12 @@
     #sidebar-root {
       display: flex;
       flex-direction: column;
+      /* B025: Prevent underlying drag regions (BrowserTabBar) from intercepting
+         mouse events through this transparent overlay. Without this, clicks on
+         the sidebar over areas where .tabBar or .tabBarSpacer (with
+         -webkit-app-region: drag) are behind will be intercepted by Chromium's
+         compositor for window dragging instead of reaching the sidebar. */
+      -webkit-app-region: no-drag;
     }
   </style>
 </head>

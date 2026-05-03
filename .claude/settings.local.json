@@ -60,7 +60,9 @@
       "Bash(bash -l -c:*)",
       "Bash(npm run build-release:*)",
       "Bash(echo:*)",
-      "Bash(export PATH=\"$HOME/.nvm/versions/node/v22.17.1/bin:$PATH\")"
+      "Bash(export PATH=\"$HOME/.nvm/versions/node/v22.17.1/bin:$PATH\")",
+      "WebSearch",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

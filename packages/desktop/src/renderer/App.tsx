@@ -2440,6 +2440,9 @@ export function App(): React.ReactElement {
                         // In fixed mode: 0 (DOM layout already positions content after sidebar)
                         // The useOverlayMode ensures browser stays stable when sidebar opens/closes
                         sidebarWidth={0}
+                        // B025: Disable drag regions when sidebar overlay is visible to prevent
+                        // them from intercepting clicks on the overlay WebContentsView
+                        sidebarOverlayActive={useOverlayMode && sidebarVisible}
                     />
                 ) : (
                     <div style={{

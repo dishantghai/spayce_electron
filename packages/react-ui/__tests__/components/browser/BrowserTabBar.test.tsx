@@ -229,4 +229,96 @@ describe('BrowserTabBar', () => {
             expect(screen.getByLabelText('Open new tab')).toBeTruthy();
         });
     });
+
+    describe('B025: Sidebar Overlay Click Interception Fix', () => {
+        /**
+         * B025: When sidebar overlay is visible, drag regions in BrowserTabBar
+         * intercept clicks through the transparent overlay WebContentsView.
+         * The fix applies inline style { WebkitAppRegion: 'no-drag' } when
+         * sidebarOverlayActive=true to prevent this interception.
+         *
+         * Note: jsdom doesn't support -webkit-app-region as a CSS property,
+         * so we test via data-drag-disabled attribute which mirrors the behavior.
+         * The actual style is verified through static analysis tests in B025 test file.
+         */
+
+        it('should NOT set drag-disabled when sidebarOverlayActive is false', () => {
+            const { container } = render(
+                <BrowserTabBar {...defaultProps} sidebarOverlayActive={false} />
+            );
+            const tabBar = container.firstChild as HTMLElement;
+
+            // Should not have data-drag-disabled attribute
+            expect(tabBar.hasAttribute('data-drag-disabled')).toBe(false);
+        });
+
+        it('should NOT set drag-disabled when sidebarOverlayActive is not provided', () => {
+            const { container } = render(<BrowserTabBar {...defaultProps} />);
+            const tabBar = container.firstChild as HTMLElement;
+
+            // Should not have data-drag-disabled attribute (default is false)
+            expect(tabBar.hasAttribute('data-drag-disabled')).toBe(false);
+        });
+
+        it('should set drag-disabled on tabBar when sidebarOverlayActive is true', () => {
+            const { container } = render(
+                <BrowserTabBar {...defaultProps} sidebarOverlayActive={true} />
+            );
+            const tabBar = container.firstChild as HTMLElement;
+
+            // Should have data-drag-disabled attribute
+            expect(tabBar.hasAttribute('data-drag-disabled')).toBe(true);
+        });
+
+        it('should set drag-disabled on spacer when sidebarOverlayActive is true', () => {
+            const { container } = render(
+                <BrowserTabBar {...defaultProps} sidebarOverlayActive={true} />
+            );
+            // Spacer is the last child of tabBar (after new tab button and tabs container)
+            const tabBar = container.firstChild as HTMLElement;
+            const spacer = tabBar.lastChild as HTMLElement;
+
+            // Should have data-drag-disabled attribute
+            expect(spacer.hasAttribute('data-drag-disabled')).toBe(true);
+        });
+
+        it('should preserve existing functionality when sidebarOverlayActive is true', () => {
+            const onTabClick = vi.fn();
+            const onNewTab = vi.fn();
+            render(
+                <BrowserTabBar
+                    {...defaultProps}
+                    onTabClick={onTabClick}
+                    onNewTab={onNewTab}
+                    sidebarOverlayActive={true}
+                />
+            );
+
+            // Tab clicking should still work
+            fireEvent.click(screen.getByText('GitHub').closest('[role="tab"]')!);
+            expect(onTabClick).toHaveBeenCalledWith('tab-2');
+
+            // New tab button should still work
+            fireEvent.click(screen.getByLabelText('Open new tab'));
+            expect(onNewTab).toHaveBeenCalledTimes(1);
+        });
+
+        it('should toggle drag-disabled when sidebarOverlayActive changes', () => {
+            const { container, rerender } = render(
+                <BrowserTabBar {...defaultProps} sidebarOverlayActive={false} />
+            );
+            const tabBar = container.firstChild as HTMLElement;
+
+            // Initially false - no attribute
+            expect(tabBar.hasAttribute('data-drag-disabled')).toBe(false);
+
+            // Change to true - should have attribute
+            rerender(<BrowserTabBar {...defaultProps} sidebarOverlayActive={true} />);
+            expect(tabBar.hasAttribute('data-drag-disabled')).toBe(true);
+
+            // Change back to false - should remove attribute
+            rerender(<BrowserTabBar {...defaultProps} sidebarOverlayActive={false} />);
+            expect(tabBar.hasAttribute('data-drag-disabled')).toBe(false);
+        });
+    });
 });

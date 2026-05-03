@@ -19,6 +19,12 @@ export interface BrowserAreaProps {
     topOffset?: number;
     /** Additional class name */
     className?: string;
+    /**
+     * B025: When true, disables -webkit-app-region: drag on the tab bar.
+     * This prevents the drag region from intercepting clicks on the sidebar
+     * overlay WebContentsView that floats above this component.
+     */
+    sidebarOverlayActive?: boolean;
 }
 
 // Heights for the chrome elements
@@ -45,6 +51,7 @@ export function BrowserArea({
     sidebarWidth,
     topOffset = 0,
     className,
+    sidebarOverlayActive = false,
 }: BrowserAreaProps) {
     const contentRef = useRef<HTMLDivElement>(null);
     const [isReady, setIsReady] = useState(false);
@@ -419,6 +426,7 @@ export function BrowserArea({
                 onNewTab={handleNewTab}
                 onReorder={handleReorder}
                 className={styles.tabBar}
+                sidebarOverlayActive={sidebarOverlayActive}
             />
 
             {/* Navigation toolbar - driven by browserUiStore */}
