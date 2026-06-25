@@ -33,7 +33,7 @@ Spayce is a desktop AI OS — a single Electron application that combines an int
 
 **Tech stack:** Electron 30, React, TypeScript, Zustand, SQLite (better-sqlite3), WebContentsView for Arc-style browser tabs.
 
-**Codebase size:** 20 AASEF specs written, 28 test files (800+ tests), multiple working modules.
+**Codebase size:** 20 SPEKY specs written, 28 test files (800+ tests), multiple working modules.
 
 The app runs. A reviewer can install it, launch it, create Spaces, save links, browse the web in integrated tabs, and navigate their local filesystem — all within Spayce.
 
@@ -153,7 +153,7 @@ Write a concise walkthrough for the application form:
 >
 > **Designed but not yet built:** Notes editor, AI agent, STT/transcription, IDE/terminal, cloud sync.
 >
-> The codebase has 20 specification documents (AASEF specs), 800+ unit and integration tests, and a clean TypeScript/React architecture designed specifically to support the AI agent layer coming in Phase 2.
+> The codebase has 20 specification documents (SPEKY specs), 800+ unit and integration tests, and a clean TypeScript/React architecture designed specifically to support the AI agent layer coming in Phase 2.
 
 ---
 
@@ -164,7 +164,7 @@ This is critical. The application asks for proof that you build without being as
 **What to link / show:**
 
 - **GitHub commit history on spayce_electron:** Show consistent, self-directed commits over weeks/months — not bursts before an application deadline
-- **AASEF spec documents:** 20 specs written and executed, showing you plan and ship systematically without external direction
+- **SPEKY spec documents:** 20 specs written and executed, showing you plan and ship systematically without external direction
 - **800+ tests:** Written proactively as part of development, not required by anyone
 - **Migration work:** You migrated from a Flutter prototype to an Electron app — a major proactive technical decision
 - **Session summaries:** The HANDOFF and SESSION_FINAL_STATUS docs show deep, systematic debugging at the architectural level — not "wait for help" energy

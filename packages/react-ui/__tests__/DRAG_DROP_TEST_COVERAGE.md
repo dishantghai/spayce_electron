@@ -253,7 +253,7 @@ pnpm test:watch
 ## Related Documentation
 
 - Implementation: `DroppableTreeItem.tsx`, `dragDropUiStore.ts`, `TreeView.tsx`
-- Design: `.aasef/specs/` (if applicable)
+- Design: `.speky/specs/` (if applicable)
 - User Guide: Document nested folder drag-drop behavior
 
 ---

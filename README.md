@@ -66,7 +66,7 @@ spayce_electron/
 │           └── preload/  # Preload scripts (context bridge)
 │
 ├── scripts/              # Build, migration, and native module scripts
-├── .aasef/               # Architectural specs and implementation stories
+├── .speky/               # Architectural specs and implementation stories
 └── project_ops/          # Product documentation
 ```
 
@@ -219,9 +219,9 @@ Design tokens live in `packages/shared/src/theme/`:
 
 ---
 
-## Implementation Specs (AASEF)
+## Implementation Specs (SPEKY)
 
-The `.aasef/` directory contains architectural specification documents for each implemented feature:
+The `.speky/` directory contains architectural specification documents for each implemented feature:
 
 | Spec | Feature | Status |
 |---|---|---|

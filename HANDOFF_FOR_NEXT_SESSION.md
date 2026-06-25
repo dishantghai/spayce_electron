@@ -4,7 +4,7 @@
 
 In your fresh session, run:
 ```bash
-aasef implement B002
+speky implement B002
 ```
 
 This will implement the browser sidebar context menu, stale state, and drag/drop fixes with clean context.
@@ -17,7 +17,7 @@ Save the current progress:
 
 ```bash
 # Commit the story and test coverage
-git add .aasef/stories/B002-browser-sidebar-context-menu-fixes/
+git add .speky/stories/B002-browser-sidebar-context-menu-fixes/
 git add packages/desktop/__tests__/spec-020/
 
 # Commit working partial implementations
@@ -66,7 +66,7 @@ Co-Authored-By: Claude Sonnet 4.5 (1M context) <noreply@anthropic.com>"
 
 ## 📋 STORY B002 - QUICK REFERENCE
 
-**Location**: `.aasef/stories/B002-browser-sidebar-context-menu-fixes/story.md`
+**Location**: `.speky/stories/B002-browser-sidebar-context-menu-fixes/story.md`
 
 **Key Requirements:**
 1. Context menus render in overlay (z-index fix)
@@ -137,7 +137,7 @@ packages/desktop/src/renderer/App.tsx (reverted to clean state)
 
 **New (Commit):**
 ```
-.aasef/stories/B002-*
+.speky/stories/B002-*
 packages/desktop/__tests__/spec-020/REGRESSION_*
 All *.md documentation files
 ```
@@ -148,7 +148,7 @@ All *.md documentation files
 
 ### What the Fresh Session Will Do
 
-**With `aasef implement B002`, you'll get:**
+**With `speky implement B002`, you'll get:**
 - ✅ Clean context focused on the story
 - ✅ All requirements loaded
 - ✅ Test files available for validation
@@ -226,7 +226,7 @@ Everything is set up for a clean, successful implementation:
 
 **In your next session:**
 ```
-aasef implement B002
+speky implement B002
 ```
 
 This will load the story context and implement systematically with all the knowledge from this session but none of the accumulated complexity! 🚀

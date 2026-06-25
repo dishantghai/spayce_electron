@@ -211,17 +211,17 @@ Stories for advanced features (detailed in separate documents):
 
 ## Spec & Story Structure
 
-### AASEF Compliance
+### SPEKY Compliance
 
-All specs and stories follow AASEF methodology:
+All specs and stories follow SPEKY methodology:
 
 ```
-.aasef/specs/017-browser-foundation/
+.speky/specs/017-browser-foundation/
 ├── spec.md           # Requirements and scope
 ├── plan.md           # Implementation steps
 └── status.json       # Priority, dependencies, status
 
-.aasef/stories/F002-arc-fullscreen/
+.speky/stories/F002-arc-fullscreen/
 ├── story.md          # Story definition
 └── status.json       # Related specs, affected files
 ```
@@ -466,5 +466,5 @@ This implementation plan consists of:
 
 1. **Review this overview** with stakeholders
 2. **Proceed to Phase 1** documentation (`02-PHASE1-FOUNDATION.md`)
-3. **Create AASEF specs** in `.aasef/specs/` following the plan
+3. **Create SPEKY specs** in `.speky/specs/` following the plan
 4. **Begin implementation** with Spec 017

@@ -1,7 +1,7 @@
 /**
- * Spec 011: Migration & Feature Parity - AASEF Documentation Updates Tests
+ * Spec 011: Migration & Feature Parity - SPEKY Documentation Updates Tests
  * 
- * TDD RED Phase: These tests verify AASEF documentation is updated.
+ * TDD RED Phase: These tests verify SPEKY documentation is updated.
  * Tests should FAIL initially until documentation is complete.
  */
 
@@ -11,15 +11,15 @@ import * as path from 'path';
 
 const PROJECT_ROOT = path.resolve(__dirname, '../../../..');
 
-describe('Spec 011: AASEF Documentation Updates', () => {
+describe('Spec 011: SPEKY Documentation Updates', () => {
     describe('AC1: codebase.md Updates', () => {
         it('should have updated codebase.md', () => {
-            const codebasePath = path.join(PROJECT_ROOT, '.aasef/context/codebase.md');
+            const codebasePath = path.join(PROJECT_ROOT, '.speky/context/codebase.md');
             expect(fs.existsSync(codebasePath)).toBe(true);
         });
 
         it('should document @spayce/core package', () => {
-            const codebasePath = path.join(PROJECT_ROOT, '.aasef/context/codebase.md');
+            const codebasePath = path.join(PROJECT_ROOT, '.speky/context/codebase.md');
 
             if (!fs.existsSync(codebasePath)) {
                 expect(fs.existsSync(codebasePath)).toBe(true);
@@ -32,7 +32,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should document @spayce/infrastructure package', () => {
-            const codebasePath = path.join(PROJECT_ROOT, '.aasef/context/codebase.md');
+            const codebasePath = path.join(PROJECT_ROOT, '.speky/context/codebase.md');
 
             if (!fs.existsSync(codebasePath)) {
                 expect(fs.existsSync(codebasePath)).toBe(true);
@@ -44,7 +44,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should document @spayce/react-ui package', () => {
-            const codebasePath = path.join(PROJECT_ROOT, '.aasef/context/codebase.md');
+            const codebasePath = path.join(PROJECT_ROOT, '.speky/context/codebase.md');
 
             if (!fs.existsSync(codebasePath)) {
                 expect(fs.existsSync(codebasePath)).toBe(true);
@@ -56,7 +56,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should NOT reference packages/shared/ as active package', () => {
-            const codebasePath = path.join(PROJECT_ROOT, '.aasef/context/codebase.md');
+            const codebasePath = path.join(PROJECT_ROOT, '.speky/context/codebase.md');
 
             if (!fs.existsSync(codebasePath)) {
                 expect(fs.existsSync(codebasePath)).toBe(true);
@@ -77,12 +77,12 @@ describe('Spec 011: AASEF Documentation Updates', () => {
 
     describe('AC2: tech_decisions.md Updates', () => {
         it('should have updated tech_decisions.md', () => {
-            const techPath = path.join(PROJECT_ROOT, '.aasef/context/tech_decisions.md');
+            const techPath = path.join(PROJECT_ROOT, '.speky/context/tech_decisions.md');
             expect(fs.existsSync(techPath)).toBe(true);
         });
 
         it('should document Clean Architecture structure', () => {
-            const techPath = path.join(PROJECT_ROOT, '.aasef/context/tech_decisions.md');
+            const techPath = path.join(PROJECT_ROOT, '.speky/context/tech_decisions.md');
 
             if (!fs.existsSync(techPath)) {
                 expect(fs.existsSync(techPath)).toBe(true);
@@ -94,7 +94,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should document service registry pattern', () => {
-            const techPath = path.join(PROJECT_ROOT, '.aasef/context/tech_decisions.md');
+            const techPath = path.join(PROJECT_ROOT, '.speky/context/tech_decisions.md');
 
             if (!fs.existsSync(techPath)) {
                 expect(fs.existsSync(techPath)).toBe(true);
@@ -107,7 +107,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should document domain layer patterns', () => {
-            const techPath = path.join(PROJECT_ROOT, '.aasef/context/tech_decisions.md');
+            const techPath = path.join(PROJECT_ROOT, '.speky/context/tech_decisions.md');
 
             if (!fs.existsSync(techPath)) {
                 expect(fs.existsSync(techPath)).toBe(true);
@@ -120,7 +120,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should document application layer patterns', () => {
-            const techPath = path.join(PROJECT_ROOT, '.aasef/context/tech_decisions.md');
+            const techPath = path.join(PROJECT_ROOT, '.speky/context/tech_decisions.md');
 
             if (!fs.existsSync(techPath)) {
                 expect(fs.existsSync(techPath)).toBe(true);
@@ -133,7 +133,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should document React UI integration patterns', () => {
-            const techPath = path.join(PROJECT_ROOT, '.aasef/context/tech_decisions.md');
+            const techPath = path.join(PROJECT_ROOT, '.speky/context/tech_decisions.md');
 
             if (!fs.existsSync(techPath)) {
                 expect(fs.existsSync(techPath)).toBe(true);
@@ -146,7 +146,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should have Migration Complete Markers section', () => {
-            const techPath = path.join(PROJECT_ROOT, '.aasef/context/tech_decisions.md');
+            const techPath = path.join(PROJECT_ROOT, '.speky/context/tech_decisions.md');
 
             if (!fs.existsSync(techPath)) {
                 expect(fs.existsSync(techPath)).toBe(true);
@@ -161,12 +161,12 @@ describe('Spec 011: AASEF Documentation Updates', () => {
 
     describe('AC3: architecture.md Creation', () => {
         it('should have architecture.md file', () => {
-            const archPath = path.join(PROJECT_ROOT, '.aasef/context/architecture.md');
+            const archPath = path.join(PROJECT_ROOT, '.speky/context/architecture.md');
             expect(fs.existsSync(archPath)).toBe(true);
         });
 
         it('should document layer dependencies', () => {
-            const archPath = path.join(PROJECT_ROOT, '.aasef/context/architecture.md');
+            const archPath = path.join(PROJECT_ROOT, '.speky/context/architecture.md');
 
             if (!fs.existsSync(archPath)) {
                 expect(fs.existsSync(archPath)).toBe(true);
@@ -178,7 +178,7 @@ describe('Spec 011: AASEF Documentation Updates', () => {
         });
 
         it('should document package purposes', () => {
-            const archPath = path.join(PROJECT_ROOT, '.aasef/context/architecture.md');
+            const archPath = path.join(PROJECT_ROOT, '.speky/context/architecture.md');
 
             if (!fs.existsSync(archPath)) {
                 expect(fs.existsSync(archPath)).toBe(true);

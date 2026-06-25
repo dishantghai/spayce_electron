@@ -32,7 +32,7 @@
 
 ## 📋 STORY B002 CREATED
 
-**Location**: `.aasef/stories/B002-browser-sidebar-context-menu-fixes/`
+**Location**: `.speky/stories/B002-browser-sidebar-context-menu-fixes/`
 
 **Covers All Issues:**
 - Context menu functionality and z-index
@@ -107,7 +107,7 @@ Implement B002 phase by phase:
 
 ```bash
 # Commit what's working
-git add .aasef/stories/B002*
+git add .speky/stories/B002*
 git add packages/desktop/__tests__/spec-020/
 git add packages/desktop/src/renderer/sidebar.tsx
 git add packages/react-ui/src/components/Sidebar.tsx
@@ -123,14 +123,14 @@ git commit -m "feat(B002): Add story and partial implementation for context menu
 Related: Spec-020"
 ```
 
-### Option C: Use AASEF Workflow
+### Option C: Use SPEKY Workflow
 
 ```bash
-# Adopt the story into AASEF tracking
-aasef adopt B002
+# Adopt the story into SPEKY tracking
+speky adopt B002
 
-# Then implement with AASEF guidance
-aasef implement B002
+# Then implement with SPEKY guidance
+speky implement B002
 ```
 
 ---

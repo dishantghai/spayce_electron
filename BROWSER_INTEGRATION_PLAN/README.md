@@ -203,24 +203,24 @@ Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6
 
 ---
 
-## AASEF Integration
+## SPEKY Integration
 
-After this plan is approved, create AASEF specs:
+After this plan is approved, create SPEKY specs:
 
 ```bash
 # Create specs for each phase
-aasef spec "Browser Foundation - WebContentsView Service"
-aasef spec "Browser Domain Layer - Tab Entities"
+speky spec "Browser Foundation - WebContentsView Service"
+speky spec "Browser Domain Layer - Tab Entities"
 # ... etc
 
 # Or import this plan
-aasef import ./BROWSER_INTEGRATION_PLAN/
+speky import ./BROWSER_INTEGRATION_PLAN/
 ```
 
 Spec files will be created in:
 ```
-.aasef/specs/017-browser-foundation/
-.aasef/specs/018-tab-domain-layer/
+.speky/specs/017-browser-foundation/
+.speky/specs/018-tab-domain-layer/
 # ... etc
 ```
 
@@ -258,7 +258,7 @@ pnpm typecheck
 If unclear about any spec or story:
 1. Check `08-FLUTTER-REFERENCE-MAPPING.md` for Flutter source
 2. Reference HiFi designs in `project_ops/HIFI_UI_DESIGN_SCREENS/`
-3. Review `.aasef/context/tech_decisions.md` for constraints
+3. Review `.speky/context/tech_decisions.md` for constraints
 
 ---
 
