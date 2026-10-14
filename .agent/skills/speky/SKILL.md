@@ -17,11 +17,12 @@ Then ask `speky next --json` and follow it. After compaction, ask again — the 
 | `action` | Use |
 |---|---|
 | `propose` | speky-propose |
+| `design` | speky-design (find or create the design a UI change implements; plus `also_skills`) |
 | `validate`, `fix_structure` | speky-validate |
 | `plan` | speky-plan |
 | `start`, `implement` | speky-implement (+ speky-test for tests) |
 | `archive` | speky-verify |
-| `task` | do the task (size it first; promote it if it changes behaviour) |
+| `task` | do the task (size it first; if it changes behaviour, `speky task promote W<n>` — keeps labels and refs); follow `also_skills` if listed |
 | `gate`, `phase` | check the phase deliverables (`speky phases check`), then `speky phases complete` |
 | `resolve_gate` | stop and ask the owner — never decide a human gate yourself |
 | `blocked` | work on what it waits for (`speky ready --json`) |
