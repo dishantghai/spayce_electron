@@ -1,0 +1,26 @@
+{
+  "id": "B030",
+  "status": "draft",
+  "created": "2026-10-14T05:40:59",
+  "source": "speky-v3",
+  "priority": "medium",
+  "dependencies": [],
+  "size": "small",
+  "kind": "story",
+  "title": "Tab-limit eviction deletes the tab row but leaks its WebContentsView",
+  "type": "bug",
+  "updated_at": "2026-10-14T05:42:01",
+  "links": [
+    {
+      "type": "discovered-from",
+      "target": "F037"
+    }
+  ],
+  "validation": {
+    "round": 1,
+    "spec_hash": "2a899e1a9d061d70",
+    "converged": true,
+    "converged_reason": "no open blocker or major findings",
+    "checked_at": "2026-10-14T05:42:01"
+  }
+}

@@ -1,0 +1,13 @@
+# SPEKY v3 settings — reference: https://github.com/dishantghai/speky/blob/main/docs/v3/CONTRACTS.md#8-spekyyaml
+version: 3
+agent_profile: conservative
+id_style: sequential
+max_rounds: 2
+max_questions: 5
+max_clarification_markers: 3
+max_spec_lines: 250
+verify_command: pnpm test
+harnesses:
+- claude-code
+migration_done:
+- check_suspect_completions

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v speky >/dev/null 2>&1 && speky prime --hook-json || true"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -101,7 +101,6 @@
   "updated_at": "2026-06-25T21:52:51.832532",
   "enabled_ides": [
     "windsurf",
-    "antigravity",
-    "claude-code"
+    "antigravity"
   ]
 }

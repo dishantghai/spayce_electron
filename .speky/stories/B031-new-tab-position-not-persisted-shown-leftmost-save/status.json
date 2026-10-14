@@ -1,0 +1,26 @@
+{
+  "id": "B031",
+  "status": "draft",
+  "created": "2026-10-14T05:40:59",
+  "source": "speky-v3",
+  "priority": "low",
+  "dependencies": [],
+  "size": "small",
+  "kind": "story",
+  "title": "New tab position not persisted: shown leftmost, saved rightmost",
+  "type": "bug",
+  "updated_at": "2026-10-14T05:42:01",
+  "links": [
+    {
+      "type": "discovered-from",
+      "target": "B019"
+    }
+  ],
+  "validation": {
+    "round": 1,
+    "spec_hash": "ddaa6a98d0db766d",
+    "converged": true,
+    "converged_reason": "no open blocker or major findings",
+    "checked_at": "2026-10-14T05:42:01"
+  }
+}

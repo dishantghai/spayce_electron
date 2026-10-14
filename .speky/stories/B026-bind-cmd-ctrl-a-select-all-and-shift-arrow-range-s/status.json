@@ -1,0 +1,26 @@
+{
+  "id": "B026",
+  "status": "draft",
+  "created": "2026-10-14T05:40:47",
+  "source": "speky-v3",
+  "priority": "medium",
+  "dependencies": [],
+  "size": "small",
+  "kind": "story",
+  "title": "Bind Cmd/Ctrl+A select-all and Shift+Arrow range selection",
+  "type": "bug",
+  "updated_at": "2026-10-14T05:42:00",
+  "links": [
+    {
+      "type": "discovered-from",
+      "target": "013"
+    }
+  ],
+  "validation": {
+    "round": 1,
+    "spec_hash": "9f5f22defa5eec4c",
+    "converged": true,
+    "converged_reason": "no open blocker or major findings",
+    "checked_at": "2026-10-14T05:42:00"
+  }
+}

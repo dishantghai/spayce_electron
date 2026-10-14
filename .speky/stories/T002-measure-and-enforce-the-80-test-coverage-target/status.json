@@ -1,0 +1,26 @@
+{
+  "id": "T002",
+  "status": "draft",
+  "created": "2026-10-14T05:40:59",
+  "source": "speky-v3",
+  "priority": "low",
+  "dependencies": [],
+  "size": "small",
+  "kind": "story",
+  "title": "Measure and enforce the 80% test coverage target",
+  "type": "tech_debt",
+  "updated_at": "2026-10-14T05:42:01",
+  "links": [
+    {
+      "type": "discovered-from",
+      "target": "011"
+    }
+  ],
+  "validation": {
+    "round": 1,
+    "spec_hash": "de0f135cadb9a830",
+    "converged": true,
+    "converged_reason": "no open blocker or major findings",
+    "checked_at": "2026-10-14T05:42:01"
+  }
+}

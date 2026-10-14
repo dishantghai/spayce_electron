@@ -1,0 +1,26 @@
+{
+  "id": "B029",
+  "status": "draft",
+  "created": "2026-10-14T05:40:59",
+  "source": "speky-v3",
+  "priority": "low",
+  "dependencies": [],
+  "size": "small",
+  "kind": "story",
+  "title": "Local folder Refresh does nothing because refreshLocalFolder IPC is missing",
+  "type": "bug",
+  "updated_at": "2026-10-14T05:42:00",
+  "links": [
+    {
+      "type": "discovered-from",
+      "target": "F005"
+    }
+  ],
+  "validation": {
+    "round": 1,
+    "spec_hash": "756580754c4f95a8",
+    "converged": true,
+    "converged_reason": "no open blocker or major findings",
+    "checked_at": "2026-10-14T05:42:00"
+  }
+}

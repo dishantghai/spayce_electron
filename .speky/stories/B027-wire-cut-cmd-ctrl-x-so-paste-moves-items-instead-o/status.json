@@ -1,0 +1,26 @@
+{
+  "id": "B027",
+  "status": "draft",
+  "created": "2026-10-14T05:40:58",
+  "source": "speky-v3",
+  "priority": "medium",
+  "dependencies": [],
+  "size": "small",
+  "kind": "story",
+  "title": "Wire Cut (Cmd/Ctrl+X) so paste moves items instead of duplicating",
+  "type": "bug",
+  "updated_at": "2026-10-14T05:42:00",
+  "links": [
+    {
+      "type": "discovered-from",
+      "target": "016"
+    }
+  ],
+  "validation": {
+    "round": 1,
+    "spec_hash": "4415380edb93c9dd",
+    "converged": true,
+    "converged_reason": "no open blocker or major findings",
+    "checked_at": "2026-10-14T05:42:00"
+  }
+}
