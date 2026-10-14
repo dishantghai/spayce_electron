@@ -9,7 +9,7 @@
   "kind": "story",
   "title": "Overlay sidebar never shows Paste because hasClipboard is not synced",
   "type": "bug",
-  "updated_at": "2026-10-14T05:42:00",
+  "updated_at": "2026-10-14T11:40:40",
   "links": [
     {
       "type": "discovered-from",
@@ -17,10 +17,13 @@
     }
   ],
   "validation": {
-    "round": 1,
-    "spec_hash": "68eea62c1cc3b413",
+    "round": 2,
+    "spec_hash": "5054a00003401b71",
     "converged": true,
     "converged_reason": "no open blocker or major findings",
-    "checked_at": "2026-10-14T05:42:00"
-  }
+    "checked_at": "2026-10-14T11:40:40"
+  },
+  "labels": [
+    "ui"
+  ]
 }

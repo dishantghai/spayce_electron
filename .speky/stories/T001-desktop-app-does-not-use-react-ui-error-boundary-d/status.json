@@ -9,7 +9,7 @@
   "kind": "story",
   "title": "Desktop app does not use react-ui error boundary, data hooks and skeletons",
   "type": "tech_debt",
-  "updated_at": "2026-10-14T05:42:01",
+  "updated_at": "2026-10-14T11:40:33",
   "links": [
     {
       "type": "discovered-from",
@@ -17,10 +17,13 @@
     }
   ],
   "validation": {
-    "round": 1,
-    "spec_hash": "b76f198629101729",
+    "round": 2,
+    "spec_hash": "9654ba20b03fd49f",
     "converged": true,
     "converged_reason": "no open blocker or major findings",
-    "checked_at": "2026-10-14T05:42:01"
-  }
+    "checked_at": "2026-10-14T11:40:33"
+  },
+  "labels": [
+    "ui"
+  ]
 }

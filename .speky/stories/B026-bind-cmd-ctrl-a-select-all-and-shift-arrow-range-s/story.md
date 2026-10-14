@@ -14,6 +14,16 @@ see selection-R4 and keyboard-navigation-R5.
 - No change to mouse selection (Cmd-click, Shift-click).
 - No select-all across spaces.
 
+## Design
+<!-- Which design this implements, so nobody guesses during implementation:
+     - Screens: IDs from the screen catalogue (screen:<id>) or design files in the repo, per state
+       (default, empty, error, loading).
+     - Design system: `.speky/context/design_system.md`
+     Look for an existing design first (`speky design status`, the screen catalogue). If there is none,
+     write "To be designed" and `speky next` runs the design step. If nothing visual changes, write
+     "No new design needed: <why>". -->
+No new design needed: keyboard behaviour only. Selected items use the existing selection highlight from the design system; sidebar and Spaces screen as in `project_ops/HIFI_UI_DESIGN_SCREENS/App Side Bar with Spaces Screen Open.png`.
+
 ## Requirements
 
 ### R1: Select all with Cmd/Ctrl+A

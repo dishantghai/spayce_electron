@@ -13,7 +13,10 @@ harnesses:
 - antigravity
 migration_done:
 - check_suspect_completions
+- register_design_folders
 testing:
   coverage_command: npx vitest run --coverage
   coverage_threshold: 80
   runner: vitest
+paths:
+  design_screens: project_ops/HIFI_UI_DESIGN_SCREENS

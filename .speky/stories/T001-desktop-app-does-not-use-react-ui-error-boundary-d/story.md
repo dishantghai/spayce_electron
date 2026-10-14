@@ -15,6 +15,16 @@ checking spec 010 during the SPEKY v3 migration.
 - No visual redesign of the loading or error states.
 - Not splitting the 2,500-line `App.tsx` beyond what adopting the hooks needs.
 
+## Design
+<!-- Which design this implements, so nobody guesses during implementation:
+     - Screens: IDs from the screen catalogue (screen:<id>) or design files in the repo, per state
+       (default, empty, error, loading).
+     - Design system: `.speky/context/design_system.md`
+     Look for an existing design first (`speky design status`, the screen catalogue). If there is none,
+     write "To be designed" and `speky next` runs the design step. If nothing visual changes, write
+     "No new design needed: <why>". -->
+No new design needed: uses the `ErrorFallback` and `SpaceListSkeleton` components already built in `@spayce/react-ui` (spec 010), with design-system tokens.
+
 ## Requirements
 
 ### R1: Global error boundary

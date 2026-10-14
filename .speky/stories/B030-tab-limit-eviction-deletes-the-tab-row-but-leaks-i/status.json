@@ -9,7 +9,7 @@
   "kind": "story",
   "title": "Tab-limit eviction deletes the tab row but leaks its WebContentsView",
   "type": "bug",
-  "updated_at": "2026-10-14T05:42:01",
+  "updated_at": "2026-10-14T11:40:33",
   "links": [
     {
       "type": "discovered-from",
@@ -17,10 +17,13 @@
     }
   ],
   "validation": {
-    "round": 1,
-    "spec_hash": "2a899e1a9d061d70",
+    "round": 2,
+    "spec_hash": "23471c9630fff52e",
     "converged": true,
     "converged_reason": "no open blocker or major findings",
-    "checked_at": "2026-10-14T05:42:01"
-  }
+    "checked_at": "2026-10-14T11:40:33"
+  },
+  "labels": [
+    "ui"
+  ]
 }

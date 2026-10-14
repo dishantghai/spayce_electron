@@ -9,7 +9,7 @@
   "kind": "story",
   "title": "Local folder Refresh does nothing because refreshLocalFolder IPC is missing",
   "type": "bug",
-  "updated_at": "2026-10-14T05:42:00",
+  "updated_at": "2026-10-14T11:40:40",
   "links": [
     {
       "type": "discovered-from",
@@ -17,10 +17,13 @@
     }
   ],
   "validation": {
-    "round": 1,
-    "spec_hash": "756580754c4f95a8",
+    "round": 2,
+    "spec_hash": "9146bedaa6498d7d",
     "converged": true,
     "converged_reason": "no open blocker or major findings",
-    "checked_at": "2026-10-14T05:42:00"
-  }
+    "checked_at": "2026-10-14T11:40:40"
+  },
+  "labels": [
+    "ui"
+  ]
 }

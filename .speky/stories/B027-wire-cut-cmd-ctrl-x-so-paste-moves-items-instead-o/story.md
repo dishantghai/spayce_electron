@@ -14,6 +14,16 @@ clipboard-R5.
 - No dimmed or ghost styling for cut items in this story.
 - No cut of pinned items from the pins grid.
 
+## Design
+<!-- Which design this implements, so nobody guesses during implementation:
+     - Screens: IDs from the screen catalogue (screen:<id>) or design files in the repo, per state
+       (default, empty, error, loading).
+     - Design system: `.speky/context/design_system.md`
+     Look for an existing design first (`speky design status`, the screen catalogue). If there is none,
+     write "To be designed" and `speky next` runs the design step. If nothing visual changes, write
+     "No new design needed: <why>". -->
+No new design needed: a key binding and move-on-paste. If a Cut entry is added to item menus it follows the existing context menu (`project_ops/HIFI_UI_DESIGN_SCREENS/Spaces Card Folder Context Menu.png`).
+
 ## Requirements
 
 ### R1: Cut shortcut

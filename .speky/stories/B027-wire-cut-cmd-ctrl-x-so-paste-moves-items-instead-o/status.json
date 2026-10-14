@@ -9,7 +9,7 @@
   "kind": "story",
   "title": "Wire Cut (Cmd/Ctrl+X) so paste moves items instead of duplicating",
   "type": "bug",
-  "updated_at": "2026-10-14T05:42:00",
+  "updated_at": "2026-10-14T11:40:40",
   "links": [
     {
       "type": "discovered-from",
@@ -17,10 +17,13 @@
     }
   ],
   "validation": {
-    "round": 1,
-    "spec_hash": "4415380edb93c9dd",
+    "round": 2,
+    "spec_hash": "8dd538826723a8e9",
     "converged": true,
     "converged_reason": "no open blocker or major findings",
-    "checked_at": "2026-10-14T05:42:00"
-  }
+    "checked_at": "2026-10-14T11:40:40"
+  },
+  "labels": [
+    "ui"
+  ]
 }
