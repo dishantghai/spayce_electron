@@ -264,7 +264,7 @@ Lines 44-117: BrowserError model and error types
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser View (Error States) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+> | Browser View (Error States) | `.speky/design/screens/browser-view/Browser View.png` |
 >
 > **Key UI Elements to Match:**
 > - Error view centered in browser area
@@ -303,7 +303,7 @@ Already partially implemented in Phase 1-2. This story ensures polish and edge c
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser View (Loading Bar) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+> | Browser View (Loading Bar) | `.speky/design/screens/browser-view/Browser View.png` |
 >
 > **Key UI Elements to Match:**
 > - Progress bar position: top of browser area, full width
@@ -479,7 +479,7 @@ Lines 202-203: WorkspaceTab integration
 
 ### HiFi Design Reference
 
-- `project_ops/HIFI_UI_DESIGN_SCREENS/Workspace View in Browser.png`
+- `.speky/design/screens/workspace-view-in-browser/Workspace View in Browser.png`
 
 ### Estimated Effort
 
@@ -522,7 +522,7 @@ const tabContextMenuItems = [
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser Tab Bar (Context Menu) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` |
+> | Browser Tab Bar (Context Menu) | `.speky/design/screens/browser-tab-bar/Browser Tab Bar.png` |
 >
 > **Key UI Elements to Match:**
 > - Context menu styling per design system
@@ -588,7 +588,7 @@ Full file - New tab menu component
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser Tab Bar (New Tab) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` |
+> | Browser Tab Bar (New Tab) | `.speky/design/screens/browser-tab-bar/Browser Tab Bar.png` |
 >
 > **Key UI Elements to Match:**
 > - New tab page background: `--color-bg-dark`

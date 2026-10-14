@@ -257,7 +257,7 @@ pnpm typecheck
 
 If unclear about any spec or story:
 1. Check `08-FLUTTER-REFERENCE-MAPPING.md` for Flutter source
-2. Reference HiFi designs in `project_ops/HIFI_UI_DESIGN_SCREENS/`
+2. Reference HiFi designs in `.speky/design/screens/`
 3. Review `.speky/context/tech_decisions.md` for constraints
 
 ---

@@ -46,7 +46,7 @@ For EACH phase:
 1. Read the phase section in implementation_plan.md
 2. Read the corresponding OLD codebase tests in `spayce/frontend/test/`
 3. Read the corresponding OLD source code in `spayce/frontend/lib/features/`
-4. Cross-reference HiFi UI screens in `spayce_electron/project_ops/HIFI_UI_DESIGN_SCREENS/`
+4. Cross-reference HiFi UI screens in `spayce_electron/.speky/design/screens/`
 5. Implement with 100% feature parity
 6. Run verification checklist from the plan
 
@@ -58,4 +58,4 @@ For EACH phase:
 | Old Flutter Tests | `/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/test/` |
 | Old Feature Code | `/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/` |
 | Design System | `/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/core/theme/` |
-| UI Screens | `/Users/Shared/ALL WORKSPACE/projects/spayce_electron/project_ops/HIFI_UI_DESIGN_SCREENS/` |
+| UI Screens | `/Users/Shared/ALL WORKSPACE/projects/spayce_electron/.speky/design/screens/` |

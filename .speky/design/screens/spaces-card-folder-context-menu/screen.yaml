@@ -1,0 +1,10 @@
+id: spaces-card-folder-context-menu
+title: Spaces Card Folder Context Menu
+kind: hifi
+status: draft
+states: []
+items:
+- B027
+- B028
+source: project_ops/HIFI_UI_DESIGN_SCREENS (hi-fi designs made before SPEKY)
+created_at: '2026-10-14T11:52:17'

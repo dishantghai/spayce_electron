@@ -377,13 +377,13 @@ Links to Flutter implementation and HiFi designs.
 
 ### HiFi Designs Available
 
-From `project_ops/HIFI_UI_DESIGN_SCREENS/`:
+From `.speky/design/screens/`:
 
 | Design | File Path | Relevant Specs/Stories |
 |--------|-----------|------------------------|
-| **Browser Tab Bar** | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` | Spec 020, Story F011, Story F012 |
-| **Browser View** | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` | Specs 019, 023, 024, Stories F005, F006 |
-| **Workspace View in Browser** | `project_ops/HIFI_UI_DESIGN_SCREENS/Workspace View in Browser.png` | Story F010 |
+| **Browser Tab Bar** | `.speky/design/screens/browser-tab-bar/Browser Tab Bar.png` | Spec 020, Story F011, Story F012 |
+| **Browser View** | `.speky/design/screens/browser-view/Browser View.png` | Specs 019, 023, 024, Stories F005, F006 |
+| **Workspace View in Browser** | `.speky/design/screens/workspace-view-in-browser/Workspace View in Browser.png` | Story F010 |
 
 ### Pixel-Perfect Implementation Requirements
 

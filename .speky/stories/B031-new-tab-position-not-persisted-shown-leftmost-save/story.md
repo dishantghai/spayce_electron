@@ -16,11 +16,11 @@ specs during the SPEKY v3 migration; see browser-R3.
 <!-- Which design this implements, so nobody guesses during implementation:
      - Screens: IDs from the screen catalogue (screen:<id>) or design files in the repo, per state
        (default, empty, error, loading).
-     - Design system: `.speky/context/design_system.md`
+     - Design system: `.speky/design/system.md`
      Look for an existing design first (`speky design status`, the screen catalogue). If there is none,
      write "To be designed" and `speky next` runs the design step. If nothing visual changes, write
      "No new design needed: <why>". -->
-No new design needed: tab order after restart; tab bar as designed (`project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png`).
+No new design needed: tab order after restart; tab bar as designed (screen:browser-tab-bar).
 
 ## Requirements
 

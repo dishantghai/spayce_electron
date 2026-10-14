@@ -192,5 +192,5 @@ See `.speky/stories/IMPLEMENTATION_STATUS.md` for detailed integration pattern.
 
 - Flutter app: `/Users/Shared/ALL WORKSPACE/projects/spayce/frontend/lib/features/navigation/presentation/main_layout_final.dart`
 - Implementation plan: `IMPLEMENTATION_PLAN/03-PHASE1-CORE-ITEM-MANAGEMENT.md`
-- Design system: `.speky/context/design_system.md`
+- Design system: `.speky/design/system.md`
 - Tech decisions: `.speky/context/tech_decisions.md`

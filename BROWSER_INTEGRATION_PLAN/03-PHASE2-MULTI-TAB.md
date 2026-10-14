@@ -434,7 +434,7 @@ Key patterns:
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser Tab Bar | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser Tab Bar.png` |
+> | Browser Tab Bar | `.speky/design/screens/browser-tab-bar/Browser Tab Bar.png` |
 >
 > **Key UI Elements to Match:**
 > - Tab bar height (40px) and background color (`--color-bg-sidebar`)

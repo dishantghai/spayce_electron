@@ -9,7 +9,7 @@
   "kind": "story",
   "title": "Bind Cmd/Ctrl+A select-all and Shift+Arrow range selection",
   "type": "bug",
-  "updated_at": "2026-10-14T11:40:33",
+  "updated_at": "2026-10-14T11:52:52",
   "links": [
     {
       "type": "discovered-from",
@@ -17,11 +17,11 @@
     }
   ],
   "validation": {
-    "round": 2,
-    "spec_hash": "0b34f81d0b46bf4c",
+    "round": 3,
+    "spec_hash": "84a88d38cb32c0d3",
     "converged": true,
     "converged_reason": "no open blocker or major findings",
-    "checked_at": "2026-10-14T11:40:33"
+    "checked_at": "2026-10-14T11:52:52"
   },
   "labels": [
     "ui"

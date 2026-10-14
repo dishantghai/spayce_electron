@@ -1071,7 +1071,7 @@ Key patterns:
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser View (Overall Layout) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+> | Browser View (Overall Layout) | `.speky/design/screens/browser-view/Browser View.png` |
 >
 > **Key UI Elements to Match:**
 > - Browser area background color: `--color-bg-dark` (#0F0B1A)

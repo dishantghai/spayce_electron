@@ -351,7 +351,7 @@ Lines 304-386: `_buildNavigationBar` method
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser View (Navigation Bar) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+> | Browser View (Navigation Bar) | `.speky/design/screens/browser-view/Browser View.png` |
 >
 > **Key UI Elements to Match:**
 > - Navigation bar height: 48px
@@ -677,7 +677,7 @@ Full file (71 lines)
 >
 > | Design | File Path |
 > |--------|----------|
-> | Browser View (URL Bar) | `project_ops/HIFI_UI_DESIGN_SCREENS/Browser View.png` |
+> | Browser View (URL Bar) | `.speky/design/screens/browser-view/Browser View.png` |
 >
 > **Key UI Elements to Match:**
 > - URL bar height: 32px
