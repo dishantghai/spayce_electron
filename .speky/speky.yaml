@@ -18,3 +18,5 @@ testing:
   coverage_command: npx vitest run --coverage
   coverage_threshold: 80
   runner: vitest
+paths:
+  research: project_ops/TECH_RESEARCH
