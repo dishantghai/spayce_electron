@@ -9,5 +9,11 @@ max_spec_lines: 250
 verify_command: pnpm test
 harnesses:
 - claude-code
+- windsurf
+- antigravity
 migration_done:
 - check_suspect_completions
+testing:
+  coverage_command: npx vitest run --coverage
+  coverage_threshold: 80
+  runner: vitest

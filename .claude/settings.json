@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "manual|auto",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v speky >/dev/null 2>&1 && speky checkpoint --auto >/dev/null 2>&1 || true"
+          }
+        ]
+      }
     ]
   }
 }
