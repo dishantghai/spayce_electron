@@ -1,4 +1,4 @@
-<!-- BEGIN SPEKY v:3 profile:full hash:12d5e0c5 -->
+<!-- BEGIN SPEKY v:3 profile:full hash:cc1529ae -->
 ## SPEKY
 
 This project uses SPEKY for spec-driven development. Changes live in `.speky/specs/` and
@@ -19,6 +19,8 @@ you do the work through the `speky` CLI (every `--json` command prints one JSON 
 - Validation converges: `speky check <id>`; record only verified findings; stop when it says converged.
 - Discovered work: `speky new story "..." --discovered-from <id>`. Decisions: `speky decide`.
 - Human gates (stack, design, scope, merge) are the user's call: stop and ask.
-- Nothing you tell the owner lives only in the chat: before ending a turn, record owner actions and
-  recommendations that need their decision (`speky owner add`), plan changes (`speky task`), decisions.
+- Nothing lives only in the chat: before ending a turn, record owner actions and recommendations
+  needing their decision (`speky owner add`), the owner's standing instructions (`speky remember --topic
+  owner --always`), their feedback (tasks/findings), their answers (`speky owner done O<n> --note`,
+  `speky decide`), links they share (`speky remember --topic environment`), assumptions and promises.
 <!-- END SPEKY v:3 -->
