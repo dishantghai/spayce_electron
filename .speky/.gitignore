@@ -1,0 +1,4 @@
+# per-machine SPEKY state (speky checkpoint, speky test)
+checkpoint.json
+testing/runs.json
+turn.json
