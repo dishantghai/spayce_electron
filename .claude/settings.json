@@ -21,6 +21,26 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v speky >/dev/null 2>&1 && speky checkpoint --turn-start || true"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "command -v speky >/dev/null 2>&1 && speky checkpoint --stop || true"
+          }
+        ]
+      }
     ]
   }
 }
